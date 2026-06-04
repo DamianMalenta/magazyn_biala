@@ -1,0 +1,263 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { QuickLink } from '../types'
+import { EMBED_SIZE_HEIGHT } from '../lib/linkOpenUtils'
+import {
+  MUSIC_CATEGORIES,
+  fetchRadioStations,
+  loadLastStation,
+  saveLastStation,
+  stationsForCategory,
+  type MusicCategoryId,
+  type MusicStation,
+} from '../lib/musicUtils'
+
+interface MusicPanelProps {
+  link: QuickLink
+  onClose: () => void
+}
+
+export function MusicPanel({ link, onClose }: MusicPanelProps) {
+  const height = EMBED_SIZE_HEIGHT[link.embedSize ?? 'medium']
+  const audioRef = useRef<HTMLAudioElement>(null)
+
+  const [category, setCategory] = useState<MusicCategoryId>('lounge')
+  const [stations, setStations] = useState<MusicStation[]>(() => stationsForCategory('lounge'))
+  const [loading, setLoading] = useState(false)
+  const [current, setCurrent] = useState<MusicStation | null>(() => loadLastStation())
+  const [playing, setPlaying] = useState(false)
+  const [volume, setVolume] = useState(0.75)
+  const [error, setError] = useState<string | null>(null)
+  const [customUrl, setCustomUrl] = useState('')
+
+  const loadCategory = useCallback(async (catId: MusicCategoryId) => {
+    setCategory(catId)
+    setError(null)
+    const presets = stationsForCategory(catId)
+    setStations(presets)
+    setLoading(true)
+
+    const cat = MUSIC_CATEGORIES.find((c) => c.id === catId)
+    try {
+      const online = cat?.search ? await fetchRadioStations(cat.search, 8) : []
+      const merged = [...presets]
+      for (const s of online) {
+        if (!merged.some((m) => m.streamUrl === s.streamUrl)) merged.push(s)
+      }
+      setStations(merged)
+    } catch {
+      setStations(presets)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadCategory('lounge')
+  }, [loadCategory])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  useEffect(() => {
+    const el = audioRef.current
+    if (!el) return
+    el.volume = volume
+  }, [volume])
+
+  const playStation = useCallback(async (station: MusicStation) => {
+    const el = audioRef.current
+    if (!el) return
+
+    setError(null)
+    setCurrent(station)
+    saveLastStation(station)
+
+    el.pause()
+    el.src = station.streamUrl
+    el.load()
+
+    try {
+      await el.play()
+      setPlaying(true)
+    } catch {
+      setPlaying(false)
+      setError('Nie udało się odtworzyć tej stacji — spróbuj innej lub sprawdź internet.')
+    }
+  }, [])
+
+  const togglePlay = async () => {
+    const el = audioRef.current
+    if (!el) return
+
+    if (playing) {
+      el.pause()
+      setPlaying(false)
+      return
+    }
+
+    if (!current && stations[0]) {
+      await playStation(stations[0])
+      return
+    }
+
+    try {
+      await el.play()
+      setPlaying(true)
+      setError(null)
+    } catch {
+      setError('Odtwarzanie zablokowane — kliknij ▶ jeszcze raz (wymagane działanie użytkownika).')
+    }
+  }
+
+  const playCustom = () => {
+    const url = customUrl.trim()
+    if (!url) return
+    void playStation({
+      id: 'custom',
+      name: 'Własny strumień',
+      streamUrl: url.includes('://') ? url : `https://${url}`,
+      source: 'preset',
+    })
+  }
+
+  return (
+    <section
+      className="embed-inline-wrap music-panel-wrap"
+      aria-label={`Muzyka: ${link.label}`}
+      style={{ '--embed-h': height } as React.CSSProperties}
+    >
+      <div className="embed-inline-panel">
+        <header className="embed-panel-header">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-lg shrink-0">{link.icon}</span>
+            <div className="min-w-0">
+              <p className="font-bold text-sm truncate">{link.label}</p>
+              <p className="text-[10px] text-slate-500 truncate">
+                {current ? `▶ ${current.name}` : 'Radio i strumienie audio — bez wideo'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <button type="button" onClick={togglePlay} className="embed-btn embed-btn-primary" title={playing ? 'Pauza' : 'Odtwórz'}>
+              {playing ? '⏸ Pauza' : '▶ Graj'}
+            </button>
+            <button type="button" onClick={onClose} className="embed-btn" title="Zwiń panel">
+              ×
+            </button>
+          </div>
+        </header>
+
+        <div className="embed-panel-body music-panel-body">
+          <audio
+            ref={audioRef}
+            preload="none"
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onError={() => {
+              setPlaying(false)
+              setError('Strumień niedostępny — wybierz inną stację.')
+            }}
+          />
+
+          <div className="music-panel-toolbar">
+            <div className="music-categories">
+              {MUSIC_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => void loadCategory(cat.id)}
+                  className={`music-cat-btn ${category === cat.id ? 'music-cat-btn-active' : ''}`}
+                >
+                  <span>{cat.emoji}</span>
+                  <span>{cat.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="music-volume-row">
+              <span className="text-[10px] text-slate-500 shrink-0">Głośność</span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={volume}
+                onChange={(e) => setVolume(Number(e.target.value))}
+                className="music-volume-slider"
+                aria-label="Głośność"
+              />
+            </div>
+          </div>
+
+          {error && <p className="music-error-banner">{error}</p>}
+
+          <div className="music-station-list" role="list">
+            {loading && stations.length <= 3 && (
+              <p className="text-xs text-slate-500 px-3 py-2">Ładowanie stacji z katalogu…</p>
+            )}
+            {stations.map((station) => (
+              <button
+                key={station.id}
+                type="button"
+                role="listitem"
+                onClick={() => void playStation(station)}
+                className={`music-station-row ${current?.id === station.id ? 'music-station-row-active' : ''}`}
+              >
+                {station.favicon ? (
+                  <img src={station.favicon} alt="" className="music-station-favicon" />
+                ) : (
+                  <span className="music-station-favicon music-station-favicon-placeholder">🎧</span>
+                )}
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-sm font-semibold truncate">{station.name}</p>
+                  <p className="text-[10px] text-slate-500 truncate">
+                    {[station.country, station.tags].filter(Boolean).join(' · ') || 'strumień audio'}
+                  </p>
+                </div>
+                <span className="text-amber-400 text-xs shrink-0">
+                  {current?.id === station.id && playing ? '●' : '▶'}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <details className="music-legal-note">
+            <summary>Prawa autorskie w lokalu (ważne)</summary>
+            <p>
+              Odtwarzanie muzyki w restauracji to <strong>użycie publiczne</strong> — w Polsce zwykle wymaga opłat
+              dla ZAiKS/STOART (lub licencji zbiorczej). Darmowe strumienie (YouTube, Spotify Free, radio z reklamami
+              w eterze) często <strong>nie pozwalaj</strong> na komercyjne użycie w lokalu.
+            </p>
+            <p className="mt-2">
+              Ten panel odtwarza <strong>same audio</strong> (bez filmów i bez reklam w interfejsie). Stacje Jamendo/SomaFM
+              i radio z katalogu Radio Browser są wygodne technicznie; do pełnej zgodności prawnej w lokalu rozważ np.{' '}
+              <a href="https://licensing.jamendo.com/en/in-store" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline">
+                Jamendo In-Store
+              </a>{' '}
+              (~89 €/rok, bez reklam, certyfikat) lub playlisty royalty-free (np. Pixabay Music) na własnym serwerze.
+            </p>
+          </details>
+
+          <div className="music-custom-stream">
+            <input
+              type="url"
+              value={customUrl}
+              onChange={(e) => setCustomUrl(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && playCustom()}
+              placeholder="Własny URL strumienia MP3/AAC (opcjonalnie)"
+              className="embed-youtube-input text-xs"
+            />
+            <button type="button" onClick={playCustom} className="embed-btn shrink-0">
+              Odtwórz
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

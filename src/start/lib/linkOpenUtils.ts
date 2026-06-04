@@ -130,7 +130,7 @@ export const OPEN_MODE_LABELS: Record<LinkOpenMode, string> = {
 
 export const OPEN_MODE_DESCRIPTIONS: Record<LinkOpenMode, string> = {
   tab: 'Otwiera pełną stronę w nowej karcie Chrome — zalecane dla Facebooka, POS i banków.',
-  embed: 'Rozsuwa panel pod kafelkami — działa z YouTube (film), Vimeo i mapami.',
+  embed: 'Rozsuwa panel pod kafelkami — muzyka (audio), YouTube (film), Vimeo i mapy.',
   window: 'Otwiera osobne okno (np. na drugi monitor).',
 }
 

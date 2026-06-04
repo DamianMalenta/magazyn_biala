@@ -1,5 +1,7 @@
 export type IconMode = 'auto' | 'manual'
 export type LinkOpenMode = 'tab' | 'embed' | 'window'
+/** `music` = wbudowany odtwarzacz audio (bez iframe / YouTube). */
+export type QuickLinkType = 'link' | 'music'
 export type EmbedSize = 'compact' | 'medium' | 'large' | 'fullscreen'
 
 export type DayKey = 'pon' | 'wt' | 'sr' | 'czw' | 'pt' | 'sob' | 'nd'
@@ -22,6 +24,7 @@ export interface QuickLink {
   url: string
   icon: string
   iconMode: IconMode
+  linkType?: QuickLinkType
   openMode: LinkOpenMode
   embedSize: EmbedSize
   color: string
