@@ -99,7 +99,18 @@ export default function StartApp() {
           </div>
         )}
 
-        {sections.showQuickLinks && <QuickLinksGrid links={config.quickLinks} onOpenLink={openLink} />}
+        {sections.showQuickLinks && (
+          <>
+            <QuickLinksGrid
+              links={config.quickLinks}
+              activeEmbedId={embeddedLink?.id}
+              onOpenLink={openLink}
+            />
+            {embeddedLink && (embeddedLink.openMode ?? 'tab') === 'embed' && (
+              <EmbeddedPanel link={embeddedLink} onClose={closeEmbed} onOpenTab={openEmbeddedInTab} />
+            )}
+          </>
+        )}
 
         {(sections.showSchedule || sections.showHandover) && (
           <div
@@ -139,10 +150,6 @@ export default function StartApp() {
           </div>
         </footer>
       </div>
-
-      {embeddedLink && (
-        <EmbeddedPanel link={embeddedLink} onClose={closeEmbed} onOpenTab={openEmbeddedInTab} />
-      )}
 
       <CommandPalette
         open={commandOpen}

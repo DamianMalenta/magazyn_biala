@@ -19,7 +19,7 @@ export function useLinkOpener() {
     }
 
     if (mode === 'embed') {
-      setEmbeddedLink(link)
+      setEmbeddedLink((prev) => (prev?.id === link.id ? null : link))
     }
   }, [])
 
