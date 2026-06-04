@@ -14,6 +14,8 @@ import { AdminLogin } from './components/AdminLogin'
 import { AdminPanel } from './components/AdminPanel'
 import { useLinkOpener } from './hooks/useLinkOpener'
 import { EmbeddedPanel } from './components/EmbeddedPanel'
+import { MusicPanel } from './components/MusicPanel'
+import { isMusicLink } from './lib/musicUtils'
 import { WeatherWidget } from './components/WeatherWidget'
 import { useWeather } from './hooks/useWeather'
 
@@ -107,7 +109,11 @@ export default function StartApp() {
               onOpenLink={openLink}
             />
             {embeddedLink && (embeddedLink.openMode ?? 'tab') === 'embed' && (
-              <EmbeddedPanel link={embeddedLink} onClose={closeEmbed} onOpenTab={openEmbeddedInTab} />
+              isMusicLink(embeddedLink.url, embeddedLink.linkType) ? (
+                <MusicPanel link={embeddedLink} onClose={closeEmbed} />
+              ) : (
+                <EmbeddedPanel link={embeddedLink} onClose={closeEmbed} onOpenTab={openEmbeddedInTab} />
+              )
             )}
           </>
         )}

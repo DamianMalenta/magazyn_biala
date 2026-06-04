@@ -74,6 +74,18 @@ export const DEFAULT_CONFIG: StartPageConfig = {
       color: '#ec4899',
       pinned: true,
     },
+    {
+      id: 'muzyka',
+      label: 'Muzyka',
+      url: 'music://player',
+      linkType: 'music',
+      iconMode: 'manual',
+      openMode: 'embed',
+      embedSize: 'medium',
+      icon: '🎵',
+      color: '#a855f7',
+      pinned: true,
+    },
   ],
   infoCards: [
     {

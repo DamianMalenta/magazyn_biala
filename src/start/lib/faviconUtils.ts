@@ -45,14 +45,24 @@ export function getFaviconUrl(url: string, size = 128): string | null {
   return getFaviconCandidates(url, size)[0] ?? null
 }
 
+function normalizeLinkType(link: QuickLink): QuickLink['linkType'] {
+  if (link.linkType === 'music') return 'music'
+  const url = link.url.trim().toLowerCase()
+  if (url === 'music:' || url === 'music://player' || url.startsWith('music://')) return 'music'
+  return 'link'
+}
+
 export function normalizeQuickLink(link: QuickLink): QuickLink {
   const iconMode: IconMode = link.iconMode ?? 'auto'
+  const linkType = normalizeLinkType(link)
   return {
     ...link,
     iconMode,
+    linkType,
     openMode: link.openMode ?? 'tab',
     embedSize: link.embedSize ?? 'medium',
     icon: link.icon?.trim() || '🔗',
+    url: linkType === 'music' && !link.url.trim() ? 'music://player' : link.url,
   }
 }
 

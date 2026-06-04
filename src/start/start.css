@@ -303,6 +303,75 @@
   @apply relative;
 }
 
+/* ── Odtwarzacz muzyki (panel audio) ── */
+.music-panel-body {
+  @apply overflow-hidden;
+}
+
+.music-panel-toolbar {
+  @apply flex flex-col gap-2 px-3 py-2 border-b border-white/10 shrink-0;
+}
+
+.music-categories {
+  @apply flex flex-wrap gap-1.5;
+}
+
+.music-cat-btn {
+  @apply flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition;
+}
+
+.music-cat-btn-active {
+  @apply bg-violet-600/80 text-white;
+}
+
+.music-volume-row {
+  @apply flex items-center gap-2;
+}
+
+.music-volume-slider {
+  @apply flex-1 h-1.5 accent-violet-500;
+}
+
+.music-station-list {
+  @apply flex-1 overflow-y-auto min-h-0 px-2 py-1;
+}
+
+.music-station-row {
+  @apply w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-white/5 transition text-left;
+}
+
+.music-station-row-active {
+  @apply bg-violet-500/15 ring-1 ring-violet-500/30;
+}
+
+.music-station-favicon {
+  @apply w-9 h-9 rounded-lg object-cover bg-white/5 shrink-0;
+}
+
+.music-station-favicon-placeholder {
+  @apply flex items-center justify-center text-lg;
+}
+
+.music-error-banner {
+  @apply mx-3 mt-2 px-3 py-2 rounded-lg text-xs text-amber-200 bg-amber-500/15 border border-amber-500/25;
+}
+
+.music-legal-note {
+  @apply mx-3 my-2 px-3 py-2 rounded-xl text-[10px] text-slate-500 bg-white/[0.03] border border-white/5;
+}
+
+.music-legal-note summary {
+  @apply cursor-pointer font-semibold text-slate-400 hover:text-slate-300;
+}
+
+.music-legal-note p {
+  @apply mt-2 leading-relaxed;
+}
+
+.music-custom-stream {
+  @apply flex gap-2 px-3 py-2 border-t border-white/10 shrink-0;
+}
+
 
 /* ── Widget pogody ── */
 

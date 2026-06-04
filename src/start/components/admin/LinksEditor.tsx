@@ -6,7 +6,8 @@ import {
   OPEN_MODE_LABELS,
   getEmbedInfo,
 } from '../../lib/linkOpenUtils'
-import type { EmbedSize, LinkOpenMode } from '../../types'
+import { isMusicLink } from '../../lib/musicUtils'
+import type { EmbedSize, LinkOpenMode, QuickLinkType } from '../../types'
 import type { IconMode, QuickLink, StartPageConfig } from '../../types'
 import { LinkIcon } from '../LinkIcon'
 import {
@@ -60,6 +61,27 @@ export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
     onToast('Dodano nowy kafelek')
   }
 
+  const addMusicLink = () => {
+    patch({
+      quickLinks: [
+        ...config.quickLinks,
+        {
+          id: uid(),
+          label: 'Muzyka',
+          url: 'music://player',
+          linkType: 'music',
+          icon: '🎵',
+          iconMode: 'manual',
+          openMode: 'embed',
+          embedSize: 'medium',
+          color: '#a855f7',
+          pinned: true,
+        },
+      ],
+    })
+    onToast('Dodano odtwarzacz muzyki (panel audio)')
+  }
+
   const removeLink = (id: string, label: string) => {
     if (!window.confirm(`Usunąć kafelek „${label}"? Tej operacji nie można cofnąć.`)) return
     patch({ quickLinks: config.quickLinks.filter((l) => l.id !== id) })
@@ -91,9 +113,14 @@ export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
           </p>
           <p className="text-xs text-slate-400 mt-0.5">Zmiany zapisują się automatycznie</p>
         </div>
-        <button type="button" onClick={addLink} className={btnPrimary}>
-          + Dodaj kafelek
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={addLink} className={btnPrimary}>
+            + Dodaj kafelek
+          </button>
+          <button type="button" onClick={addMusicLink} className={btnGhost}>
+            + Odtwarzacz muzyki
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -154,8 +181,9 @@ function LinkCard({
   onDuplicate: () => void
   onRemove: () => void
 }) {
+  const isMusic = isMusicLink(link.url, link.linkType)
   const hostname = extractHostname(link.url)
-  const isAuto = link.iconMode === 'auto'
+  const isAuto = link.iconMode === 'auto' && !isMusic
 
   return (
     <article
@@ -196,13 +224,61 @@ function LinkCard({
             />
           </div>
 
-          <Field label="Adres URL" hint="Favicon pobierany automatycznie z tej domeny">
+          <div>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+              Typ kafelka
+            </span>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {(
+                [
+                  ['link', '🔗 Zwykły link'],
+                  ['music', '🎵 Muzyka w panelu'],
+                ] as const
+              ).map(([type, label]) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    onUpdate(link.id, 'linkType', type as QuickLinkType)
+                    if (type === 'music') {
+                      onUpdate(link.id, 'url', 'music://player')
+                      onUpdate(link.id, 'openMode', 'embed')
+                      onUpdate(link.id, 'iconMode', 'manual')
+                      if (!link.icon || link.icon === '🔗') onUpdate(link.id, 'icon', '🎵')
+                    }
+                  }}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                    (isMusic ? 'music' : 'link') === type
+                      ? 'bg-violet-600 text-white'
+                      : 'bg-white/5 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Field
+            label={isMusic ? 'Adres (opcjonalny)' : 'Adres URL'}
+            hint={
+              isMusic
+                ? 'Odtwarzacz audio w panelu — bez YouTube i bez filmów'
+                : 'Favicon pobierany automatycznie z tej domeny'
+            }
+          >
             <input
               className={inputCls}
               value={link.url}
               onChange={(e) => onUpdate(link.id, 'url', e.target.value)}
-              placeholder="https://smartlunch.pl"
+              placeholder={isMusic ? 'music://player' : 'https://smartlunch.pl'}
+              disabled={isMusic}
             />
+            {isMusic && (
+              <p className="text-[10px] text-emerald-400/80 mt-1.5">
+                Ustaw „Panel pod kafelkami” — stacje lounge, jazz, chill i własny strumień MP3.
+              </p>
+            )}
             {isAuto && hostname && (
               <p className="text-[10px] text-emerald-400/80 mt-1.5">Źródło ikony: {hostname}</p>
             )}
@@ -247,8 +323,13 @@ function LinkCard({
                     {sz === 'compact' ? 'Mały' : sz === 'medium' ? 'Średni' : sz === 'large' ? 'Duży' : 'Pełny'}
                   </button>
                 ))}
-                {!getEmbedInfo(link.url).supportsEmbed && link.url.length > 12 && (
+                {!isMusic &&
+                  !getEmbedInfo(link.url).supportsEmbed &&
+                  link.url.length > 12 && (
                   <span className="text-[10px] text-amber-400">⚠ Strona może blokować podgląd</span>
+                )}
+                {isMusic && (
+                  <span className="text-[10px] text-emerald-400">✓ Odtwarzacz audio — bez iframe</span>
                 )}
               </div>
             )}
