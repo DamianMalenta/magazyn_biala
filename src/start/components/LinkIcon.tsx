@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { QuickLink } from '../types'
-import { getFaviconUrl, usesAutoIcon } from '../lib/faviconUtils'
+import { getFaviconCandidates, hasValidIconUrl, usesAutoIcon } from '../lib/faviconUtils'
 
 type LinkIconSize = 'tile' | 'preview' | 'command'
 
@@ -16,6 +16,12 @@ const EMOJI_CLASS: Record<LinkIconSize, string> = {
   command: 'text-xl',
 }
 
+const FAVICON_SIZE: Record<LinkIconSize, number> = {
+  tile: 128,
+  preview: 64,
+  command: 32,
+}
+
 interface LinkIconProps {
   link: QuickLink
   size?: LinkIconSize
@@ -23,18 +29,41 @@ interface LinkIconProps {
 }
 
 export function LinkIcon({ link, size = 'tile', className = '' }: LinkIconProps) {
-  const [failed, setFailed] = useState(false)
-  const auto = usesAutoIcon(link) && !failed
-  const favicon = getFaviconUrl(link.url, size === 'tile' ? 128 : 64)
+  const auto = usesAutoIcon(link)
+  const candidates = useMemo(
+    () => getFaviconCandidates(link.url, FAVICON_SIZE[size]),
+    [link.url, size],
+  )
 
-  if (auto && favicon) {
+  const [candidateIndex, setCandidateIndex] = useState(0)
+  const [exhausted, setExhausted] = useState(false)
+
+  useEffect(() => {
+    setCandidateIndex(0)
+    setExhausted(false)
+  }, [link.url, link.iconMode, candidates.length])
+
+  const showFavicon = auto && !exhausted && candidates.length > 0 && hasValidIconUrl(link.url)
+  const src = showFavicon ? candidates[candidateIndex] : null
+
+  const handleError = () => {
+    if (candidateIndex < candidates.length - 1) {
+      setCandidateIndex((i) => i + 1)
+    } else {
+      setExhausted(true)
+    }
+  }
+
+  if (showFavicon && src) {
     return (
       <img
-        src={favicon}
+        key={src}
+        src={src}
         alt=""
         draggable={false}
+        referrerPolicy="no-referrer"
         className={`object-contain bg-white/90 p-1.5 shadow-lg ${SIZE_CLASS[size]} ${className}`}
-        onError={() => setFailed(true)}
+        onError={handleError}
       />
     )
   }
