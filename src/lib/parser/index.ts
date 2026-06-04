@@ -6,5 +6,6 @@ export {
   classifyLine,
   CategoryStateMachine,
   isMetaLine,
-  looksLikeInventoryItem,
+  detectCategoryHeader,
+  stripDateFromHeader,
 } from './categoryStateMachine'

@@ -16,50 +16,52 @@ const META_PATTERNS = [
   /\baktualizacja\b/i,
   /\bostatnia\b/i,
   /\binwentaryzacja\b/i,
-  /^\d{1,2}[./]\d{1,2}/,
-  /\b\d{1,2}:\d{2}\b/,
+  /^renament\b/i,
 ]
 
-const ITEM_HINTS = [
-  'worek',
-  'pojemnik',
-  'pojemniki',
-  'nugetsy',
-  'nuggets',
-  'mozzarella',
-  'salami',
-  'frytki',
-  'krewetki',
-  'poledwiczki',
-  'polędwiczki',
-  'jogurt',
-  'czosnkowy',
-  'wieczka',
-  'sztucce',
-  'sztućce',
-  'kartony małe',
-  'kartony male',
-  'na makarony',
-  'papryka',
-  'skrzyd',
-  'szyszk',
-]
+/** Usuwa datę z nagłówka strefy: „Lodówka 04.06”, „Zamrazalka — 04.06.2026”. */
+export function stripDateFromHeader(line: string): string {
+  return line
+    .replace(/\s*[-–—]\s*\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?\s*$/i, '')
+    .replace(/\s+\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?\s*$/i, '')
+    .trim()
+}
+
+function isDateOnlySuffix(rest: string): boolean {
+  const compact = rest.replace(/\s/g, '')
+  return (
+    /^\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?$/.test(compact) ||
+    /^\d{1,2}\.\d{1,2}$/.test(compact)
+  )
+}
+
+/** Nagłówek strefy (lodówka 04.06, zamrazalka, opakowania). */
+export function detectCategoryHeader(line: string): Category | null {
+  const stripped = stripDateFromHeader(line.trim())
+  const normalized = normalizeText(stripped)
+
+  for (const [category, aliases] of Object.entries(CATEGORY_ALIASES) as [Category, string[]][]) {
+    for (const alias of aliases) {
+      const aliasNorm = normalizeText(alias)
+      if (normalized === aliasNorm) return category
+
+      if (normalized.startsWith(`${aliasNorm} `)) {
+        const rest = normalized.slice(aliasNorm.length).trim()
+        if (!rest || isDateOnlySuffix(rest)) return category
+      }
+    }
+  }
+
+  return null
+}
 
 export function isMetaLine(line: string): boolean {
   const normalized = normalizeText(line)
   if (IGNORE_LINE_KEYWORDS.some((keyword) => normalized.includes(keyword))) {
     return true
   }
+  if (/^renament\b/i.test(normalized)) return false
   return META_PATTERNS.some((pattern) => pattern.test(line))
-}
-
-export function looksLikeInventoryItem(line: string): boolean {
-  const trimmed = line.trim()
-  if (!trimmed) return false
-  if (QUANTITY_PREFIX.test(trimmed)) return true
-
-  const normalized = normalizeText(trimmed)
-  return ITEM_HINTS.some((hint) => normalized.includes(hint))
 }
 
 export function classifyLine(line: string): LineClassification {
@@ -70,18 +72,10 @@ export function classifyLine(line: string): LineClassification {
     return { kind: 'ignore' }
   }
 
-  const normalized = normalizeText(trimmed)
-
-  if (!QUANTITY_PREFIX.test(trimmed) && !looksLikeInventoryItem(trimmed)) {
-    for (const [category, aliases] of Object.entries(CATEGORY_ALIASES) as [Category, string[]][]) {
-      const isHeader = aliases.some((alias) => {
-        const aliasNorm = normalizeText(alias)
-        return normalized === aliasNorm || normalized.startsWith(`${aliasNorm} `)
-      })
-
-      if (isHeader && normalized.split(' ').length <= 3) {
-        return { kind: 'category', category }
-      }
+  if (!QUANTITY_PREFIX.test(trimmed)) {
+    const category = detectCategoryHeader(trimmed)
+    if (category) {
+      return { kind: 'category', category }
     }
   }
 
@@ -96,7 +90,6 @@ export class CategoryStateMachine {
     return this.current
   }
 
-  /** Strefy wymienione nagłówkiem w wiadomości (cała strefa podlega aktualizacji). */
   getTouchedCategories(): ReadonlySet<Category> {
     return this.touched
   }

@@ -15,11 +15,11 @@ export interface InstructionRule {
 }
 
 export const QUICK_STEPS = [
-  'Stan wpisujecie na grupę Messenger (każdy po zmianie).',
-  'Na komputerze w pracy otwórz link magazynu (nie telefon).',
-  'Skopiuj całą wiadomość ze stanem z grupy.',
-  'Wklej w Smart Paste → Przetwórz tekst.',
-  'Po prawej — tylko towary na stanie.',
+  'Renament: stan faktyczny → wiadomość na grupę Messenger.',
+  'Na PC: kopiuj renament → Smart Paste → Przetwórz tekst.',
+  'Przywóz/wywóz w ciągu dnia: tylko +/− na komputerze (bez Messengera).',
+  'Porównaj system z rzeczywistością po renamencie.',
+  'Aplikacja tylko na komputerze w pracy — nie na telefonie.',
 ] as const
 
 export const INSTRUCTION_STEPS: InstructionStep[] = [
@@ -76,15 +76,23 @@ export const PHONE_POLICY_NOTE =
 export const INSTRUCTION_RULES: InstructionRule[] = [
   {
     type: 'ok',
-    text: 'W wiadomości jest tylko lodówka → zmienia się tylko lodówka. Zamrażarka i opakowania zostają bez zmian.',
+    text: 'Renament (Messenger): okresowa kontrola — liczycie na miejscu i wpisujecie faktyczny stan na grupę, potem przetwarzacie na PC.',
+  },
+  {
+    type: 'ok',
+    text: 'Przywóz / wywóz w trakcie dnia: tylko przyciski + i − na komputerze. Nie trzeba pisać na Messengerze.',
   },
   {
     type: 'warn',
-    text: 'Wysyłasz całą strefę → wypisz wszystko, co jest na stanie. Czego nie ma na liście, system ustawi na 0 (zniknie z widoku).',
+    text: 'Renament tylko lodówki → w wiadomości sam nagłówek lodówka + towary. Inne strefy w systemie bez zmian.',
+  },
+  {
+    type: 'warn',
+    text: 'Renament całej strefy → wypisujecie wszystko co jest. Brak na liście = 0 w systemie.',
   },
   {
     type: 'info',
-    text: 'Czerwona kwarantanna? Wybierz właściwy towar z listy → OK. Możesz zaznaczyć „zapamiętaj alias”.',
+    text: 'Kwarantanna (czerwone)? Wybierz towar z listy → OK.',
   },
 ]
 

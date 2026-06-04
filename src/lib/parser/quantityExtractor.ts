@@ -41,15 +41,29 @@ export function extractQuantityAndName(line: string): ExtractedLine {
   let rawUnit: string | null = null
   let rawName = trimmed
 
+  let keepFullProductName = false
+
   const match = trimmed.match(LEADING_QTY_PATTERN)
   if (match) {
     qty = parseFloat(match[1].replace(',', '.'))
     rawUnit = match[2]?.toLowerCase() ?? null
     rawName = match[3]?.trim() || trimmed
 
+    // „3x kartony duży” → produkt „kartony duży”, nie samo „duży”
+    if (rawUnit && /^(karton|kartony)$/i.test(rawUnit) && rawName) {
+      rawName = `${rawUnit} ${rawName}`.trim()
+      rawUnit = 'x'
+      keepFullProductName = true
+    }
+
     const rejoined = rejoinNameWhenUnitIsProduct(trimmed, rawUnit, rawName)
     rawUnit = rejoined.rawUnit
     rawName = rejoined.rawName
+
+    // „3x kartony duży” — x jest mnożnikiem, kartony część nazwy
+    if (rawUnit === 'x' && /^(karton|kartony)\s+\S/i.test(rawName)) {
+      keepFullProductName = true
+    }
   }
 
   if (!rawUnit) {
@@ -66,13 +80,18 @@ export function extractQuantityAndName(line: string): ExtractedLine {
   }
 
   const unit = normalizeUOM(rawUnit)
-  let cleanName = stripUnitTokensFromName(rawName)
+  let cleanName = keepFullProductName ? rawName : stripUnitTokensFromName(rawName)
 
   if (!cleanName && rawName) {
     cleanName = rawName
   }
 
-  if (rawUnit && isRawUnitToken(rawUnit) && !match?.[3]?.trim()) {
+  if (
+    !keepFullProductName &&
+    rawUnit &&
+    isRawUnitToken(rawUnit) &&
+    !match?.[3]?.trim()
+  ) {
     cleanName = stripUnitTokensFromName(trimmed.replace(/^\d+(?:[.,]\d+)?\s*/i, ''))
   }
 

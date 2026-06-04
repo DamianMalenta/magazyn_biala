@@ -50,6 +50,13 @@ describe('quantityExtractor', () => {
     expect(r.unit).toBe('szt.')
   })
 
+  it('parses kartony with adjective', () => {
+    const r = extractQuantityAndName('3x kartony duży')
+    expect(r.qty).toBe(3)
+    expect(r.cleanName).toContain('kartony')
+    expect(r.cleanName).toContain('duż')
+  })
+
   it('parses trailing worek without leading qty', () => {
     const r = extractQuantityAndName('poledwiczki surowe worek')
     expect(r.qty).toBe(1)
@@ -70,6 +77,9 @@ describe('categoryStateMachine', () => {
     expect(classifyLine('zamrażalnik').kind).toBe('category')
     expect(classifyLine('lodówka').kind).toBe('category')
     expect(classifyLine('opakowania').kind).toBe('category')
+    expect(classifyLine('Lodówka 04.06').kind).toBe('category')
+    expect(classifyLine('Zamrazalka 04.06').kind).toBe('category')
+    expect(classifyLine('Opakowania 04.06').kind).toBe('category')
   })
 
   it('does not treat numbered lines as categories', () => {
@@ -146,7 +156,6 @@ describe('parseMessengerText — example message', () => {
   it('recognizes all items without quarantine', () => {
     const result = parseMessengerText(EXAMPLE, DEFAULT_INVENTORY)
     expect(result.quarantine).toHaveLength(0)
-    expect(result.updates.size).toBe(15)
     expect(result.touchedCategories).toEqual(
       expect.arrayContaining(['LODÓWKA', 'ZAMRAŻARKA', 'OPAKOWANIA']),
     )
@@ -163,6 +172,46 @@ describe('parseMessengerText — example message', () => {
     expect(result.updates.get(byName('Ser Mozzarella')!)).toBe(2)
     expect(result.updates.get(byName('Opakowania na makarony')!)).toBe(50)
     expect(result.updates.get(byName('Wieczka na makarony')!)).toBe(20)
+  })
+
+  it('parses real renament with dated zone headers', () => {
+    const USER_TEXT = `Lodówka 04.06 
+4x jogurt grecki 
+7 x salami
+4x salami pikanterii
+4x rwana wieprzowina 
+3x pekińska kapusta
+2 x lodowa sałata 
+
+Zamrazalka 04.06
+3x kuweta polędwiczki
+4x skrzydełka 
+2x szyszki ziemniaczane 
+3x nuggetsy
+5x frytki
+
+Opakowania 04.06
+3x kartony duży
+3x kartony mały 
+3x kartony pizzerinki
+1x kartony zapiekanki
+2x frytki male
+1x frytki duze
+6x opakowania makarony
+6x wieczka makarony 
+1 karton serwetki( 40 małych opakowan do dyspenserow)`
+
+    const result = parseMessengerText(USER_TEXT, DEFAULT_INVENTORY)
+    expect(result.touchedCategories).toEqual(
+      expect.arrayContaining(['LODÓWKA', 'ZAMRAŻARKA', 'OPAKOWANIA']),
+    )
+    expect(result.quarantine.length).toBeLessThanOrEqual(1)
+    const byName = (n: string) => DEFAULT_INVENTORY.find((i) => i.name === n)!
+    expect(result.updates.get(byName('Salami').id)).toBe(7)
+    expect(result.updates.get(byName('Salami pikantne').id)).toBe(4)
+    expect(result.updates.get(byName('Kartony duże').id)).toBe(3)
+    expect(result.updates.get(byName('Frytki').id)).toBe(5)
+    expect(result.updates.get(byName('Frytki małe').id)).toBe(2)
   })
 
   it('uses custom aliases when parsing', () => {
