@@ -1,9 +1,10 @@
 interface SearchBarProps {
   searchEngine: 'google' | 'duckduckgo'
   embedded?: boolean
+  compact?: boolean
 }
 
-export function SearchBar({ searchEngine, embedded = false }: SearchBarProps) {
+export function SearchBar({ searchEngine, embedded = false, compact = false }: SearchBarProps) {
   const action = searchEngine === 'google' ? 'https://www.google.com/search' : 'https://duckduckgo.com/'
 
   return (
@@ -13,7 +14,9 @@ export function SearchBar({ searchEngine, embedded = false }: SearchBarProps) {
       target="_blank"
       className={
         embedded
-          ? 'flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-black/25 border border-white/10 focus-within:border-amber-500/40 transition'
+          ? `flex items-center gap-2 w-full bg-black/25 border border-white/10 focus-within:border-amber-500/40 transition ${
+              compact ? 'px-3 py-1.5 rounded-xl' : 'px-4 py-2.5 rounded-2xl gap-3'
+            }`
           : 'panel flex items-center gap-3 px-5 py-3'
       }
     >

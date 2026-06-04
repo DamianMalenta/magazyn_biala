@@ -13,17 +13,17 @@ export function WeeklyScheduleView({ schedule, employees }: WeeklyScheduleViewPr
   const todayShifts = (schedule[today] ?? []).length
 
   return (
-    <section className="panel panel-accent p-5 md:p-6 overflow-hidden">
+    <section className="panel panel-accent p-4 md:p-5 overflow-hidden">
       <SectionHeader
         icon="📅"
         title="Grafik tygodniowy"
         badge={`Dziś: ${DAY_LABELS[today]}`}
         badgeVariant="amber"
+        compact
       />
 
-      {/* Podgląd dnia — kto dziś pracuje */}
-      <div className="mb-4 p-3 rounded-2xl bg-amber-500/8 border border-amber-500/15">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400/80 mb-2">
+      <div className="mb-2.5 p-2.5 rounded-xl bg-amber-500/8 border border-amber-500/15">
+        <p className="text-[9px] font-bold uppercase tracking-wider text-amber-400/80 mb-1.5">
           Dziś na grafiku ({todayShifts} {todayShifts === 1 ? 'zmiana' : 'zmian'})
         </p>
         <div className="flex flex-wrap gap-2">
@@ -54,12 +54,12 @@ export function WeeklyScheduleView({ schedule, employees }: WeeklyScheduleViewPr
 
       <div className="overflow-x-auto scrollbar-thin -mx-1 px-1">
         <div className="min-w-[640px]">
-          <div className="grid grid-cols-8 gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-            <div className="p-2">Osoba</div>
+          <div className="grid grid-cols-8 gap-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+            <div className="p-1.5">Osoba</div>
             {DAY_KEYS.map((day) => (
               <div
                 key={day}
-                className={`p-2 text-center rounded-lg ${
+                className={`p-1.5 text-center rounded-lg ${
                   day === today ? 'bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/30' : ''
                 }`}
               >
@@ -70,10 +70,10 @@ export function WeeklyScheduleView({ schedule, employees }: WeeklyScheduleViewPr
           </div>
 
           {employees.map((emp) => (
-            <div key={emp.id} className="grid grid-cols-8 gap-1 mb-1">
-              <div className="p-2 flex items-center gap-2 rounded-lg bg-white/[0.04]">
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: emp.color }} />
-                <span className="font-medium truncate text-sm">{emp.name}</span>
+            <div key={emp.id} className="grid grid-cols-8 gap-0.5 mb-0.5">
+              <div className="p-1.5 flex items-center gap-1.5 rounded-lg bg-white/[0.04]">
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: emp.color }} />
+                <span className="font-medium truncate text-xs">{emp.name}</span>
               </div>
               {DAY_KEYS.map((day) => (
                 <DayCell key={day} day={day} today={today} employeeId={emp.id} schedule={schedule} empMap={empMap} />
@@ -104,7 +104,7 @@ function DayCell({
 
   return (
     <div
-      className={`p-1.5 min-h-[48px] rounded-lg text-center text-[11px] leading-tight flex items-center justify-center ${
+      className={`p-1 min-h-[40px] rounded-md text-center text-[10px] leading-tight flex items-center justify-center ${
         isToday ? 'bg-amber-500/10 ring-1 ring-amber-500/25 font-semibold' : 'bg-white/[0.02]'
       }`}
     >

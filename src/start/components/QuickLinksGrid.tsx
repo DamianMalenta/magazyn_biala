@@ -17,9 +17,9 @@ export function QuickLinksGrid({ links, activeEmbedId, onOpenLink }: QuickLinksG
   if (pinned.length === 0) return null
 
   return (
-    <section className="links-dock-wrap">
+    <section className="links-dock-wrap links-dock-wrap-compact">
       <p className="links-dock-label">Szybki dostęp</p>
-      <div className="links-dock">
+      <div className="links-dock links-dock-compact">
         {pinned.map((link) => {
           const isActive = activeEmbedId === link.id && (link.openMode ?? 'tab') === 'embed'
           return (

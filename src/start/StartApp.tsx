@@ -74,7 +74,7 @@ export default function StartApp() {
         </div>
       )}
 
-      <div className="relative min-h-screen max-w-6xl mx-auto px-4 md:px-6 py-5 md:py-8 flex flex-col gap-5 md:gap-6">
+      <div className="start-page-layout relative min-h-screen max-w-6xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col gap-3 md:gap-4">
         {sections.showShiftPulse && (
           <HeroHeader
             employees={config.employees}
@@ -87,6 +87,8 @@ export default function StartApp() {
             weather={weatherState}
             searchEngine={config.searchEngine}
             openHandoverCount={openHandoverCount}
+            handoverNotes={config.handoverNotes}
+            onHandoverUpdate={(handoverNotes) => update({ ...config, handoverNotes })}
           />
         )}
 
@@ -120,7 +122,7 @@ export default function StartApp() {
 
         {(sections.showSchedule || sections.showHandover) && (
           <div
-            className={`grid grid-cols-1 gap-5 md:gap-6 ${
+            className={`grid grid-cols-1 gap-3 md:gap-4 ${
               sections.showSchedule && sections.showHandover ? 'xl:grid-cols-5' : ''
             }`}
           >

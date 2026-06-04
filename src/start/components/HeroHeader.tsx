@@ -1,9 +1,19 @@
-import { getActiveShifts, getEmployeeMap, getGreeting, getTodayKey, formatShiftTime } from '../lib/scheduleUtils'
-import type { Employee, WeekSchedule } from '../types'
+import { useState } from 'react'
+import {
+  getActiveShifts,
+  getEmployeeMap,
+  getGreeting,
+  getTodayKey,
+  formatShiftTime,
+} from '../lib/scheduleUtils'
+import { loadHandoverAuthor, sortHandoverNotes } from '../lib/handoverUtils'
+import type { Employee, HandoverNote, WeekSchedule } from '../types'
 import { DAY_LABELS } from '../types'
 import { SearchBar } from './SearchBar'
 import { WeatherWidget } from './WeatherWidget'
 import type { WeatherData } from '../lib/weatherUtils'
+import { StartModal } from './StartModal'
+import { HandoverCard } from './HandoverCard'
 
 interface HeroHeaderProps {
   employees: Employee[]
@@ -16,6 +26,8 @@ interface HeroHeaderProps {
   weather: { data: WeatherData | null; loading: boolean; error: boolean }
   searchEngine: 'google' | 'duckduckgo'
   openHandoverCount: number
+  handoverNotes: HandoverNote[]
+  onHandoverUpdate: (notes: HandoverNote[]) => void
 }
 
 export function HeroHeader({
@@ -29,110 +41,187 @@ export function HeroHeader({
   weather,
   searchEngine,
   openHandoverCount,
+  handoverNotes,
+  onHandoverUpdate,
 }: HeroHeaderProps) {
   const today = getTodayKey()
   const active = getActiveShifts(schedule, today)
   const empMap = getEmployeeMap(employees)
   const greeting = getGreeting()
 
+  const [shiftModalOpen, setShiftModalOpen] = useState(false)
+  const [handoverModalOpen, setHandoverModalOpen] = useState(false)
+
+  const sortedHandovers = sortHandoverNotes(handoverNotes)
+  const activeHandovers = sortedHandovers.filter((n) => !n.done)
+
+  const toggleHandover = (id: string) => {
+    const doneBy = loadHandoverAuthor().trim() || 'Zespół'
+    onHandoverUpdate(
+      handoverNotes.map((n) => {
+        if (n.id !== id) return n
+        if (n.done) {
+          return { ...n, done: false, doneAt: undefined, doneBy: undefined }
+        }
+        return {
+          ...n,
+          done: true,
+          doneAt: new Date().toISOString(),
+          doneBy,
+        }
+      }),
+    )
+  }
+
   return (
-    <header className="hero-shell">
-      <div className="hero-inner panel p-6 md:p-8">
-        <div className="flex flex-col xl:flex-row xl:items-start gap-6">
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
+    <>
+      <header className="hero-shell">
+        <div className="hero-inner hero-inner-compact panel p-4 md:p-5">
+          <div className="hero-top-row">
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
               <span className="status-live">
                 <span className="status-live-dot" />
                 Na żywo
               </span>
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-amber-400/90">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-400/90">
                 {greeting} · {DAY_LABELS[today]}
               </span>
             </div>
-            <h1 className="text-3xl md:text-[2.75rem] font-black tracking-tight leading-none text-white">
-              {companyName}
-            </h1>
-            <p className="text-slate-400 mt-2 capitalize text-sm">{date}</p>
 
+            <div className="hero-meta-col">
+              {showWeather && (
+                <WeatherWidget
+                  data={weather.data}
+                  loading={weather.loading}
+                  error={weather.error}
+                  compact
+                />
+              )}
+              <div className="hero-clock-block">
+                <div className="clock-display clock-display-compact">{time.slice(0, 5)}</div>
+                <p className="text-[10px] text-slate-500 font-mono tabular-nums">{time.slice(6)}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="hero-title-row">
+            <h1 className="hero-title">{companyName}</h1>
+            <div className="hero-stat-group">
+              <HeroStatButton
+                label="Na zmianie"
+                value={active.length}
+                variant="live"
+                onClick={() => setShiftModalOpen(true)}
+              />
+              <HeroStatButton
+                label="Przekazania"
+                value={openHandoverCount}
+                variant="warn"
+                onClick={() => setHandoverModalOpen(true)}
+              />
+            </div>
+          </div>
+
+          <div className="hero-sub-row">
+            <p className="text-slate-400 capitalize text-xs shrink-0">{date}</p>
             {showSearch && (
-              <div className="mt-5 max-w-xl">
-                <SearchBar searchEngine={searchEngine} embedded />
+              <div className="hero-search-wrap">
+                <SearchBar searchEngine={searchEngine} embedded compact />
               </div>
             )}
-          </div>
-
-          <div className="shrink-0 text-left xl:text-right">
-            {showWeather && (
-              <div className="mb-3 xl:flex xl:justify-end">
-                <WeatherWidget data={weather.data} loading={weather.loading} error={weather.error} />
-              </div>
-            )}
-            <div className="clock-display">{time.slice(0, 5)}</div>
-            <p className="text-xs text-slate-500 mt-1 font-mono tabular-nums">{time.slice(6)}</p>
-            <div className="flex flex-wrap xl:justify-end gap-2 mt-4">
-              <StatChip label="Na zmianie" value={String(active.length)} variant="live" />
-              <StatChip label="Przekazania" value={String(openHandoverCount)} variant="warn" />
-            </div>
           </div>
         </div>
+      </header>
 
-        <div className="mt-6 pt-5 border-t border-white/[0.07]">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400/90 mb-3">
-            Teraz na zmianie
-          </p>
-          {active.length === 0 ? (
-            <p className="text-slate-500 text-sm">Nikogo na zmianie — sprawdź grafik poniżej.</p>
-          ) : (
-            <div className="flex gap-2 overflow-x-auto scrollbar-thin pb-1">
-              {active.map((shift) => {
-                const emp = empMap.get(shift.employeeId)
-                if (!emp) return null
-                return (
-                  <div key={`${shift.employeeId}-${shift.start}`} className="shift-chip shrink-0">
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                      style={{ background: `${emp.color}30`, color: emp.color, border: `1px solid ${emp.color}55` }}
-                    >
-                      {emp.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-sm truncate">{emp.name}</p>
-                      <p className="text-[10px] text-slate-400 truncate">
-                        {emp.role} · {formatShiftTime(shift)}
-                      </p>
-                    </div>
+      <StartModal
+        open={shiftModalOpen}
+        onClose={() => setShiftModalOpen(false)}
+        title={`Na zmianie teraz (${active.length})`}
+        icon="👥"
+        maxWidth="md"
+      >
+        {active.length === 0 ? (
+          <p className="text-sm text-slate-400 py-2">Nikogo na zmianie w tej chwili — sprawdź grafik poniżej.</p>
+        ) : (
+          <ul className="space-y-2">
+            {active.map((shift) => {
+              const emp = empMap.get(shift.employeeId)
+              if (!emp) return null
+              return (
+                <li key={`${shift.employeeId}-${shift.start}`} className="shift-chip-modal">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                    style={{
+                      background: `${emp.color}30`,
+                      color: emp.color,
+                      border: `1px solid ${emp.color}55`,
+                    }}
+                  >
+                    {emp.name.charAt(0)}
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </header>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm">{emp.name}</p>
+                    <p className="text-xs text-slate-400">
+                      {emp.role} · {formatShiftTime(shift)}
+                    </p>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </StartModal>
+
+      <StartModal
+        open={handoverModalOpen}
+        onClose={() => setHandoverModalOpen(false)}
+        title={`Przekazania (${openHandoverCount} otwartych)`}
+        icon="📌"
+        maxWidth="lg"
+      >
+        <p className="text-[11px] text-slate-500 mb-3">
+          Szybki podgląd — pełna tablica z dodawaniem notatek jest w sekcji po prawej / poniżej.
+        </p>
+        {activeHandovers.length === 0 ? (
+          <p className="text-sm text-slate-400 py-2 italic">Brak otwartych przekazań — wszystko ogarnięte.</p>
+        ) : (
+          <div className="space-y-2 max-h-[min(50vh,360px)] overflow-y-auto scrollbar-thin pr-1">
+            {activeHandovers.map((note) => (
+              <HandoverCard
+                key={note.id}
+                note={note}
+                employees={employees}
+                onToggle={() => toggleHandover(note.id)}
+                compact
+              />
+            ))}
+          </div>
+        )}
+      </StartModal>
+    </>
   )
 }
 
-function StatChip({
+function HeroStatButton({
   label,
   value,
   variant,
+  onClick,
 }: {
   label: string
-  value: string
+  value: number
   variant: 'live' | 'warn'
+  onClick: () => void
 }) {
   return (
-    <div
-      className={`px-3 py-2 rounded-xl border text-left ${
-        variant === 'live'
-          ? 'bg-emerald-500/10 border-emerald-500/25'
-          : 'bg-amber-500/10 border-amber-500/25'
-      }`}
+    <button
+      type="button"
+      onClick={onClick}
+      className={`hero-stat-btn ${variant === 'live' ? 'hero-stat-btn-live' : 'hero-stat-btn-warn'}`}
+      title={`${label}: ${value} — kliknij, aby zobaczyć szczegóły`}
     >
-      <p className="text-[9px] uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={`text-lg font-black tabular-nums ${variant === 'live' ? 'text-emerald-300' : 'text-amber-300'}`}>
-        {value}
-      </p>
-    </div>
+      <span className="hero-stat-label">{label}</span>
+      <span className="hero-stat-value">{value}</span>
+    </button>
   )
 }
