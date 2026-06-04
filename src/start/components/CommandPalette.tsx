@@ -96,11 +96,11 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin }:
   return (
     <div className="command-overlay" onClick={onClose}>
       <div
-        className="w-full max-w-xl glass-strong rounded-2xl overflow-hidden shadow-2xl"
+        className="w-full max-w-xl panel-strong rounded-2xl overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-white/10">
-          <span className="text-slate-500">⌘</span>
+          <span className="text-amber-500/70">⌘</span>
           <input
             ref={inputRef}
             value={query}
@@ -123,7 +123,7 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin }:
                     onClose()
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${
-                    i === selected ? 'bg-violet-500/20' : 'hover:bg-white/5'
+                    i === selected ? 'bg-amber-500/15' : 'hover:bg-white/5'
                   }`}
                 >
                   {item.link ? (
@@ -142,11 +142,6 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin }:
             ))
           )}
         </ul>
-        <div className="px-4 py-2 border-t border-white/10 text-[10px] text-slate-600 flex gap-4">
-          <span>↑↓ nawigacja</span>
-          <span>↵ wybierz</span>
-          <span>Ctrl+K otwórz</span>
-        </div>
       </div>
     </div>
   )

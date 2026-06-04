@@ -3,8 +3,8 @@ import { useStartPageConfig } from './hooks/useStartPageConfig'
 import { useClock } from './hooks/useClock'
 import { useAdminAuth } from './hooks/useAdminAuth'
 import { isFirstVisit } from './lib/storage'
+import { HeroHeader } from './components/HeroHeader'
 import { QuickLinksGrid } from './components/QuickLinksGrid'
-import { ShiftPulse } from './components/ShiftPulse'
 import { WeeklyScheduleView } from './components/WeeklyScheduleView'
 import { InfoCards } from './components/InfoCards'
 import { HandoverBoard } from './components/HandoverBoard'
@@ -21,6 +21,8 @@ export default function StartApp() {
   const [adminOpen, setAdminOpen] = useState(false)
   const [firstVisit] = useState(() => isFirstVisit())
   const { sections } = config
+
+  const openHandoverCount = config.handoverNotes.filter((n) => !n.done).length
 
   useEffect(() => {
     if (firstVisit) setShowLogin(true)
@@ -48,76 +50,77 @@ export default function StartApp() {
     return ok
   }
 
-  const handleResetPin = () => {
-    resetAdminPin()
-  }
-
-  const handleFullReset = () => {
-    reset()
-  }
-
   return (
     <>
       <div className="mesh-bg" />
 
       {firstVisit && !isAdmin && !showLogin && (
-        <div className="relative max-w-7xl mx-auto px-4 md:px-8 pt-4">
+        <div className="relative max-w-6xl mx-auto px-4 md:px-6 pt-4">
           <button
             type="button"
             onClick={() => setShowLogin(true)}
-            className="w-full p-4 rounded-2xl bg-violet-600/20 border border-violet-500/40 text-violet-200 text-sm font-semibold hover:bg-violet-600/30 transition text-center"
+            className="w-full p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-sm font-semibold hover:bg-amber-500/20 transition text-center"
           >
-            🎉 Pierwsza konfiguracja — kliknij tutaj, aby ustawić stronę startową (PIN: 2024)
+            🎉 Pierwsza konfiguracja — kliknij tutaj (PIN: 2024)
           </button>
         </div>
       )}
 
-      <div className="relative min-h-screen max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10 flex flex-col gap-6">
+      <div className="relative min-h-screen max-w-6xl mx-auto px-4 md:px-6 py-5 md:py-8 flex flex-col gap-5 md:gap-6">
         {sections.showShiftPulse && (
-          <ShiftPulse
+          <HeroHeader
             employees={config.employees}
             schedule={config.schedule}
             companyName={config.companyName}
             time={time}
             date={date}
+            showSearch={sections.showSearch}
+            searchEngine={config.searchEngine}
+            openHandoverCount={openHandoverCount}
           />
         )}
 
-        {sections.showSearch && <SearchBar searchEngine={config.searchEngine} />}
+        {!sections.showShiftPulse && sections.showSearch && (
+          <div className="panel p-4">
+            <SearchBar searchEngine={config.searchEngine} />
+          </div>
+        )}
 
         {sections.showQuickLinks && <QuickLinksGrid links={config.quickLinks} />}
 
         {(sections.showSchedule || sections.showHandover) && (
-          <div className={`grid grid-cols-1 gap-6 ${sections.showSchedule && sections.showHandover ? 'xl:grid-cols-2' : ''}`}>
+          <div
+            className={`grid grid-cols-1 gap-5 md:gap-6 ${
+              sections.showSchedule && sections.showHandover ? 'xl:grid-cols-5' : ''
+            }`}
+          >
             {sections.showSchedule && (
-              <WeeklyScheduleView schedule={config.schedule} employees={config.employees} />
+              <div className={sections.showHandover ? 'xl:col-span-3' : ''}>
+                <WeeklyScheduleView schedule={config.schedule} employees={config.employees} />
+              </div>
             )}
             {sections.showHandover && (
-              <HandoverBoard
-                notes={config.handoverNotes}
-                onUpdate={(handoverNotes) => update({ ...config, handoverNotes })}
-              />
+              <div className={sections.showSchedule ? 'xl:col-span-2' : ''}>
+                <HandoverBoard
+                  notes={config.handoverNotes}
+                  onUpdate={(handoverNotes) => update({ ...config, handoverNotes })}
+                />
+              </div>
             )}
           </div>
         )}
 
-        {sections.showInfoCards && (
-          <div>
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2 px-1">
-              <span>📋</span> Ważne informacje i instrukcje
-            </h2>
-            <InfoCards cards={config.infoCards} />
-          </div>
-        )}
+        {sections.showInfoCards && <InfoCards cards={config.infoCards} />}
 
-        <footer className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5 text-xs text-slate-600">
+        <footer className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/[0.06] text-[11px] text-slate-600">
           <p>{config.tagline}</p>
-          <div className="flex items-center gap-4">
-            <button type="button" onClick={() => setCommandOpen(true)} className="hover:text-violet-400 transition flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white/10">Ctrl+K</kbd> Szybkie wyszukiwanie
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => setCommandOpen(true)} className="hover:text-amber-400/80 transition flex items-center gap-1.5">
+              <kbd className="px-1.5 py-0.5 rounded-md bg-white/[0.06] border border-white/[0.08] font-mono text-[10px]">Ctrl+K</kbd>
+              Szukaj
             </button>
-            <button type="button" onClick={openAdmin} className="hover:text-violet-400 transition flex items-center gap-1">
-              ⚙️ Panel admina
+            <button type="button" onClick={openAdmin} className="hover:text-amber-400/80 transition">
+              ⚙️ Admin
             </button>
           </div>
         </footer>
@@ -136,8 +139,8 @@ export default function StartApp() {
           onLogin={handleLogin}
           onClose={() => setShowLogin(false)}
           isFirstVisit={firstVisit}
-          onResetPin={handleResetPin}
-          onFullReset={handleFullReset}
+          onResetPin={resetAdminPin}
+          onFullReset={reset}
         />
       )}
 

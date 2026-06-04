@@ -7,26 +7,29 @@ interface QuickLinksGridProps {
 
 export function QuickLinksGrid({ links }: QuickLinksGridProps) {
   const pinned = links.filter((l) => l.pinned)
+  if (pinned.length === 0) return null
 
   return (
-    <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-      {pinned.map((link, index) => (
-        <a
-          key={link.id}
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="link-tile glass group"
-        >
-          <div className="link-tile-glow" style={{ background: link.color }} />
-          <div className="float-gentle relative" style={{ animationDelay: `${index * 0.3}s` }}>
-            <LinkIcon link={link} size="tile" />
-          </div>
-          <span className="text-sm md:text-base font-bold tracking-wide text-white/90 group-hover:text-white">
-            {link.label}
-          </span>
-        </a>
-      ))}
+    <section className="links-dock-wrap">
+      <p className="links-dock-label">Szybki dostęp</p>
+      <div className="links-dock">
+        {pinned.map((link) => (
+          <a
+            key={link.id}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link-tile-dock group"
+            title={link.label}
+          >
+            <div className="link-tile-dock-icon" style={{ '--tile-accent': link.color } as React.CSSProperties}>
+              <div className="link-tile-dock-glow" style={{ background: link.color }} />
+              <LinkIcon link={link} size="tile" />
+            </div>
+            <span className="link-tile-dock-label">{link.label}</span>
+          </a>
+        ))}
+      </div>
     </section>
   )
 }

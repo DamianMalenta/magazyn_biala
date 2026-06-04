@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { uid } from '../lib/storage'
 import { loadHandoverAuthor, saveHandoverAuthor, sortHandoverNotes } from '../lib/handoverUtils'
 import type { HandoverNote } from '../types'
+import { SectionHeader } from './SectionHeader'
 
 interface HandoverBoardProps {
   notes: HandoverNote[]
@@ -54,15 +55,13 @@ export function HandoverBoard({ notes, onUpdate }: HandoverBoardProps) {
   }
 
   return (
-    <section className="glass rounded-3xl p-6 flex flex-col gap-4">
-      <h2 className="text-lg font-bold flex items-center gap-2">
-        <span>📌</span> Tablica przekazań między zmianami
-        {active.length > 0 && (
-          <span className="ml-auto text-xs font-normal px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
-            {active.length} do zrobienia
-          </span>
-        )}
-      </h2>
+    <section className="panel panel-accent p-6 flex flex-col gap-4">
+      <SectionHeader
+        icon="📌"
+        title="Przekazania między zmianami"
+        badge={active.length > 0 ? `${active.length} otwartych` : undefined}
+        badgeVariant="amber"
+      />
 
       {/* Formularz dla pracowników */}
       <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2">
