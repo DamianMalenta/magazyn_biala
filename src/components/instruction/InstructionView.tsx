@@ -169,7 +169,11 @@ export function InstructionView() {
 
       {/* Messenger template */}
       <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 md:p-6">
-        <h3 className="text-lg font-bold text-white mb-2">Szablon wiadomości (Messenger)</h3>
+        <h3 className="text-lg font-bold text-white mb-2">Szablon renamentu (Messenger)</h3>
+        <p className="text-xs text-slate-500 mb-3">
+          Tylko do okresowej kontroli stanu faktycznego — nie do codziennych przywozów i wywozów (+/− na
+          komputerze).
+        </p>
         <ul className="text-xs text-slate-500 space-y-1 mb-4 list-disc pl-4">
           {MESSENGER_RULES_SHORT.map((r) => (
             <li key={r}>{r}</li>

@@ -23,9 +23,8 @@ export function DesktopOnlyGuard({ children }: DesktopOnlyGuardProps) {
           na komputerze w lokalu — tak mamy jedną, wspólną bazę na tym urządzeniu.
         </p>
         <ul className="text-left text-xs text-slate-400 space-y-2 mb-6 list-disc pl-5">
-          <li>Otwórz magazyn na komputerze w pracy</li>
-          <li>Wklej wiadomość z Messengera w Smart Paste</li>
-          <li>Kliknij „Przetwórz tekst”</li>
+          <li>Renament: wklej wiadomość z grupy w Smart Paste</li>
+          <li>Przywóz/wywóz: tylko +/− na komputerze (bez Messengera)</li>
         </ul>
         <p className="text-[11px] text-slate-500 font-mono break-all">{APP_URL}</p>
         <p className="mt-4 text-[10px] text-slate-600">

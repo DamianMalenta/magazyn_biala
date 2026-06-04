@@ -1,29 +1,41 @@
-📦 MAGAZYN — zasady (krótko)
+📦 MAGAZYN — jak to działa (przeczytajcie)
 
 🔗 Tylko KOMPUTER w pracy:
 https://damianmalenta.github.io/magazyn_biala/
 (Na telefonie aplikacja nie działa.)
 
 ━━━━━━━━━━━━━━━━━━━━
-
-KTO I CO:
-• Stan wpisujemy na TEJ GRUPIE — każdy po swojej zmianie / inwentaryzacji
-• Potem na PC: kopiujecie CAŁĄ wiadomość → Smart Paste → PRZETWÓRZ TEKST
-• Zakładka INSTRUKCJA w aplikacji = zdjęcia i opis
-
+DWIE RZECZY — NIE MYLCIE!
 ━━━━━━━━━━━━━━━━━━━━
 
-JAK PISAĆ NA GRUPĘ:
+1️⃣ RENAMENT (co jakiś czas)
+→ Sprawdzacie FAKTYCZNY stan w magazynie (liczycie na miejscu).
+→ Wpisujecie go na GRUPĘ Messenger (szablon poniżej).
+→ Na komputerze: kopiujecie wiadomość → Smart Paste → PRZETWÓRZ TEKST.
+→ Porównujecie z tym, co pokazuje system — po renamencie ma być zgodne z rzeczywistością.
+
+2️⃣ CODZIENNIE: przywóz / wywóz towaru
+→ NIE piszecie na Messengerze!
+→ Tylko na komputerze: znajdziecie towar → + lub − (albo wpisujecie liczbę).
+→ To szybka korekta: co przyjechało, co zabrano w trakcie dnia.
+
+Messenger = tylko renament (kontrola stanu faktycznego).
+Komputer +/− = bieżące ruchy magazynowe.
+
+━━━━━━━━━━━━━━━━━━━━
+JAK PISAĆ RENAMENT NA GRUPĘ
+━━━━━━━━━━━━━━━━━━━━
+
 • linia: zamrażalnik / lodówka / opakowania
 • pod spodem: 4x nugetsy | 2 kg ser | 1x papryka worek
-• tylko jedna strefa? → tylko jej nagłówek + towary (reszta magazynu bez zmian)
-• cała strefa? → wszystko co jest; brakuje na liście = 0
+• tylko jedna strefa? → tylko jej nagłówek + towary (reszta w systemie bez zmian)
+• cała strefa? → wszystko co jest; brakuje na liście = 0 w systemie
 
 ━━━━━━━━━━━━━━━━━━━━
+SZABLON RENAMENTU — skopiuj, zmień datę i ilości
+━━━━━━━━━━━━━━━━━━━━
 
-SZABLON — SKOPIUJ I UZUPEŁNIJ:
-
-Magazyn — 04.06.2026 14:00
+Renament magazyn — 04.06.2026 14:00
 
 zamrażalnik
 4x nugetsy
@@ -46,8 +58,9 @@ opakowania
 
 ━━━━━━━━━━━━━━━━━━━━
 
-Przykład — sama lodówka:
+Renament — sama lodówka:
 
+Renament — lodówka 04.06.2026
 lodówka
 2x jogurt grecki
 2 kg ser mozzarella

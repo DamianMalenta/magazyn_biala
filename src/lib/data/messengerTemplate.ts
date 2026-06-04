@@ -1,5 +1,5 @@
-/** Gotowy szablon wiadomości dla pracowników (Messenger). */
-export const MESSENGER_TEMPLATE = `Magazyn — 04.06.2026 14:00
+/** Szablon renamentu — wiadomość na grupę Messenger (nie codzienne +/−). */
+export const MESSENGER_TEMPLATE = `Renament magazyn — 04.06.2026 14:00
 
 zamrażalnik
 4x nugetsy
@@ -21,10 +21,10 @@ opakowania
 20 x wieczka na makarony`
 
 export const MESSENGER_RULES_SHORT = [
-  'Stan wpisujecie na grupę — każdy po zmianie / po inwentaryzacji',
-  'Na komputerze: kopiujecie wiadomość → Smart Paste → Przetwórz tekst',
-  'Nagłówek strefy: zamrażalnik / lodówka / opakowania',
+  'Renament (Messenger): co jakiś czas — stan faktyczny vs system',
+  'Przywóz/wywóz: tylko +/− na komputerze — bez wpisywania na grupę',
+  'Po renamencie na PC: kopiuj wiadomość → Smart Paste → Przetwórz',
+  'Nagłówek: zamrażalnik / lodówka / opakowania',
   'Linia towaru: 4x nugetsy · 2 kg ser · 1x papryka worek',
-  'Tylko jedna strefa w wiadomości = zmienia się tylko ta strefa',
-  'Cała strefa = wypisujecie wszystko co jest; brak na liście = 0',
+  'Jedna strefa w wiadomości = aktualizuje się tylko ta strefa',
 ]

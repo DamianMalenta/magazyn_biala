@@ -71,7 +71,7 @@ export const INSTRUCTION_STEPS: InstructionStep[] = [
 ]
 
 export const PHONE_POLICY_NOTE =
-  'Stan piszecie na grupę Messenger z telefonu. Magazyn w aplikacji — tylko na komputerze w pracy (wklejenie i przetworzenie).'
+  'Renament możecie wpisać na grupę z telefonu. Aplikację magazynu (wklejanie +/−) obsługujecie tylko na komputerze w pracy.'
 
 export const INSTRUCTION_RULES: InstructionRule[] = [
   {
