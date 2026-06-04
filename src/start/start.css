@@ -218,3 +218,56 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ── Panel osadzonej strony (embed) ── */
+.embed-overlay {
+  @apply fixed inset-0 z-[90] flex items-end sm:items-center justify-center p-3 sm:p-6;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(12px);
+}
+
+.embed-panel {
+  @apply w-full max-w-5xl rounded-2xl border border-white/10 overflow-hidden flex flex-col;
+  background: #0f1117;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  max-height: calc(var(--embed-h, 480px) + 56px);
+}
+
+.embed-panel-full {
+  @apply max-w-[96vw];
+  max-height: 96vh;
+}
+
+.embed-panel-header {
+  @apply flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-white/[0.03] shrink-0;
+}
+
+.embed-panel-body {
+  @apply flex flex-col flex-1 min-h-0;
+  height: var(--embed-h, 480px);
+}
+
+.embed-iframe {
+  @apply w-full flex-1 border-0 bg-black min-h-0;
+  height: 100%;
+}
+
+.embed-fallback {
+  @apply flex flex-col items-center justify-center h-full p-8 text-center;
+}
+
+.embed-btn {
+  @apply px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-sm font-semibold transition;
+}
+
+.embed-btn-primary {
+  @apply bg-amber-600 hover:bg-amber-500 text-white;
+}
+
+.link-open-badge {
+  @apply absolute -top-1 -right-1 w-5 h-5 rounded-md bg-amber-600 text-[10px] font-bold flex items-center justify-center shadow-lg;
+}
+
+.link-tile-dock-icon {
+  @apply relative;
+}

@@ -50,6 +50,8 @@ export function normalizeQuickLink(link: QuickLink): QuickLink {
   return {
     ...link,
     iconMode,
+    openMode: link.openMode ?? 'tab',
+    embedSize: link.embedSize ?? 'medium',
     icon: link.icon?.trim() || '🔗',
   }
 }

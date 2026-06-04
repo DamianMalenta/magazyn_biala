@@ -17,9 +17,10 @@ interface CommandPaletteProps {
   links: QuickLink[]
   infoCards: InfoCard[]
   onOpenAdmin: () => void
+  onOpenLink: (link: QuickLink) => void
 }
 
-export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin }: CommandPaletteProps) {
+export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin, onOpenLink }: CommandPaletteProps) {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -32,7 +33,7 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin }:
         sublabel: l.url,
         icon: l.icon,
         link: l,
-        action: () => window.open(l.url, '_blank'),
+        action: () => onOpenLink(l),
       })),
       ...infoCards.map((c) => ({
         id: `info-${c.id}`,
@@ -55,7 +56,7 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin }:
     return list.filter(
       (i) => i.label.toLowerCase().includes(q) || i.sublabel?.toLowerCase().includes(q),
     )
-  }, [links, infoCards, query, onOpenAdmin])
+  }, [links, infoCards, query, onOpenAdmin, onOpenLink])
 
   useEffect(() => {
     if (open) {

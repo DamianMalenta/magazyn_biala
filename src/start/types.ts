@@ -1,4 +1,6 @@
 export type IconMode = 'auto' | 'manual'
+export type LinkOpenMode = 'tab' | 'embed' | 'window'
+export type EmbedSize = 'compact' | 'medium' | 'large' | 'fullscreen'
 
 export type DayKey = 'pon' | 'wt' | 'sr' | 'czw' | 'pt' | 'sob' | 'nd'
 
@@ -20,6 +22,8 @@ export interface QuickLink {
   url: string
   icon: string
   iconMode: IconMode
+  openMode: LinkOpenMode
+  embedSize: EmbedSize
   color: string
   pinned: boolean
 }

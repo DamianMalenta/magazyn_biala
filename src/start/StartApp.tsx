@@ -12,6 +12,8 @@ import { SearchBar } from './components/SearchBar'
 import { CommandPalette } from './components/CommandPalette'
 import { AdminLogin } from './components/AdminLogin'
 import { AdminPanel } from './components/AdminPanel'
+import { useLinkOpener } from './hooks/useLinkOpener'
+import { EmbeddedPanel } from './components/EmbeddedPanel'
 
 export default function StartApp() {
   const { config, update, reset, resetAdminPin, exportBackup, importBackup } = useStartPageConfig()
@@ -20,6 +22,7 @@ export default function StartApp() {
   const [commandOpen, setCommandOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
   const [firstVisit] = useState(() => isFirstVisit())
+  const { openLink, embeddedLink, closeEmbed, openEmbeddedInTab } = useLinkOpener()
   const { sections } = config
 
   const openHandoverCount = config.handoverNotes.filter((n) => !n.done).length
@@ -86,7 +89,7 @@ export default function StartApp() {
           </div>
         )}
 
-        {sections.showQuickLinks && <QuickLinksGrid links={config.quickLinks} />}
+        {sections.showQuickLinks && <QuickLinksGrid links={config.quickLinks} onOpenLink={openLink} />}
 
         {(sections.showSchedule || sections.showHandover) && (
           <div
@@ -126,12 +129,17 @@ export default function StartApp() {
         </footer>
       </div>
 
+      {embeddedLink && (
+        <EmbeddedPanel link={embeddedLink} onClose={closeEmbed} onOpenTab={openEmbeddedInTab} />
+      )}
+
       <CommandPalette
         open={commandOpen}
         onClose={() => setCommandOpen(false)}
         links={config.quickLinks}
         infoCards={config.infoCards}
         onOpenAdmin={() => { setCommandOpen(false); openAdmin() }}
+        onOpenLink={openLink}
       />
 
       {showLogin && !isAdmin && (

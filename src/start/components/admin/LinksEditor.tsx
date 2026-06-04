@@ -1,6 +1,12 @@
 import { uid } from '../../lib/storage'
 import { moveItem } from '../../lib/arrayUtils'
 import { extractHostname } from '../../lib/faviconUtils'
+import {
+  OPEN_MODE_DESCRIPTIONS,
+  OPEN_MODE_LABELS,
+  getEmbedInfo,
+} from '../../lib/linkOpenUtils'
+import type { EmbedSize, LinkOpenMode } from '../../types'
 import type { IconMode, QuickLink, StartPageConfig } from '../../types'
 import { LinkIcon } from '../LinkIcon'
 import {
@@ -44,6 +50,8 @@ export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
           url: 'https://',
           icon: '🔗',
           iconMode: 'auto',
+          openMode: 'tab',
+          embedSize: 'medium',
           color: '#8b5cf6',
           pinned: true,
         },
@@ -199,6 +207,52 @@ function LinkCard({
               <p className="text-[10px] text-emerald-400/80 mt-1.5">Źródło ikony: {hostname}</p>
             )}
           </Field>
+
+
+          <div>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+              Sposób otwierania
+            </span>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {(['tab', 'embed', 'window'] as LinkOpenMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => onUpdate(link.id, 'openMode', mode)}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                    (link.openMode ?? 'tab') === mode
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-white/5 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {OPEN_MODE_LABELS[mode]}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-slate-500 mb-2">
+              {OPEN_MODE_DESCRIPTIONS[link.openMode ?? 'tab']}
+            </p>
+            {(link.openMode ?? 'tab') === 'embed' && (
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-[10px] text-slate-500">Wysokość panelu:</span>
+                {(['compact', 'medium', 'large', 'fullscreen'] as EmbedSize[]).map((sz) => (
+                  <button
+                    key={sz}
+                    type="button"
+                    onClick={() => onUpdate(link.id, 'embedSize', sz)}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-semibold ${
+                      (link.embedSize ?? 'medium') === sz ? 'bg-violet-600 text-white' : 'bg-white/5 text-slate-400'
+                    }`}
+                  >
+                    {sz === 'compact' ? 'Mały' : sz === 'medium' ? 'Średni' : sz === 'large' ? 'Duży' : 'Pełny'}
+                  </button>
+                ))}
+                {!getEmbedInfo(link.url).supportsEmbed && link.url.length > 12 && (
+                  <span className="text-[10px] text-amber-400">⚠ Strona może blokować podgląd</span>
+                )}
+              </div>
+            )}
+          </div>
 
           <div>
             <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
