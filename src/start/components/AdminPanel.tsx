@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { uid } from '../lib/storage'
 import { moveItem } from '../lib/arrayUtils'
-import { DAY_KEYS, DAY_LABELS, type DayKey, type StartPageConfig } from '../types'
+import type { StartPageConfig } from '../types'
 import { LinksEditor } from './admin/LinksEditor'
+import { ScheduleEditor } from './admin/ScheduleEditor'
 import {
   TabHeader,
   Field,
@@ -112,7 +113,7 @@ export function AdminPanel({
           {tab === 'wyglad' && <SectionsTab config={config} patch={patch} />}
           {tab === 'linki' && <LinksEditor config={config} patch={patch} onToast={notify} />}
           {tab === 'info' && <InfoTab config={config} patch={patch} onToast={notify} />}
-          {tab === 'grafik' && <ScheduleTab config={config} patch={patch} onToast={notify} />}
+          {tab === 'grafik' && <ScheduleEditor config={config} patch={patch} onToast={notify} />}
           {tab === 'przekazania' && <HandoverTab config={config} patch={patch} onToast={notify} />}
           {tab === 'backup' && (
             <BackupTab onExport={onExport} onImport={onImport} onReset={onReset} onToast={notify} />
@@ -289,107 +290,6 @@ function InfoTab({
             </div>
           </article>
         ))}
-      </div>
-    </div>
-  )
-}
-
-function ScheduleTab({
-  config,
-  patch,
-  onToast,
-}: {
-  config: StartPageConfig
-  patch: (p: Partial<StartPageConfig>) => void
-  onToast: (msg: string) => void
-}) {
-  const updateEmployee = (id: string, field: string, value: string) => {
-    patch({ employees: config.employees.map((e) => (e.id === id ? { ...e, [field]: value } : e)) })
-  }
-
-  const addEmployee = () => {
-    patch({ employees: [...config.employees, { id: uid(), name: 'Nowy', color: '#8b5cf6', role: 'Zespół' }] })
-    onToast('Dodano pracownika')
-  }
-
-  const removeEmployee = (id: string, name: string) => {
-    if (!window.confirm(`Usunąć ${name} z grafiku?`)) return
-    const schedule = { ...config.schedule }
-    for (const day of DAY_KEYS) schedule[day] = schedule[day].filter((s) => s.employeeId !== id)
-    patch({ employees: config.employees.filter((e) => e.id !== id), schedule })
-    onToast('Usunięto pracownika')
-  }
-
-  const setShift = (day: DayKey, employeeId: string, value: string) => {
-    const schedule = { ...config.schedule }
-    const others = schedule[day].filter((s) => s.employeeId !== employeeId)
-    if (!value.trim() || value.trim() === '-') {
-      schedule[day] = others
-    } else {
-      const match = value.match(/^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})(?:\s*(.*))?$/)
-      if (match) {
-        const [, start, end, note] = match
-        const pad = (t: string) => { const [h, m] = t.split(':'); return `${h.padStart(2, '0')}:${m}` }
-        schedule[day] = [...others, { employeeId, start: pad(start), end: pad(end), note: note?.trim() }]
-      }
-    }
-    patch({ schedule })
-  }
-
-  const getShiftText = (day: DayKey, employeeId: string) => {
-    const shift = config.schedule[day]?.find((s) => s.employeeId === employeeId)
-    if (!shift) return ''
-    return `${shift.start}–${shift.end}${shift.note ? ` ${shift.note}` : ''}`
-  }
-
-  return (
-    <div>
-      <TabHeader
-        title="Grafik tygodniowy"
-        description="Zarządzaj zespołem i godzinami pracy. Format: 08:00-16:00 lub z notatką: 10:00-18:00 sala. Puste pole = dzień wolny."
-      />
-
-      <div className="space-y-3 mb-6">
-        {config.employees.map((emp) => (
-          <div key={emp.id} className="flex gap-2 items-center p-3 rounded-xl bg-white/5 border border-white/10">
-            <input className={`${inputCls} w-12 shrink-0`} type="color" value={emp.color} onChange={(e) => updateEmployee(emp.id, 'color', e.target.value)} />
-            <input className={`${inputCls} flex-1`} value={emp.name} onChange={(e) => updateEmployee(emp.id, 'name', e.target.value)} placeholder="Imię" />
-            <input className={`${inputCls} flex-1`} value={emp.role} onChange={(e) => updateEmployee(emp.id, 'role', e.target.value)} placeholder="Rola / stanowisko" />
-            <button type="button" onClick={() => removeEmployee(emp.id, emp.name)} className={btnDanger}>Usuń</button>
-          </div>
-        ))}
-        <button type="button" onClick={addEmployee} className={`${btnPrimary} w-full`}>+ Dodaj pracownika</button>
-      </div>
-
-      <div className="overflow-x-auto scrollbar-thin rounded-2xl border border-white/10">
-        <table className="w-full text-xs">
-          <thead className="bg-white/5">
-            <tr className="text-slate-500 uppercase">
-              <th className="p-3 text-left">Osoba</th>
-              {DAY_KEYS.map((d) => <th key={d} className="p-3">{DAY_LABELS[d]}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {config.employees.map((emp) => (
-              <tr key={emp.id} className="border-t border-white/5">
-                <td className="p-3 font-medium whitespace-nowrap">
-                  <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ background: emp.color }} />
-                  {emp.name}
-                </td>
-                {DAY_KEYS.map((day) => (
-                  <td key={day} className="p-1.5">
-                    <input
-                      className="w-full px-1.5 py-2 rounded-lg bg-white/5 border border-white/10 outline-none focus:border-violet-500 text-center font-mono text-[10px]"
-                      value={getShiftText(day, emp.id)}
-                      onChange={(e) => setShift(day, emp.id, e.target.value)}
-                      placeholder="—"
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   )
