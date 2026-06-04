@@ -128,6 +128,7 @@ export const DEFAULT_CONFIG: StartPageConfig = {
       content: 'Tu wpisuj ważne info między zmianami — np. brakujące produkty, rezerwacje VIP, usterki sprzętu.',
       createdAt: new Date().toISOString(),
       pinned: true,
+      done: false,
     },
   ],
 }

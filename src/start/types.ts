@@ -18,9 +18,7 @@ export interface QuickLink {
   id: string
   label: string
   url: string
-  /** Emoji używane ręcznie lub jako zapas gdy favicon się nie załaduje */
   icon: string
-  /** auto = favicon ze strony, manual = emoji z pola icon */
   iconMode: IconMode
   color: string
   pinned: boolean
@@ -56,6 +54,9 @@ export interface HandoverNote {
   content: string
   createdAt: string
   pinned: boolean
+  done: boolean
+  doneAt?: string
+  doneBy?: string
 }
 
 export interface PageSections {

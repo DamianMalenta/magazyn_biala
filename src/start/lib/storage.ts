@@ -1,5 +1,6 @@
 import { DEFAULT_CONFIG, DEFAULT_SECTIONS } from './defaultConfig'
 import { normalizeQuickLink } from './faviconUtils'
+import { normalizeHandoverNote } from './handoverUtils'
 import type { StartPageConfig } from '../types'
 
 const STORAGE_KEY = 'startpage-config-v1'
@@ -24,7 +25,7 @@ function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
     infoCards: parsed.infoCards ?? DEFAULT_CONFIG.infoCards,
     employees: parsed.employees ?? DEFAULT_CONFIG.employees,
     schedule: { ...DEFAULT_CONFIG.schedule, ...parsed.schedule },
-    handoverNotes: parsed.handoverNotes ?? DEFAULT_CONFIG.handoverNotes,
+    handoverNotes: (parsed.handoverNotes ?? DEFAULT_CONFIG.handoverNotes).map(normalizeHandoverNote),
   }
 }
 
@@ -47,6 +48,7 @@ export function saveConfig(config: StartPageConfig): void {
     ...config,
     adminPin: normalizePin(config.adminPin),
     quickLinks: normalizeQuickLinks(config.quickLinks),
+    handoverNotes: config.handoverNotes.map(normalizeHandoverNote),
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(safe))
 }

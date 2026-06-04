@@ -311,12 +311,23 @@ function HandoverTab({
     if (!draft.trim()) return
     patch({
       handoverNotes: [
-        { id: uid(), author: author.trim() || 'Anonim', content: draft.trim(), createdAt: new Date().toISOString(), pinned: false },
+        { id: uid(), author: author.trim() || 'Anonim', content: draft.trim(), createdAt: new Date().toISOString(), pinned: false, done: false },
         ...config.handoverNotes,
       ],
     })
     setDraft('')
     onToast('Opublikowano przekazanie')
+  }
+
+
+  const toggleDone = (id: string) => {
+    patch({
+      handoverNotes: config.handoverNotes.map((n) => {
+        if (n.id !== id) return n
+        if (n.done) return { ...n, done: false, doneAt: undefined, doneBy: undefined }
+        return { ...n, done: true, doneAt: new Date().toISOString(), doneBy: 'Admin' }
+      }),
+    })
   }
 
   const updateNote = (id: string, content: string) => {
@@ -350,7 +361,7 @@ function HandoverTab({
 
       <div className="space-y-3">
         {config.handoverNotes.map((note) => (
-          <article key={note.id} className="p-4 rounded-2xl bg-white/5 border border-white/10">
+          <article key={note.id} className={`p-4 rounded-2xl border border-white/10 ${note.done ? 'bg-white/[0.02] opacity-60' : 'bg-white/5'}`}>
             <textarea
               className={`${inputCls} min-h-[72px] mb-2`}
               value={note.content}
@@ -358,7 +369,10 @@ function HandoverTab({
             />
             <div className="flex items-center justify-between gap-2">
               <p className="text-[10px] text-slate-500">{note.author} · {new Date(note.createdAt).toLocaleString('pl-PL')}</p>
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-wrap">
+                <button type="button" onClick={() => toggleDone(note.id)} className={btnGhost}>
+                  {note.done ? '↩ Cofnij' : '✓ Odhacz'}
+                </button>
                 <button type="button" onClick={() => togglePin(note.id)} className={btnGhost} title="Przypnij">
                   {note.pinned ? '📍 Przypięte' : '📌 Przypnij'}
                 </button>

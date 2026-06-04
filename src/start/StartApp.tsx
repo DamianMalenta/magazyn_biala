@@ -92,7 +92,12 @@ export default function StartApp() {
             {sections.showSchedule && (
               <WeeklyScheduleView schedule={config.schedule} employees={config.employees} />
             )}
-            {sections.showHandover && <HandoverBoard notes={config.handoverNotes} />}
+            {sections.showHandover && (
+              <HandoverBoard
+                notes={config.handoverNotes}
+                onUpdate={(handoverNotes) => update({ ...config, handoverNotes })}
+              />
+            )}
           </div>
         )}
 
