@@ -34,6 +34,8 @@ export interface ParseLogEntry {
 
 export interface ParseResult {
   updates: Map<string, number>
+  /** Strefy z nagłówkiem w wiadomości — pozostałe SKU w strefie bez wpisu → 0. */
+  touchedCategories: Category[]
   quarantine: QuarantineItem[]
   logs: ParseLogEntry[]
 }

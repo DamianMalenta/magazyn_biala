@@ -111,5 +111,26 @@ export function parseMessengerText(
     })
   }
 
-  return { updates, quarantine, logs }
+  const touchedCategories = [...stateMachine.getTouchedCategories()]
+
+  for (const item of inventory) {
+    if (touchedCategories.includes(item.category) && !updates.has(item.id)) {
+      updates.set(item.id, 0)
+    }
+  }
+
+  for (const category of touchedCategories) {
+    const zeroed = inventory.filter(
+      (item) => item.category === category && updates.get(item.id) === 0,
+    ).length
+    if (zeroed > 0) {
+      logs.push({
+        id: createId('log'),
+        type: 'meta',
+        message: `Strefa ${category}: ${zeroed} SKU bez wpisu w wiadomości → stan 0 (ukryte)`,
+      })
+    }
+  }
+
+  return { updates, quarantine, logs, touchedCategories }
 }

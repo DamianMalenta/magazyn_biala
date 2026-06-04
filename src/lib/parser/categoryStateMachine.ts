@@ -90,14 +90,21 @@ export function classifyLine(line: string): LineClassification {
 
 export class CategoryStateMachine {
   private current: Category | null = null
+  private readonly touched = new Set<Category>()
 
   get zone(): Category | null {
     return this.current
   }
 
+  /** Strefy wymienione nagłówkiem w wiadomości (cała strefa podlega aktualizacji). */
+  getTouchedCategories(): ReadonlySet<Category> {
+    return this.touched
+  }
+
   processClassification(classification: LineClassification): Category | null {
     if (classification.kind === 'category' && classification.category) {
       this.current = classification.category
+      this.touched.add(classification.category)
       return this.current
     }
     return null

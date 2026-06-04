@@ -48,8 +48,12 @@ export function SmartPastePanel() {
     const successCount = result.logs.filter(
       (l) => l.type === 'success' || l.type === 'warning',
     ).length
+    const zones =
+      result.touchedCategories.length > 0
+        ? ` · Strefy: ${result.touchedCategories.join(', ')}`
+        : ''
     setLastSummary(
-      `Zaktualizowano ${result.updates.size} SKU · Kwarantanna: ${result.quarantine.length} · Wpisy: ${successCount}`,
+      `Zaktualizowano ${result.updates.size} SKU · Kwarantanna: ${result.quarantine.length} · Wpisy: ${successCount}${zones}`,
     )
 
     if (result.quarantine.length === 0) {

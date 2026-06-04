@@ -102,11 +102,54 @@ describe('aliasMatcher', () => {
   })
 })
 
+describe('parseMessengerText — category snapshot', () => {
+  it('zeros unmentioned SKUs only in touched category', () => {
+    const inventory = DEFAULT_INVENTORY.map((item) => ({ ...item }))
+    const nugetsy = inventory.find((i) => i.name === 'Nugetsy')!
+    const jogurt = inventory.find((i) => i.name === 'Jogurt grecki')!
+    const salami = inventory.find((i) => i.name === 'Salami')!
+    nugetsy.qty = 10
+    jogurt.qty = 3
+    salami.qty = 7
+
+    const text = `lodówka
+2x jogurt grecki`
+
+    const result = parseMessengerText(text, inventory)
+
+    expect(result.touchedCategories).toEqual(['LODÓWKA'])
+    expect(result.updates.get(jogurt.id)).toBe(2)
+    expect(result.updates.get(salami.id)).toBe(0)
+    expect(result.updates.has(nugetsy.id)).toBe(false)
+  })
+
+  it('updates multiple touched categories, leaves others unchanged', () => {
+    const inventory = DEFAULT_INVENTORY.map((item) => ({ ...item }))
+    const kartony = inventory.find((i) => i.name === 'Kartony małe')!
+    kartony.qty = 99
+
+    const text = `lodówka
+1x jogurt grecki
+zamrażalnik
+4x nugetsy`
+
+    const result = parseMessengerText(text, inventory)
+
+    expect(result.touchedCategories).toContain('LODÓWKA')
+    expect(result.touchedCategories).toContain('ZAMRAŻARKA')
+    expect(result.touchedCategories).not.toContain('OPAKOWANIA')
+    expect(result.updates.has(kartony.id)).toBe(false)
+  })
+})
+
 describe('parseMessengerText — example message', () => {
   it('recognizes all items without quarantine', () => {
     const result = parseMessengerText(EXAMPLE, DEFAULT_INVENTORY)
     expect(result.quarantine).toHaveLength(0)
     expect(result.updates.size).toBe(15)
+    expect(result.touchedCategories).toEqual(
+      expect.arrayContaining(['LODÓWKA', 'ZAMRAŻARKA', 'OPAKOWANIA']),
+    )
   })
 
   it('assigns correct quantities', () => {

@@ -13,7 +13,9 @@ Aplikacja do zarządzania stanem magazynu restauracji. Wklejasz wiadomość z Me
 
 | Moduł | Opis |
 |--------|------|
-| **Smart Paste** | Wklejanie tekstu z Messengera → automatyczna aktualizacja stanów |
+| **Smart Paste** | Wklejanie z Messengera → aktualizacja stanów |
+| **Snapshot strefy** | Nagłówek `lodówka` / `zamrażalnik` / `opakowania` = cała strefa: brak w tekście → stan 0; strefy bez nagłówka → bez zmian |
+| **Widok magazynu** | Pokazuje tylko towary na stanie (qty &gt; 0); zera są ukryte |
 | **Parser modułowy** | State machine stref, ekstrakcja ilości, normalizacja UOM |
 | **Fuzzy matching** | Literówki w nazwach (Levenshtein) |
 | **Aliasy użytkownika** | Po kwarantannie można zapamiętać alias na przyszłość |
