@@ -33,9 +33,11 @@ export function QuickLinksGrid({ links, activeEmbedId, onOpenLink }: QuickLinksG
             >
               <div className="link-tile-dock-icon" style={{ '--tile-accent': link.color } as React.CSSProperties}>
                 <div className="link-tile-dock-glow" style={{ background: link.color }} />
-                <LinkIcon link={link} size="tile" />
+                <LinkIcon link={link} size="tileCompact" />
                 {OPEN_MODE_BADGE[link.openMode] && (
-                  <span className="link-open-badge">{OPEN_MODE_BADGE[link.openMode]}</span>
+                  <span className="link-open-badge link-open-badge-compact" title="Otwiera panel">
+                    {OPEN_MODE_BADGE[link.openMode]}
+                  </span>
                 )}
               </div>
               <span className="link-tile-dock-label">{link.label}</span>

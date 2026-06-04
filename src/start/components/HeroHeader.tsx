@@ -117,6 +117,7 @@ export function HeroHeader({
                 label="Przekazania"
                 value={openHandoverCount}
                 variant="warn"
+                pulse={openHandoverCount > 0}
                 onClick={() => setHandoverModalOpen(true)}
               />
             </div>
@@ -206,18 +207,22 @@ function HeroStatButton({
   label,
   value,
   variant,
+  pulse = false,
   onClick,
 }: {
   label: string
   value: number
   variant: 'live' | 'warn'
+  pulse?: boolean
   onClick: () => void
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`hero-stat-btn ${variant === 'live' ? 'hero-stat-btn-live' : 'hero-stat-btn-warn'}`}
+      className={`hero-stat-btn ${variant === 'live' ? 'hero-stat-btn-live' : 'hero-stat-btn-warn'} ${
+        pulse ? 'hero-stat-btn-pulse' : ''
+      }`}
       title={`${label}: ${value} — kliknij, aby zobaczyć szczegóły`}
     >
       <span className="hero-stat-label">{label}</span>

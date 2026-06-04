@@ -2,22 +2,25 @@ import { useEffect, useMemo, useState } from 'react'
 import type { QuickLink } from '../types'
 import { getFaviconCandidates, hasValidIconUrl, usesAutoIcon } from '../lib/faviconUtils'
 
-type LinkIconSize = 'tile' | 'preview' | 'command'
+type LinkIconSize = 'tile' | 'tileCompact' | 'preview' | 'command'
 
 const SIZE_CLASS: Record<LinkIconSize, string> = {
   tile: 'w-14 h-14 md:w-16 md:h-16 rounded-2xl',
+  tileCompact: 'w-10 h-10 md:w-11 md:h-11 rounded-xl',
   preview: 'w-10 h-10 rounded-xl',
   command: 'w-6 h-6 rounded-md',
 }
 
 const EMOJI_CLASS: Record<LinkIconSize, string> = {
   tile: 'text-5xl md:text-6xl drop-shadow-lg',
+  tileCompact: 'text-2xl md:text-3xl leading-none drop-shadow',
   preview: 'text-3xl',
   command: 'text-xl',
 }
 
 const FAVICON_SIZE: Record<LinkIconSize, number> = {
   tile: 128,
+  tileCompact: 64,
   preview: 64,
   command: 32,
 }
