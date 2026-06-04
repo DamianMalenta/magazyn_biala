@@ -91,6 +91,7 @@
 /* ── Hero (kompaktowy) ── */
 .hero-inner-compact {
   @apply p-4 md:p-5;
+  overflow: visible;
 }
 
 .hero-top-row {
@@ -98,7 +99,7 @@
 }
 
 .hero-meta-col {
-  @apply flex flex-wrap items-center gap-2 shrink-0;
+  @apply flex flex-wrap items-center gap-2 shrink-0 overflow-visible;
 }
 
 .hero-clock-block {
@@ -532,7 +533,15 @@
 
 
 .weather-widget-compact {
-  @apply px-3 py-2 gap-2;
+  @apply px-3 py-2 gap-2 max-w-[11rem];
+}
+
+.weather-city-compact {
+  @apply text-[10px] mt-0.5 leading-tight;
+}
+
+.weather-expand-icon-compact {
+  @apply text-[9px];
 }
 
 .weather-emoji {
@@ -550,7 +559,7 @@
 /* ── @mention w przekazaniach ── */
 
 .weather-widget-wrap {
-  @apply relative;
+  @apply relative z-20;
 }
 
 .weather-widget-wrap-open .weather-widget {
@@ -566,8 +575,28 @@
 }
 
 .weather-forecast-panel {
-  @apply absolute right-0 top-full mt-2 z-30 w-[min(92vw,340px)] p-3 rounded-2xl border border-sky-500/25 bg-slate-950/95 shadow-2xl backdrop-blur-md;
+  @apply absolute right-0 top-full mt-2 z-50 w-[min(92vw,340px)] p-3 rounded-2xl border border-sky-500/25 bg-slate-950/95 shadow-2xl backdrop-blur-md;
   animation: weather-panel-in 0.22s ease-out both;
+}
+
+.weather-forecast-backdrop {
+  @apply fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] cursor-default;
+}
+
+.weather-forecast-panel-modal {
+  @apply fixed z-50 left-1/2 top-[18vh] -translate-x-1/2 mt-0 w-[min(92vw,360px)];
+  animation: weather-modal-in 0.22s ease-out both;
+}
+
+@keyframes weather-modal-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
 }
 
 @keyframes weather-panel-in {

@@ -27,6 +27,15 @@ export function WeatherWidget({ data, loading, error, compact = false }: Weather
     setOpen(false)
   }, [data?.cityLabel, data?.fetchedAt])
 
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
   const display = useMemo(
     () => (data ? resolveWeatherDisplay(data, selection) : null),
     [data, selection],
@@ -74,20 +83,32 @@ export function WeatherWidget({ data, loading, error, compact = false }: Weather
         <span className="weather-emoji">{weatherCodeToEmoji(display.weatherCode)}</span>
         <div className="min-w-0 text-left">
           <p className="weather-temp">{display.temperature}°C</p>
-          {!compact && (
-            <>
-              <p className="weather-city truncate">{display.cityLabel}</p>
-              <p className="text-[9px] text-slate-500 truncate">
-                {display.label} · {display.detail}
-              </p>
-            </>
-          )}
+          <p className={`weather-city truncate ${compact ? 'weather-city-compact' : ''}`}>
+            {display.cityLabel}
+          </p>
+          <p className={`text-slate-500 truncate ${compact ? 'text-[8px] max-w-[9rem]' : 'text-[9px]'}`}>
+            {display.label} · {display.detail}
+          </p>
         </div>
-        {!compact && <span className="weather-expand-icon">{open ? '▴' : '▾'}</span>}
+        <span className={`weather-expand-icon ${compact ? 'weather-expand-icon-compact' : ''}`}>
+          {open ? '▴' : '▾'}
+        </span>
       </button>
 
-      {open && !compact && (
-        <div className="weather-forecast-panel">
+      {open && (
+        <>
+          {compact && (
+            <button
+              type="button"
+              className="weather-forecast-backdrop"
+              onClick={() => setOpen(false)}
+              aria-label="Zamknij prognozę"
+            />
+          )}
+          <div className={`weather-forecast-panel ${compact ? 'weather-forecast-panel-modal' : ''}`}>
+          {compact && (
+            <p className="text-xs font-bold text-sky-200/90 mb-2 truncate">{display.cityLabel}</p>
+          )}
           <div className="weather-forecast-toolbar">
             <button
               type="button"
@@ -139,7 +160,8 @@ export function WeatherWidget({ data, loading, error, compact = false }: Weather
               {weatherCodeLabel(display.weatherCode)} · zakres {display.detail}
             </p>
           )}
-        </div>
+          </div>
+        </>
       )}
     </div>
   )
