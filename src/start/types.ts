@@ -53,6 +53,15 @@ export interface HandoverNote {
   pinned: boolean
 }
 
+export interface PageSections {
+  showSearch: boolean
+  showQuickLinks: boolean
+  showSchedule: boolean
+  showHandover: boolean
+  showInfoCards: boolean
+  showShiftPulse: boolean
+}
+
 export interface StartPageConfig {
   version: 1
   companyName: string
@@ -64,4 +73,5 @@ export interface StartPageConfig {
   schedule: WeekSchedule
   handoverNotes: HandoverNote[]
   searchEngine: 'google' | 'duckduckgo'
+  sections: PageSections
 }

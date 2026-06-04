@@ -99,7 +99,7 @@
 }
 
 .admin-drawer {
-  @apply fixed inset-y-0 right-0 z-50 w-full max-w-2xl shadow-2xl;
+  @apply fixed inset-y-0 right-0 z-50 w-full max-w-3xl shadow-2xl;
   @apply bg-slate-900/60 backdrop-blur-2xl border border-white/10;
   @apply flex flex-col overflow-hidden;
   animation: slide-in 0.3s ease-out;

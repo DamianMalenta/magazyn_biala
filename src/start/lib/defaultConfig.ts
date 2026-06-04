@@ -1,11 +1,21 @@
 import type { StartPageConfig } from '../types'
 
+export const DEFAULT_SECTIONS: StartPageConfig['sections'] = {
+  showSearch: true,
+  showQuickLinks: true,
+  showSchedule: true,
+  showHandover: true,
+  showInfoCards: true,
+  showShiftPulse: true,
+}
+
 export const DEFAULT_CONFIG: StartPageConfig = {
   version: 1,
   companyName: 'Biała Restauracja',
   tagline: 'Panel startowy zespołu',
   adminPin: '2024',
   searchEngine: 'google',
+  sections: DEFAULT_SECTIONS,
   quickLinks: [
     {
       id: 'pos',

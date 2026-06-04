@@ -18,6 +18,7 @@ export default function StartApp() {
   const { isAdmin, showLogin, setShowLogin, login, logout } = useAdminAuth(config.adminPin)
   const [commandOpen, setCommandOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
+  const { sections } = config
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -31,11 +32,8 @@ export default function StartApp() {
   }, [])
 
   const openAdmin = () => {
-    if (isAdmin) {
-      setAdminOpen(true)
-    } else {
-      setShowLogin(true)
-    }
+    if (isAdmin) setAdminOpen(true)
+    else setShowLogin(true)
   }
 
   const handleLogin = (pin: string) => {
@@ -49,45 +47,45 @@ export default function StartApp() {
       <div className="mesh-bg" />
 
       <div className="relative min-h-screen max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10 flex flex-col gap-6">
-        <ShiftPulse
-          employees={config.employees}
-          schedule={config.schedule}
-          companyName={config.companyName}
-          time={time}
-          date={date}
-        />
+        {sections.showShiftPulse && (
+          <ShiftPulse
+            employees={config.employees}
+            schedule={config.schedule}
+            companyName={config.companyName}
+            time={time}
+            date={date}
+          />
+        )}
 
-        <SearchBar searchEngine={config.searchEngine} />
+        {sections.showSearch && <SearchBar searchEngine={config.searchEngine} />}
 
-        <QuickLinksGrid links={config.quickLinks} />
+        {sections.showQuickLinks && <QuickLinksGrid links={config.quickLinks} />}
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <WeeklyScheduleView schedule={config.schedule} employees={config.employees} />
-          <HandoverBoard notes={config.handoverNotes} />
-        </div>
+        {(sections.showSchedule || sections.showHandover) && (
+          <div className={`grid grid-cols-1 gap-6 ${sections.showSchedule && sections.showHandover ? 'xl:grid-cols-2' : ''}`}>
+            {sections.showSchedule && (
+              <WeeklyScheduleView schedule={config.schedule} employees={config.employees} />
+            )}
+            {sections.showHandover && <HandoverBoard notes={config.handoverNotes} />}
+          </div>
+        )}
 
-        <div>
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 px-1">
-            <span>📋</span> Ważne informacje i instrukcje
-          </h2>
-          <InfoCards cards={config.infoCards} />
-        </div>
+        {sections.showInfoCards && (
+          <div>
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2 px-1">
+              <span>📋</span> Ważne informacje i instrukcje
+            </h2>
+            <InfoCards cards={config.infoCards} />
+          </div>
+        )}
 
         <footer className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-white/5 text-xs text-slate-600">
           <p>{config.tagline}</p>
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setCommandOpen(true)}
-              className="hover:text-violet-400 transition flex items-center gap-1"
-            >
+            <button type="button" onClick={() => setCommandOpen(true)} className="hover:text-violet-400 transition flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 rounded bg-white/10">Ctrl+K</kbd> Szybkie wyszukiwanie
             </button>
-            <button
-              type="button"
-              onClick={openAdmin}
-              className="hover:text-violet-400 transition flex items-center gap-1"
-            >
+            <button type="button" onClick={openAdmin} className="hover:text-violet-400 transition flex items-center gap-1">
               ⚙️ Panel admina
             </button>
           </div>
@@ -99,34 +97,23 @@ export default function StartApp() {
         onClose={() => setCommandOpen(false)}
         links={config.quickLinks}
         infoCards={config.infoCards}
-        onOpenAdmin={() => {
-          setCommandOpen(false)
-          openAdmin()
-        }}
+        onOpenAdmin={() => { setCommandOpen(false); openAdmin() }}
       />
 
-      {showLogin && !isAdmin && (
-        <AdminLogin onLogin={handleLogin} onClose={() => setShowLogin(false)} />
-      )}
+      {showLogin && !isAdmin && <AdminLogin onLogin={handleLogin} onClose={() => setShowLogin(false)} />}
 
       {adminOpen && isAdmin && (
         <AdminPanel
           config={config}
           onUpdate={update}
           onClose={() => setAdminOpen(false)}
-          onLogout={() => {
-            logout()
-            setAdminOpen(false)
-          }}
+          onLogout={() => { logout(); setAdminOpen(false) }}
           onExport={exportBackup}
           onImport={async (file) => {
             const r = await importBackup(file)
             return r.ok ? { ok: true } : { ok: false, error: r.error }
           }}
-          onReset={() => {
-            reset()
-            setAdminOpen(false)
-          }}
+          onReset={() => { reset(); setAdminOpen(false) }}
         />
       )}
     </>

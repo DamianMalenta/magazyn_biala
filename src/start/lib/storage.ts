@@ -1,4 +1,4 @@
-import { DEFAULT_CONFIG } from './defaultConfig'
+import { DEFAULT_CONFIG, DEFAULT_SECTIONS } from './defaultConfig'
 import type { StartPageConfig } from '../types'
 
 const STORAGE_KEY = 'startpage-config-v1'
@@ -7,6 +7,7 @@ function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
   return {
     ...DEFAULT_CONFIG,
     ...parsed,
+    sections: { ...DEFAULT_SECTIONS, ...parsed.sections },
     quickLinks: parsed.quickLinks ?? DEFAULT_CONFIG.quickLinks,
     infoCards: parsed.infoCards ?? DEFAULT_CONFIG.infoCards,
     employees: parsed.employees ?? DEFAULT_CONFIG.employees,
