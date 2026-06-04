@@ -7,6 +7,7 @@ export interface InventoryContextValue {
   addItem: (payload: { name: string; category: Category; unit: StandardUOM; qty?: number }) => void
   updateQty: (id: string, delta: number) => void
   setQty: (id: string, qty: number) => void
+  setUnit: (id: string, unit: StandardUOM) => void
   applyBulkUpdates: (updates: Map<string, number>) => void
   deleteItem: (id: string) => void
   resetToDefaults: () => void

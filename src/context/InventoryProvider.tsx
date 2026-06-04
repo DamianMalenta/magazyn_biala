@@ -60,6 +60,13 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     [items, persist],
   )
 
+  const setUnit = useCallback(
+    (id: string, unit: StandardUOM) => {
+      persist(items.map((item) => (item.id === id ? { ...item, unit } : item)))
+    },
+    [items, persist],
+  )
+
   const applyBulkUpdates = useCallback(
     (updates: Map<string, number>) => {
       persist(
@@ -138,6 +145,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       addItem,
       updateQty,
       setQty,
+      setUnit,
       applyBulkUpdates,
       deleteItem,
       resetToDefaults,
@@ -152,6 +160,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       addItem,
       updateQty,
       setQty,
+      setUnit,
       applyBulkUpdates,
       deleteItem,
       resetToDefaults,

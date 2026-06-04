@@ -1,4 +1,4 @@
-import type { InventoryItem, Category } from '../../types/inventory'
+import type { InventoryItem, Category, StandardUOM } from '../../types/inventory'
 import { CATEGORY_META } from '../../lib/data/categoryMeta'
 import { ItemCard } from './ItemCard'
 
@@ -7,6 +7,8 @@ interface CategorySectionProps {
   items: InventoryItem[]
   onIncrement: (id: string) => void
   onDecrement: (id: string) => void
+  onSetQty: (id: string, qty: number) => void
+  onSetUnit: (id: string, unit: StandardUOM) => void
   onDelete: (id: string) => void
 }
 
@@ -15,6 +17,8 @@ export function CategorySection({
   items,
   onIncrement,
   onDecrement,
+  onSetQty,
+  onSetUnit,
   onDelete,
 }: CategorySectionProps) {
   const meta = CATEGORY_META[category]
@@ -36,6 +40,8 @@ export function CategorySection({
               item={item}
               onIncrement={() => onIncrement(item.id)}
               onDecrement={() => onDecrement(item.id)}
+              onSetQty={(qty) => onSetQty(item.id, qty)}
+              onSetUnit={(unit) => onSetUnit(item.id, unit)}
               onDelete={() => onDelete(item.id)}
             />
           ))}

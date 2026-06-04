@@ -4,6 +4,7 @@ import { useInventory } from '../../hooks/useInventory'
 import type { ParseLogEntry, QuarantineItem } from '../../types/inventory'
 import { ParseLog } from './ParseLog'
 import { QuarantineZone, type ResolvePayload } from './QuarantineZone'
+import { MessengerTemplate } from './MessengerTemplate'
 
 const EXAMPLE_TEXT = `Magazyn biala 04.06 14:00
 zamrażalnik 
@@ -106,6 +107,8 @@ export function SmartPastePanel() {
       </header>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 flex flex-col gap-4">
+        <MessengerTemplate />
+
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}

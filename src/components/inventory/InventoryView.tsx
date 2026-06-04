@@ -3,7 +3,7 @@ import { useInventory } from '../../hooks/useInventory'
 import { CategorySection } from './CategorySection'
 
 export function InventoryView() {
-  const { items, updateQty, deleteItem } = useInventory()
+  const { items, updateQty, setQty, setUnit, deleteItem } = useInventory()
 
   const inStock = items.filter((item) => item.qty > 0)
   const totalQty = inStock.reduce((sum, item) => sum + item.qty, 0)
@@ -41,6 +41,8 @@ export function InventoryView() {
               items={categoryInStock}
               onIncrement={(id) => updateQty(id, 1)}
               onDecrement={(id) => updateQty(id, -1)}
+              onSetQty={setQty}
+              onSetUnit={setUnit}
               onDelete={handleDelete}
             />
           )
