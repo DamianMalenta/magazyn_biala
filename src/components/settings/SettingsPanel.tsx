@@ -5,6 +5,7 @@ import { AliasesTab } from './AliasesTab'
 import { UomTab } from './UomTab'
 import { ParserTab } from './ParserTab'
 import { BackupTab } from './BackupTab'
+import { CloudTab } from './CloudTab'
 
 const TABS = [
   { id: 'categories', label: 'Strefy', icon: '🗂️' },
@@ -12,13 +13,14 @@ const TABS = [
   { id: 'aliases', label: 'Aliasy', icon: '🔗' },
   { id: 'uom', label: 'Jednostki', icon: '⚖️' },
   { id: 'parser', label: 'Parser', icon: '🧠' },
+  { id: 'cloud', label: 'Chmura', icon: '☁️' },
   { id: 'backup', label: 'Backup', icon: '💾' },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
 
 export function SettingsPanel() {
-  const [activeTab, setActiveTab] = useState<TabId>('categories')
+  const [activeTab, setActiveTab] = useState<TabId>('cloud')
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 min-h-0 flex-1">
@@ -47,6 +49,7 @@ export function SettingsPanel() {
         {activeTab === 'aliases' && <AliasesTab />}
         {activeTab === 'uom' && <UomTab />}
         {activeTab === 'parser' && <ParserTab />}
+        {activeTab === 'cloud' && <CloudTab />}
         {activeTab === 'backup' && <BackupTab />}
       </div>
     </div>

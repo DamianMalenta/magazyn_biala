@@ -1,62 +1,45 @@
 # Magazyn Główny — Smart Paste
 
-Standalone inventory management app for restaurant warehouse staff. Paste raw Messenger inventory counts and the parser automatically maps them to SKUs, categories, and standard units.
+Standalone inventory management app for restaurant warehouse staff.
 
-## Stack
-
-- **Vite + React 19 + TypeScript**
-- **Tailwind CSS v4**
-- **localStorage** — inventory + full parser config persisted in browser
-
-## Features
-
-| Module | Description |
-|--------|-------------|
-| **Smart Paste** | Paste Messenger text → auto-parse zones, quantities, aliases |
-| **Panel Ustawień** | Full admin UI for zones, SKUs, aliases, UOM, parser, backup |
-| **Category State Machine** | Headers like `zamrażalnik` / `lodówka` set the active zone |
-| **Alias Dictionary** | Longest-match + fuzzy fallback — editable from UI |
-| **Strict UOM** | All units normalized to `kg.`, `szt.`, or `opak.` — mappings editable |
-| **Quarantine** | Unrecognized lines with one-click SKU assignment |
-| **Import/Export** | JSON backup of config + inventory |
-
-## Commands
+## Uruchomienie
 
 ```bash
 npm install
 npm run dev
+```
+
+Aplikacja: **http://localhost:5173**
+
+## Synchronizacja chmurowa (Supabase)
+
+1. Utwórz projekt na [supabase.com](https://supabase.com)
+2. W **SQL Editor** uruchom plik `supabase/schema.sql`
+3. Skopiuj `.env.example` → `.env.local` i uzupełnij klucze API
+4. Zrestartuj `npm run dev`
+5. W aplikacji: **Ustawienia → Chmura** → ustaw wspólny **kod magazynu**
+
+Funkcje:
+- **Auto-sync** — każda zmiana wysyłana do chmury po 2 s
+- **Realtime** — zmiany innych urządzeń bez odświeżania
+- **Ręczny push/pull** — przyciski w zakładce Chmura
+
+## Panel Ustawień
+
+| Zakładka | Opis |
+|----------|------|
+| Strefy | Kategorie magazynowe + aliasy nagłówków |
+| Produkty | Katalog SKU |
+| Aliasy | Słownik nazw z Messengera |
+| Jednostki | Mapowanie j.m. |
+| Parser | Słowa ignorowane, fuzzy match |
+| **Chmura** | Sync Supabase |
+| Backup | Import/eksport JSON |
+
+## Komendy
+
+```bash
+npm run dev
 npm run build
 npm test
 ```
-
-## Panel Ustawień (⚙️)
-
-| Zakładka | Co konfigurujesz |
-|----------|------------------|
-| **Strefy** | Kategorie magazynowe, aliasy nagłówków, ikony, kolory |
-| **Produkty** | Pełny katalog SKU — nazwa, strefa, jednostka |
-| **Aliasy** | Słownik potocznych nazw → SKU |
-| **Jednostki** | Mapowanie surowych j.m., tokeny parsera |
-| **Parser** | Słowa ignorowane, fuzzy match |
-| **Backup** | Eksport/import JSON, reset do domyślnych |
-
-Konfiguracja zapisywana w `localStorage` pod kluczem `magazyn_config_v1`.
-
-## Architecture
-
-```
-src/
-├── lib/parser/          # Pure parsing engine (reads ParserConfig)
-├── lib/data/            # Default config seed
-├── lib/storage/         # configStorage + inventoryStorage
-├── context/             # ConfigProvider + InventoryProvider
-├── components/
-│   ├── smart-paste/
-│   ├── inventory/
-│   └── settings/        # Admin panel tabs
-└── hooks/
-```
-
-## Demo
-
-Click **Demo** in Smart Paste to load the example Messenger message.

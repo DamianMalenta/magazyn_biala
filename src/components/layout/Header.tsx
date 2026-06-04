@@ -1,5 +1,6 @@
 import { AddItemForm } from '../inventory/AddItemForm'
 import { Navigation, type AppView } from './Navigation'
+import { CloudStatusBadge } from './CloudStatusBadge'
 
 interface HeaderProps {
   activeView: AppView
@@ -17,6 +18,7 @@ export function Header({ activeView, onViewChange }: HeaderProps) {
           <h1 className="text-xl font-black tracking-tight text-white">Magazyn Główny</h1>
           <p className="text-xs text-slate-500">Inteligentny panel inwentaryzacji</p>
         </div>
+        <CloudStatusBadge />
       </div>
 
       <Navigation active={activeView} onChange={onViewChange} />
