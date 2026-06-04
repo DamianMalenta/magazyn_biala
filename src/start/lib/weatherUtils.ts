@@ -4,15 +4,49 @@ export interface WeatherConfig {
   longitude: number | null
 }
 
-export interface WeatherData {
+export interface WeatherHourlySlot {
+  time: string
   temperature: number
   weatherCode: number
   windSpeed: number
-  cityLabel: string
-  fetchedAt: string
 }
 
-const CACHE_KEY = 'startpage-weather-v1'
+export interface WeatherDailySlot {
+  date: string
+  weatherCode: number
+  tempMax: number
+  tempMin: number
+  windSpeedMax: number
+}
+
+export interface WeatherSnapshot {
+  temperature: number
+  weatherCode: number
+  windSpeed: number
+}
+
+export interface WeatherData {
+  cityLabel: string
+  fetchedAt: string
+  timezone: string
+  current: WeatherSnapshot
+  hourly: WeatherHourlySlot[]
+  daily: WeatherDailySlot[]
+}
+
+export interface WeatherSelection {
+  mode: 'now' | 'hour' | 'day'
+  dayIndex: number
+  hourTime?: string
+}
+
+export interface WeatherDisplay extends WeatherSnapshot {
+  cityLabel: string
+  label: string
+  detail: string
+}
+
+const CACHE_KEY = 'startpage-weather-v2'
 const CACHE_TTL_MS = 30 * 60 * 1000
 
 interface WeatherCache {
@@ -44,6 +78,72 @@ export function weatherCodeLabel(code: number): string {
   return 'Pogoda'
 }
 
+export function formatDayLabel(dateStr: string, dayIndex: number): string {
+  if (dayIndex === 0) return 'Dziś'
+  if (dayIndex === 1) return 'Jutro'
+  return new Date(`${dateStr}T12:00:00`).toLocaleDateString('pl-PL', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'numeric',
+  })
+}
+
+export function formatHourLabel(isoTime: string): string {
+  return new Date(isoTime).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+}
+
+export function getHoursForDay(data: WeatherData, dayIndex: number): WeatherHourlySlot[] {
+  const day = data.daily[dayIndex]
+  if (!day) return []
+  return data.hourly.filter((h) => h.time.startsWith(day.date))
+}
+
+export function resolveWeatherDisplay(data: WeatherData, selection: WeatherSelection): WeatherDisplay {
+  if (selection.mode === 'now') {
+    return {
+      ...data.current,
+      cityLabel: data.cityLabel,
+      label: 'Teraz',
+      detail: `${weatherCodeLabel(data.current.weatherCode)} · wiatr ${data.current.windSpeed} km/h`,
+    }
+  }
+
+  const day = data.daily[selection.dayIndex]
+  if (!day) {
+    return {
+      ...data.current,
+      cityLabel: data.cityLabel,
+      label: 'Teraz',
+      detail: weatherCodeLabel(data.current.weatherCode),
+    }
+  }
+
+  if (selection.mode === 'hour' && selection.hourTime) {
+    const slot = data.hourly.find((h) => h.time === selection.hourTime)
+    if (slot) {
+      const dayLabel = formatDayLabel(day.date, selection.dayIndex)
+      return {
+        temperature: slot.temperature,
+        weatherCode: slot.weatherCode,
+        windSpeed: slot.windSpeed,
+        cityLabel: data.cityLabel,
+        label: `${dayLabel}, ${formatHourLabel(slot.time)}`,
+        detail: `${weatherCodeLabel(slot.weatherCode)} · wiatr ${slot.windSpeed} km/h`,
+      }
+    }
+  }
+
+  const dayLabel = formatDayLabel(day.date, selection.dayIndex)
+  return {
+    temperature: Math.round((day.tempMax + day.tempMin) / 2),
+    weatherCode: day.weatherCode,
+    windSpeed: day.windSpeedMax,
+    cityLabel: data.cityLabel,
+    label: dayLabel,
+    detail: `${day.tempMin}° – ${day.tempMax}° · ${weatherCodeLabel(day.weatherCode)}`,
+  }
+}
+
 async function geocodeCity(city: string): Promise<{ lat: number; lon: number; label: string } | null> {
   const q = city.trim()
   if (!q) return null
@@ -62,18 +162,61 @@ async function geocodeCity(city: string): Promise<{ lat: number; lon: number; la
 }
 
 async function fetchWeather(lat: number, lon: number, cityLabel: string): Promise<WeatherData> {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`
-  const res = await fetch(url)
+  const params = new URLSearchParams({
+    latitude: String(lat),
+    longitude: String(lon),
+    timezone: 'auto',
+    forecast_days: '7',
+    current: 'temperature_2m,weather_code,wind_speed_10m',
+    hourly: 'temperature_2m,weather_code,wind_speed_10m',
+    daily: 'weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max',
+  })
+  const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`)
   if (!res.ok) throw new Error('weather fetch failed')
   const json = (await res.json()) as {
+    timezone: string
     current: { temperature_2m: number; weather_code: number; wind_speed_10m: number }
+    hourly: {
+      time: string[]
+      temperature_2m: number[]
+      weather_code: number[]
+      wind_speed_10m: number[]
+    }
+    daily: {
+      time: string[]
+      weather_code: number[]
+      temperature_2m_max: number[]
+      temperature_2m_min: number[]
+      wind_speed_10m_max: number[]
+    }
   }
+
+  const hourly: WeatherHourlySlot[] = json.hourly.time.map((time, i) => ({
+    time,
+    temperature: Math.round(json.hourly.temperature_2m[i]),
+    weatherCode: json.hourly.weather_code[i],
+    windSpeed: Math.round(json.hourly.wind_speed_10m[i]),
+  }))
+
+  const daily: WeatherDailySlot[] = json.daily.time.map((date, i) => ({
+    date,
+    weatherCode: json.daily.weather_code[i],
+    tempMax: Math.round(json.daily.temperature_2m_max[i]),
+    tempMin: Math.round(json.daily.temperature_2m_min[i]),
+    windSpeedMax: Math.round(json.daily.wind_speed_10m_max[i]),
+  }))
+
   return {
-    temperature: Math.round(json.current.temperature_2m),
-    weatherCode: json.current.weather_code,
-    windSpeed: Math.round(json.current.wind_speed_10m),
     cityLabel,
     fetchedAt: new Date().toISOString(),
+    timezone: json.timezone,
+    current: {
+      temperature: Math.round(json.current.temperature_2m),
+      weatherCode: json.current.weather_code,
+      windSpeed: Math.round(json.current.wind_speed_10m),
+    },
+    hourly,
+    daily,
   }
 }
 
@@ -84,6 +227,7 @@ function readCache(city: string): WeatherCache | null {
     const c = JSON.parse(raw) as WeatherCache
     if (c.city.toLowerCase() !== city.trim().toLowerCase()) return null
     if (Date.now() - new Date(c.data.fetchedAt).getTime() > CACHE_TTL_MS) return null
+    if (!c.data.hourly?.length || !c.data.daily?.length) return null
     return c
   } catch {
     return null

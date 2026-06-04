@@ -211,7 +211,7 @@ function SectionsTab({
     { key: 'showSchedule', label: 'Grafik tygodniowy', desc: 'Siatka pracownik × dni' },
     { key: 'showHandover', label: 'Tablica przekazań', desc: 'Notatki między zmianami' },
     { key: 'showInfoCards', label: 'Karty instrukcji', desc: 'Wi-Fi, alarm, kontakty' },
-    { key: 'showWeather', label: 'Widget pogody', desc: 'Aktualna pogoda w nagłówku (Open-Meteo)' },
+    { key: 'showWeather', label: 'Widget pogody', desc: 'Pogoda i prognoza na 7 dni / godziny (Open-Meteo)' },
   ]
 
   return (

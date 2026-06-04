@@ -305,9 +305,7 @@
 
 
 /* ── Widget pogody ── */
-.weather-widget {
-  @apply inline-flex items-center gap-3 px-4 py-3 rounded-2xl border border-sky-500/20 bg-sky-500/10;
-}
+
 
 .weather-widget-compact {
   @apply px-3 py-2 gap-2;
@@ -326,6 +324,62 @@
 }
 
 /* ── @mention w przekazaniach ── */
+
+.weather-widget-wrap {
+  @apply relative;
+}
+
+.weather-widget-wrap-open .weather-widget {
+  @apply border-sky-400/40 bg-sky-500/15;
+}
+
+.weather-widget {
+  @apply inline-flex items-center gap-3 px-4 py-3 rounded-2xl border border-sky-500/20 bg-sky-500/10 transition cursor-pointer text-left;
+}
+
+.weather-expand-icon {
+  @apply text-sky-300/70 text-xs ml-1 shrink-0;
+}
+
+.weather-forecast-panel {
+  @apply absolute right-0 top-full mt-2 z-30 w-[min(92vw,340px)] p-3 rounded-2xl border border-sky-500/25 bg-slate-950/95 shadow-2xl backdrop-blur-md;
+  animation: weather-panel-in 0.22s ease-out both;
+}
+
+@keyframes weather-panel-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.weather-forecast-toolbar {
+  @apply flex gap-2 mb-2;
+}
+
+.weather-forecast-label {
+  @apply text-[9px] font-bold uppercase tracking-wider text-sky-400/80 mt-2 mb-1.5;
+}
+
+.weather-day-row,
+.weather-hour-row {
+  @apply flex gap-1.5 overflow-x-auto pb-1;
+}
+
+.weather-chip {
+  @apply shrink-0 px-2.5 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs transition;
+}
+
+.weather-hour-chip {
+  @apply min-w-[52px] text-center;
+}
+
+.weather-chip-active {
+  @apply border-sky-400/50 bg-sky-500/20 text-sky-100;
+}
+
+.weather-forecast-note {
+  @apply text-[10px] text-slate-400 mt-2 leading-relaxed;
+}
+
 .mention-tag {
   @apply font-semibold text-amber-300 bg-amber-500/15 px-1 rounded;
 }
