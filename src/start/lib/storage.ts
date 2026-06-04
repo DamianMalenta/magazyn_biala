@@ -1,4 +1,5 @@
 import { DEFAULT_CONFIG, DEFAULT_SECTIONS } from './defaultConfig'
+const DEFAULT_WEATHER = DEFAULT_CONFIG.weather
 import { normalizeQuickLink } from './faviconUtils'
 import { normalizeHandoverNote } from './handoverUtils'
 import type { StartPageConfig } from '../types'
@@ -21,6 +22,7 @@ function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
     ...parsed,
     adminPin: normalizePin(parsed.adminPin),
     sections: { ...DEFAULT_SECTIONS, ...parsed.sections },
+    weather: { ...DEFAULT_WEATHER, ...parsed.weather },
     quickLinks: normalizeQuickLinks(parsed.quickLinks ?? DEFAULT_CONFIG.quickLinks),
     infoCards: parsed.infoCards ?? DEFAULT_CONFIG.infoCards,
     employees: parsed.employees ?? DEFAULT_CONFIG.employees,

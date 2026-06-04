@@ -7,6 +7,7 @@ export const DEFAULT_SECTIONS: StartPageConfig['sections'] = {
   showHandover: true,
   showInfoCards: true,
   showShiftPulse: true,
+  showWeather: true,
 }
 
 export const DEFAULT_CONFIG: StartPageConfig = {
@@ -15,6 +16,7 @@ export const DEFAULT_CONFIG: StartPageConfig = {
   tagline: 'Panel startowy zespołu',
   adminPin: '2024',
   searchEngine: 'google',
+  weather: { city: 'Białystok', latitude: null, longitude: null },
   sections: DEFAULT_SECTIONS,
   quickLinks: [
     {
@@ -139,6 +141,7 @@ export const DEFAULT_CONFIG: StartPageConfig = {
       createdAt: new Date().toISOString(),
       pinned: true,
       done: false,
+      mentions: [],
     },
   ],
 }

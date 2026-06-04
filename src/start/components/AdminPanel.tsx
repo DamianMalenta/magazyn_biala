@@ -3,6 +3,8 @@ import { uid } from '../lib/storage'
 import { moveItem } from '../lib/arrayUtils'
 import type { StartPageConfig } from '../types'
 import { LinksEditor } from './admin/LinksEditor'
+import { MentionTextarea } from './MentionTextarea'
+import { extractMentions } from '../lib/mentionUtils'
 import { ScheduleEditor } from './admin/ScheduleEditor'
 import {
   TabHeader,
@@ -175,6 +177,18 @@ function SettingsTab({
           <option value="duckduckgo">DuckDuckGo</option>
         </select>
       </Field>
+      <Field label="Miasto (pogoda)" hint="Open-Meteo — np. Białystok, Warszawa">
+        <input
+          className={inputCls}
+          value={config.weather.city}
+          onChange={(e) =>
+            patch({
+              weather: { ...config.weather, city: e.target.value, latitude: null, longitude: null },
+            })
+          }
+          placeholder="Białystok"
+        />
+      </Field>
     </div>
   )
 }
@@ -197,6 +211,7 @@ function SectionsTab({
     { key: 'showSchedule', label: 'Grafik tygodniowy', desc: 'Siatka pracownik × dni' },
     { key: 'showHandover', label: 'Tablica przekazań', desc: 'Notatki między zmianami' },
     { key: 'showInfoCards', label: 'Karty instrukcji', desc: 'Wi-Fi, alarm, kontakty' },
+    { key: 'showWeather', label: 'Widget pogody', desc: 'Aktualna pogoda w nagłówku (Open-Meteo)' },
   ]
 
   return (
@@ -309,9 +324,18 @@ function HandoverTab({
 
   const addNote = () => {
     if (!draft.trim()) return
+    const content = draft.trim()
     patch({
       handoverNotes: [
-        { id: uid(), author: author.trim() || 'Anonim', content: draft.trim(), createdAt: new Date().toISOString(), pinned: false, done: false },
+        {
+          id: uid(),
+          author: author.trim() || 'Anonim',
+          content,
+          mentions: extractMentions(content, config.employees),
+          createdAt: new Date().toISOString(),
+          pinned: false,
+          done: false,
+        },
         ...config.handoverNotes,
       ],
     })
@@ -331,7 +355,11 @@ function HandoverTab({
   }
 
   const updateNote = (id: string, content: string) => {
-    patch({ handoverNotes: config.handoverNotes.map((n) => (n.id === id ? { ...n, content } : n)) })
+    patch({
+      handoverNotes: config.handoverNotes.map((n) =>
+        n.id === id ? { ...n, content, mentions: extractMentions(content, config.employees) } : n,
+      ),
+    })
   }
 
   const togglePin = (id: string) => {
@@ -351,15 +379,7 @@ function HandoverTab({
         description="Publikuj i edytuj notatki dla następnej zmiany. Przypięte wiadomości są zawsze widoczne na górze tablicy."
       />
 
-      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-6 space-y-2">
-        <input className={inputCls} value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="Twoje imię (opcjonalnie)" />
-        <textarea className={`${inputCls} min-h-[80px]`} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Wpisz przekazanie dla następnej zmiany…" />
-        <button type="button" onClick={addNote} className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 font-semibold text-sm transition">
-          Opublikuj przekazanie
-        </button>
-      </div>
-
-      <div className="space-y-3">
+      <div className="space-y-3 mb-6">
         {config.handoverNotes.map((note) => (
           <article key={note.id} className={`p-4 rounded-2xl border border-white/10 ${note.done ? 'bg-white/[0.02] opacity-60' : 'bg-white/5'}`}>
             <textarea
@@ -381,6 +401,21 @@ function HandoverTab({
             </div>
           </article>
         ))}
+      </div>
+
+      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400/80">Nowe przekazanie</p>
+        <input className={inputCls} value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="Twoje imię (opcjonalnie)" />
+        <MentionTextarea
+          value={draft}
+          onChange={setDraft}
+          onSubmit={addNote}
+          employees={config.employees}
+          placeholder="Np. @Kasia sprawdź zamrażarkę…"
+        />
+        <button type="button" onClick={addNote} className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 font-semibold text-sm transition">
+          Opublikuj przekazanie
+        </button>
       </div>
     </div>
   )

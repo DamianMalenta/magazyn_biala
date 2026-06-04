@@ -7,6 +7,7 @@ export function normalizeHandoverNote(note: HandoverNote): HandoverNote {
     ...note,
     done: note.done ?? false,
     pinned: note.pinned ?? false,
+    mentions: note.mentions ?? [],
   }
 }
 

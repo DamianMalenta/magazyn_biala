@@ -56,11 +56,18 @@ export interface HandoverNote {
   id: string
   author: string
   content: string
+  mentions: string[]
   createdAt: string
   pinned: boolean
   done: boolean
   doneAt?: string
   doneBy?: string
+}
+
+export interface WeatherConfig {
+  city: string
+  latitude: number | null
+  longitude: number | null
 }
 
 export interface PageSections {
@@ -70,6 +77,7 @@ export interface PageSections {
   showHandover: boolean
   showInfoCards: boolean
   showShiftPulse: boolean
+  showWeather: boolean
 }
 
 export interface StartPageConfig {
@@ -83,5 +91,6 @@ export interface StartPageConfig {
   schedule: WeekSchedule
   handoverNotes: HandoverNote[]
   searchEngine: 'google' | 'duckduckgo'
+  weather: WeatherConfig
   sections: PageSections
 }

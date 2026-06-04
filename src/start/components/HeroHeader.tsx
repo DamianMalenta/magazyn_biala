@@ -2,6 +2,8 @@ import { getActiveShifts, getEmployeeMap, getGreeting, getTodayKey, formatShiftT
 import type { Employee, WeekSchedule } from '../types'
 import { DAY_LABELS } from '../types'
 import { SearchBar } from './SearchBar'
+import { WeatherWidget } from './WeatherWidget'
+import type { WeatherData } from '../lib/weatherUtils'
 
 interface HeroHeaderProps {
   employees: Employee[]
@@ -10,6 +12,8 @@ interface HeroHeaderProps {
   time: string
   date: string
   showSearch: boolean
+  showWeather: boolean
+  weather: { data: WeatherData | null; loading: boolean; error: boolean }
   searchEngine: 'google' | 'duckduckgo'
   openHandoverCount: number
 }
@@ -21,6 +25,8 @@ export function HeroHeader({
   time,
   date,
   showSearch,
+  showWeather,
+  weather,
   searchEngine,
   openHandoverCount,
 }: HeroHeaderProps) {
@@ -56,6 +62,11 @@ export function HeroHeader({
           </div>
 
           <div className="shrink-0 text-left xl:text-right">
+            {showWeather && (
+              <div className="mb-3 xl:flex xl:justify-end">
+                <WeatherWidget data={weather.data} loading={weather.loading} error={weather.error} />
+              </div>
+            )}
             <div className="clock-display">{time.slice(0, 5)}</div>
             <p className="text-xs text-slate-500 mt-1 font-mono tabular-nums">{time.slice(6)}</p>
             <div className="flex flex-wrap xl:justify-end gap-2 mt-4">

@@ -14,6 +14,8 @@ import { AdminLogin } from './components/AdminLogin'
 import { AdminPanel } from './components/AdminPanel'
 import { useLinkOpener } from './hooks/useLinkOpener'
 import { EmbeddedPanel } from './components/EmbeddedPanel'
+import { WeatherWidget } from './components/WeatherWidget'
+import { useWeather } from './hooks/useWeather'
 
 export default function StartApp() {
   const { config, update, reset, resetAdminPin, exportBackup, importBackup } = useStartPageConfig()
@@ -26,6 +28,7 @@ export default function StartApp() {
   const { sections } = config
 
   const openHandoverCount = config.handoverNotes.filter((n) => !n.done).length
+  const weatherState = useWeather(config.weather, sections.showWeather)
 
   useEffect(() => {
     if (firstVisit) setShowLogin(true)
@@ -78,6 +81,8 @@ export default function StartApp() {
             time={time}
             date={date}
             showSearch={sections.showSearch}
+            showWeather={sections.showWeather}
+            weather={weatherState}
             searchEngine={config.searchEngine}
             openHandoverCount={openHandoverCount}
           />
@@ -86,6 +91,11 @@ export default function StartApp() {
         {!sections.showShiftPulse && sections.showSearch && (
           <div className="panel p-4">
             <SearchBar searchEngine={config.searchEngine} />
+          </div>
+        )}
+        {!sections.showShiftPulse && sections.showWeather && (
+          <div className="panel p-4 flex justify-end">
+            <WeatherWidget data={weatherState.data} loading={weatherState.loading} error={weatherState.error} />
           </div>
         )}
 
@@ -106,6 +116,7 @@ export default function StartApp() {
               <div className={sections.showSchedule ? 'xl:col-span-2' : ''}>
                 <HandoverBoard
                   notes={config.handoverNotes}
+                  employees={config.employees}
                   onUpdate={(handoverNotes) => update({ ...config, handoverNotes })}
                 />
               </div>
