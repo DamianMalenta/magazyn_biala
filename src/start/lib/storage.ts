@@ -2,11 +2,18 @@ import { DEFAULT_CONFIG, DEFAULT_SECTIONS } from './defaultConfig'
 import type { StartPageConfig } from '../types'
 
 const STORAGE_KEY = 'startpage-config-v1'
+export const DEFAULT_ADMIN_PIN = '2024'
+
+export function normalizePin(pin: string | undefined): string {
+  const trimmed = pin?.trim()
+  return trimmed && trimmed.length >= 4 ? trimmed : DEFAULT_ADMIN_PIN
+}
 
 function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
   return {
     ...DEFAULT_CONFIG,
     ...parsed,
+    adminPin: normalizePin(parsed.adminPin),
     sections: { ...DEFAULT_SECTIONS, ...parsed.sections },
     quickLinks: parsed.quickLinks ?? DEFAULT_CONFIG.quickLinks,
     infoCards: parsed.infoCards ?? DEFAULT_CONFIG.infoCards,
@@ -14,6 +21,10 @@ function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
     schedule: { ...DEFAULT_CONFIG.schedule, ...parsed.schedule },
     handoverNotes: parsed.handoverNotes ?? DEFAULT_CONFIG.handoverNotes,
   }
+}
+
+export function isFirstVisit(): boolean {
+  return localStorage.getItem(STORAGE_KEY) === null
 }
 
 export function loadConfig(): StartPageConfig {
@@ -27,12 +38,22 @@ export function loadConfig(): StartPageConfig {
 }
 
 export function saveConfig(config: StartPageConfig): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
+  const safe = { ...config, adminPin: normalizePin(config.adminPin) }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(safe))
 }
 
 export function resetConfig(): StartPageConfig {
   localStorage.removeItem(STORAGE_KEY)
+  sessionStorage.removeItem('startpage-admin-session')
   return structuredClone(DEFAULT_CONFIG)
+}
+
+export function resetAdminPin(): StartPageConfig {
+  const config = loadConfig()
+  const fixed = { ...config, adminPin: DEFAULT_ADMIN_PIN }
+  saveConfig(fixed)
+  sessionStorage.removeItem('startpage-admin-session')
+  return fixed
 }
 
 export function exportConfig(config: StartPageConfig): void {
@@ -54,6 +75,7 @@ export async function importConfig(file: File): Promise<{ ok: true; config: Star
     }
     const config = mergeConfig(parsed)
     saveConfig(config)
+    sessionStorage.removeItem('startpage-admin-session')
     return { ok: true, config }
   } catch {
     return { ok: false, error: 'Nie udało się wczytać pliku JSON.' }

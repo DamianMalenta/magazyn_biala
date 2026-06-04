@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { loadConfig, saveConfig, resetConfig, exportConfig, importConfig } from '../lib/storage'
+import { loadConfig, saveConfig, resetConfig, exportConfig, importConfig, resetAdminPin } from '../lib/storage'
 import type { StartPageConfig } from '../types'
 
 export function useStartPageConfig() {
@@ -15,7 +15,7 @@ export function useStartPageConfig() {
     setConfig((prev) => {
       const next = typeof patch === 'function' ? patch(prev) : patch
       saveConfig(next)
-      return next
+      return loadConfig()
     })
   }, [])
 
@@ -23,6 +23,12 @@ export function useStartPageConfig() {
     const fresh = resetConfig()
     setConfig(fresh)
     return fresh
+  }, [])
+
+  const doResetAdminPin = useCallback(() => {
+    const fixed = resetAdminPin()
+    setConfig(fixed)
+    return fixed
   }, [])
 
   const doExport = useCallback(() => exportConfig(config), [config])
@@ -33,5 +39,5 @@ export function useStartPageConfig() {
     return result
   }, [])
 
-  return { config, update, reset: doReset, exportBackup: doExport, importBackup: doImport, tick }
+  return { config, update, reset: doReset, resetAdminPin: doResetAdminPin, exportBackup: doExport, importBackup: doImport, tick }
 }

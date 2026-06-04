@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useStartPageConfig } from './hooks/useStartPageConfig'
 import { useClock } from './hooks/useClock'
 import { useAdminAuth } from './hooks/useAdminAuth'
+import { isFirstVisit } from './lib/storage'
 import { QuickLinksGrid } from './components/QuickLinksGrid'
 import { ShiftPulse } from './components/ShiftPulse'
 import { WeeklyScheduleView } from './components/WeeklyScheduleView'
@@ -13,12 +14,17 @@ import { AdminLogin } from './components/AdminLogin'
 import { AdminPanel } from './components/AdminPanel'
 
 export default function StartApp() {
-  const { config, update, reset, exportBackup, importBackup } = useStartPageConfig()
+  const { config, update, reset, resetAdminPin, exportBackup, importBackup } = useStartPageConfig()
   const { time, date } = useClock()
-  const { isAdmin, showLogin, setShowLogin, login, logout } = useAdminAuth(config.adminPin)
+  const { isAdmin, showLogin, setShowLogin, login, logout } = useAdminAuth()
   const [commandOpen, setCommandOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
+  const [firstVisit] = useState(() => isFirstVisit())
   const { sections } = config
+
+  useEffect(() => {
+    if (firstVisit) setShowLogin(true)
+  }, [firstVisit, setShowLogin])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -42,9 +48,29 @@ export default function StartApp() {
     return ok
   }
 
+  const handleResetPin = () => {
+    resetAdminPin()
+  }
+
+  const handleFullReset = () => {
+    reset()
+  }
+
   return (
     <>
       <div className="mesh-bg" />
+
+      {firstVisit && !isAdmin && !showLogin && (
+        <div className="relative max-w-7xl mx-auto px-4 md:px-8 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowLogin(true)}
+            className="w-full p-4 rounded-2xl bg-violet-600/20 border border-violet-500/40 text-violet-200 text-sm font-semibold hover:bg-violet-600/30 transition text-center"
+          >
+            🎉 Pierwsza konfiguracja — kliknij tutaj, aby ustawić stronę startową (PIN: 2024)
+          </button>
+        </div>
+      )}
 
       <div className="relative min-h-screen max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10 flex flex-col gap-6">
         {sections.showShiftPulse && (
@@ -100,7 +126,15 @@ export default function StartApp() {
         onOpenAdmin={() => { setCommandOpen(false); openAdmin() }}
       />
 
-      {showLogin && !isAdmin && <AdminLogin onLogin={handleLogin} onClose={() => setShowLogin(false)} />}
+      {showLogin && !isAdmin && (
+        <AdminLogin
+          onLogin={handleLogin}
+          onClose={() => setShowLogin(false)}
+          isFirstVisit={firstVisit}
+          onResetPin={handleResetPin}
+          onFullReset={handleFullReset}
+        />
+      )}
 
       {adminOpen && isAdmin && (
         <AdminPanel
