@@ -371,22 +371,22 @@
   overflow: hidden;
 }
 
-/* ── Panel osadzonej strony — rozwija się pod kafelkami ── */
+/* ── Panel osadzonej strony — rozwija się pod kafelkami (w normalnym flow) ── */
 .embed-inline-wrap {
-  animation: embed-slide-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  @apply relative w-full shrink-0 overflow-hidden;
+  margin-bottom: 0.25rem;
+  animation: embed-slide-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
   transform-origin: top center;
 }
 
 @keyframes embed-slide-in {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.985);
-    max-height: 0;
+    transform: translateY(-8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    max-height: calc(var(--embed-h, 420px) + 64px);
+    transform: translateY(0);
   }
 }
 
@@ -526,6 +526,58 @@
 
 .music-custom-stream {
   @apply flex gap-2 px-3 py-2 border-t border-white/10 shrink-0;
+}
+
+.music-panel-wrap {
+  @apply z-[1];
+}
+
+/* Pasek po minimalizacji — muzyka gra w tle */
+.music-mini-bar {
+  @apply fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-2 py-2 rounded-2xl border border-violet-500/35 shadow-2xl backdrop-blur-xl;
+  width: min(96vw, 28rem);
+  background: linear-gradient(180deg, rgba(20, 16, 32, 0.97) 0%, rgba(10, 12, 18, 0.98) 100%);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(139, 92, 246, 0.15);
+  animation: music-mini-in 0.28s ease-out both;
+}
+
+@keyframes music-mini-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.music-mini-bar-main {
+  @apply flex items-center gap-2 min-w-0 flex-1 text-left px-2 py-1 rounded-xl hover:bg-white/5 transition;
+}
+
+.music-mini-bar-icon {
+  @apply w-9 h-9 rounded-xl bg-violet-600/30 text-violet-200 flex items-center justify-center text-lg shrink-0;
+}
+
+.music-mini-bar-text {
+  @apply flex flex-col min-w-0;
+}
+
+.music-mini-bar-title {
+  @apply text-sm font-bold truncate text-white;
+}
+
+.music-mini-bar-sub {
+  @apply text-[10px] text-slate-500 truncate;
+}
+
+.music-mini-btn {
+  @apply px-2.5 min-w-[2.25rem];
+}
+
+.link-tile-dock-minimized .link-tile-dock-icon {
+  @apply ring-2 ring-violet-400/60 ring-offset-2 ring-offset-[#0a0c12];
 }
 
 

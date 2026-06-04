@@ -26,7 +26,15 @@ export default function StartApp() {
   const [commandOpen, setCommandOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
   const [firstVisit] = useState(() => isFirstVisit())
-  const { openLink, embeddedLink, closeEmbed, openEmbeddedInTab } = useLinkOpener()
+  const {
+    openLink,
+    embeddedLink,
+    embedMinimized,
+    closeEmbed,
+    minimizeEmbed,
+    expandEmbed,
+    openEmbeddedInTab,
+  } = useLinkOpener()
   const { sections } = config
 
   const openHandoverCount = config.handoverNotes.filter((n) => !n.done).length
@@ -108,13 +116,22 @@ export default function StartApp() {
             <QuickLinksGrid
               links={config.quickLinks}
               activeEmbedId={embeddedLink?.id}
+              embedMinimized={embedMinimized}
               onOpenLink={openLink}
             />
             {embeddedLink && (embeddedLink.openMode ?? 'tab') === 'embed' && (
               isMusicLink(embeddedLink.url, embeddedLink.linkType) ? (
-                <MusicPanel link={embeddedLink} onClose={closeEmbed} />
+                <MusicPanel
+                  link={embeddedLink}
+                  minimized={embedMinimized}
+                  onMinimize={minimizeEmbed}
+                  onExpand={expandEmbed}
+                  onClose={closeEmbed}
+                />
               ) : (
-                <EmbeddedPanel link={embeddedLink} onClose={closeEmbed} onOpenTab={openEmbeddedInTab} />
+                !embedMinimized && (
+                  <EmbeddedPanel link={embeddedLink} onClose={closeEmbed} onOpenTab={openEmbeddedInTab} />
+                )
               )
             )}
           </>

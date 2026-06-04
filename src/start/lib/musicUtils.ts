@@ -4,6 +4,8 @@ export interface MusicStation {
   id: string
   name: string
   streamUrl: string
+  /** Zapasowe adresy (np. mirror Icecast). */
+  fallbackUrls?: string[]
   tags?: string
   country?: string
   favicon?: string
@@ -25,90 +27,106 @@ export interface MusicCategory {
   }
 }
 
-/** Bezpośrednie strumienie — bez API, bez reklam w panelu (same audio). */
+function soma(slug: string): Pick<MusicStation, 'streamUrl' | 'fallbackUrls'> {
+  const base = slug.endsWith('-128-mp3') ? slug : `${slug}-128-mp3`
+  return {
+    streamUrl: `https://ice1.somafm.com/${base}`,
+    fallbackUrls: [`https://ice2.somafm.com/${base}`],
+  }
+}
+
+/** Bezpośrednie strumienie HTTPS — działają na GitHub Pages (bez mixed content). */
 export const MUSIC_PRESETS: Record<MusicCategoryId, MusicStation[]> = {
   lounge: [
     {
-      id: 'jam-lounge',
-      name: 'Jamendo — Lounge',
-      streamUrl: 'https://streaming.jamendo.com/JamLounge',
+      id: 'soma-groove',
+      name: 'SomaFM — Groove Salad',
+      ...soma('groovesalad'),
+      tags: 'downtempo, lounge',
+      source: 'preset',
+    },
+    {
+      id: 'soma-lush',
+      name: 'SomaFM — Lush',
+      ...soma('lush'),
       tags: 'lounge, ambient',
       source: 'preset',
     },
     {
-      id: 'jam-chillout',
-      name: 'Jamendo — Chillout',
-      streamUrl: 'https://streaming.jamendo.com/JamChillout',
-      tags: 'chillout',
-      source: 'preset',
-    },
-    {
-      id: 'soma-groove',
-      name: 'SomaFM — Groove Salad',
-      streamUrl: 'https://ice1.somafm.com/groovesalad-128-mp3',
-      tags: 'downtempo, lounge',
+      id: 'rp-main',
+      name: 'Radio Paradise — Main',
+      streamUrl: 'https://stream.radioparadise.com/aac-320',
+      tags: 'eclectic, lounge',
       source: 'preset',
     },
   ],
   jazz: [
     {
-      id: 'jam-jazz',
-      name: 'Jamendo — Jazz',
-      streamUrl: 'https://streaming.jamendo.com/JamJazz',
-      tags: 'jazz',
+      id: 'soma-secret',
+      name: 'SomaFM — Secret Agent',
+      ...soma('secretagent'),
+      tags: 'jazz, lounge',
       source: 'preset',
     },
     {
-      id: 'soma-secret',
-      name: 'SomaFM — Secret Agent',
-      streamUrl: 'https://ice1.somafm.com/secretagent-128-mp3',
-      tags: 'jazz, lounge',
+      id: 'soma-bossa',
+      name: 'SomaFM — Bossa Beyond',
+      ...soma('bossa'),
+      tags: 'bossa, jazz',
+      source: 'preset',
+    },
+    {
+      id: 'fip',
+      name: 'Radio France — FIP',
+      streamUrl: 'https://icecast.radiofrance.fr/fip-midfi.mp3',
+      tags: 'jazz, eclectic',
+      country: 'Francja',
       source: 'preset',
     },
   ],
   chill: [
     {
-      id: 'jam-ambient',
-      name: 'Jamendo — Ambient',
-      streamUrl: 'https://streaming.jamendo.com/JamAmbient',
-      tags: 'ambient',
-      source: 'preset',
-    },
-    {
       id: 'soma-drone',
       name: 'SomaFM — Drone Zone',
-      streamUrl: 'https://ice1.somafm.com/dronezone-128-mp3',
+      ...soma('dronezone'),
       tags: 'ambient, chill',
       source: 'preset',
     },
     {
-      id: 'soma-defcon',
-      name: 'SomaFM — DEF CON',
-      streamUrl: 'https://ice1.somafm.com/defcon-128-mp3',
-      tags: 'electronic, chill',
+      id: 'soma-deepspace',
+      name: 'SomaFM — Deep Space One',
+      ...soma('deepspaceone'),
+      tags: 'ambient, space',
+      source: 'preset',
+    },
+    {
+      id: 'soma-fluid',
+      name: 'SomaFM — Fluid',
+      ...soma('fluid'),
+      tags: 'chill, electronic',
       source: 'preset',
     },
   ],
   pop: [
     {
-      id: 'jam-pop',
-      name: 'Jamendo — Pop',
-      streamUrl: 'https://streaming.jamendo.com/JamPop',
-      tags: 'pop',
-      source: 'preset',
-    },
-    {
-      id: 'jam-rock',
-      name: 'Jamendo — Rock',
-      streamUrl: 'https://streaming.jamendo.com/JamRock',
-      tags: 'rock',
-      source: 'preset',
-    },
-    {
       id: 'soma-indie',
       name: 'SomaFM — Indie Pop',
-      streamUrl: 'https://ice1.somafm.com/indiepop-128-mp3',
+      ...soma('indiepop'),
       tags: 'indie, pop',
+      source: 'preset',
+    },
+    {
+      id: 'soma-poptron',
+      name: 'SomaFM — PopTron',
+      ...soma('poptron'),
+      tags: 'electropop, synth',
+      source: 'preset',
+    },
+    {
+      id: 'soma-covers',
+      name: 'SomaFM — Covers',
+      ...soma('covers'),
+      tags: 'covers, pop',
       source: 'preset',
     },
   ],
@@ -116,16 +134,26 @@ export const MUSIC_PRESETS: Record<MusicCategoryId, MusicStation[]> = {
     {
       id: 'rmf-maxxx',
       name: 'RMF MAXXX',
-      streamUrl: 'https://rs6-ssl.rmfon.pl/rmf_maxxx',
+      streamUrl: 'https://rs9-krk2-cyfronet.rmfstream.pl/RMFMAXXX48',
+      fallbackUrls: ['https://rs8-krk2-cyfronet.rmfstream.pl/RMFMAXXX48'],
       tags: 'dance, pop',
       country: 'Polska',
       source: 'preset',
     },
     {
-      id: 'rmf-classic',
-      name: 'RMF Classic',
-      streamUrl: 'https://rs6-ssl.rmfon.pl/rmf_classic',
-      tags: 'classic',
+      id: 'rmf-fm',
+      name: 'RMF FM',
+      streamUrl: 'https://rs9-krk2-cyfronet.rmfstream.pl/rmf_fm',
+      fallbackUrls: ['https://rs8-krk2-cyfronet.rmfstream.pl/rmf_fm'],
+      tags: 'pop, hits',
+      country: 'Polska',
+      source: 'preset',
+    },
+    {
+      id: 'radio-zet',
+      name: 'Radio ZET',
+      streamUrl: 'https://r.dcs.redcdn.pl/sc/o2/Eurozet/live/audio.livx?audio=5',
+      tags: 'pop, news',
       country: 'Polska',
       source: 'preset',
     },
@@ -137,7 +165,7 @@ export const MUSIC_CATEGORIES: MusicCategory[] = [
   { id: 'jazz', label: 'Jazz', emoji: '🎷', search: { tag: 'jazz' } },
   { id: 'chill', label: 'Chill', emoji: '🌿', search: { tagList: 'chill,ambient' } },
   { id: 'pop', label: 'Pop', emoji: '🎵', search: { tag: 'pop' } },
-  { id: 'pl', label: 'Polskie', emoji: '🇵🇱', search: { countrycode: 'PL', tag: 'lounge' } },
+  { id: 'pl', label: 'Polskie', emoji: '🇵🇱', search: { countrycode: 'PL', tag: 'pop' } },
 ]
 
 const RADIO_BROWSER = 'https://de1.api.radio-browser.info/json/stations/search'
@@ -162,6 +190,11 @@ export function isMusicLink(url: string, linkType?: string): boolean {
   return t === 'music:' || t === 'music://player' || t.startsWith('music://')
 }
 
+export function streamUrlsForStation(station: MusicStation): string[] {
+  const urls = [station.streamUrl, ...(station.fallbackUrls ?? [])]
+  return [...new Set(urls.filter(Boolean))]
+}
+
 export function loadLastStation(): MusicStation | null {
   try {
     const raw = localStorage.getItem(LAST_STATION_KEY)
@@ -184,10 +217,9 @@ export async function fetchRadioStations(
 
   const params = new URLSearchParams({
     hidebroken: 'true',
-    limit: String(limit),
+    limit: String(limit * 2),
     order: 'votes',
     reverse: 'true',
-    codec: 'MP3',
   })
 
   if (search.tag) params.set('tag', search.tag)
@@ -203,7 +235,8 @@ export async function fetchRadioStations(
 
   const rows = (await res.json()) as RadioBrowserRow[]
   return rows
-    .filter((r) => r.lastcheckok !== 0 && r.url_resolved)
+    .filter((r) => r.lastcheckok !== 0 && r.url_resolved?.startsWith('https://'))
+    .slice(0, limit)
     .map((r) => ({
       id: r.stationuuid,
       name: r.name,
