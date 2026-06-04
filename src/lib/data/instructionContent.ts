@@ -15,11 +15,11 @@ export interface InstructionRule {
 }
 
 export const QUICK_STEPS = [
-  'Używaj wyłącznie komputera w pracy (nie telefonu).',
-  'Otwórz link magazynu w przeglądarce na PC.',
-  'Skopiuj całą wiadomość ze stanem od szefa (Messenger).',
-  'Wklej w Smart Paste → kliknij Przetwórz tekst.',
-  'Po prawej widać tylko towary na stanie.',
+  'Stan wpisujecie na grupę Messenger (każdy po zmianie).',
+  'Na komputerze w pracy otwórz link magazynu (nie telefon).',
+  'Skopiuj całą wiadomość ze stanem z grupy.',
+  'Wklej w Smart Paste → Przetwórz tekst.',
+  'Po prawej — tylko towary na stanie.',
 ] as const
 
 export const INSTRUCTION_STEPS: InstructionStep[] = [
@@ -71,7 +71,7 @@ export const INSTRUCTION_STEPS: InstructionStep[] = [
 ]
 
 export const PHONE_POLICY_NOTE =
-  'Magazyn działa tylko na komputerze w pracy. Telefon służy do odbierania wiadomości na Messengerze — stan wprowadzacie na PC.'
+  'Stan piszecie na grupę Messenger z telefonu. Magazyn w aplikacji — tylko na komputerze w pracy (wklejenie i przetworzenie).'
 
 export const INSTRUCTION_RULES: InstructionRule[] = [
   {

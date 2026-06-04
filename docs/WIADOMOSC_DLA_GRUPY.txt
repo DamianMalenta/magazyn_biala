@@ -1,0 +1,56 @@
+📦 MAGAZYN — zasady (krótko)
+
+🔗 Tylko KOMPUTER w pracy:
+https://damianmalenta.github.io/magazyn_biala/
+(Na telefonie aplikacja nie działa.)
+
+━━━━━━━━━━━━━━━━━━━━
+
+KTO I CO:
+• Stan wpisujemy na TEJ GRUPIE — każdy po swojej zmianie / inwentaryzacji
+• Potem na PC: kopiujecie CAŁĄ wiadomość → Smart Paste → PRZETWÓRZ TEKST
+• Zakładka INSTRUKCJA w aplikacji = zdjęcia i opis
+
+━━━━━━━━━━━━━━━━━━━━
+
+JAK PISAĆ NA GRUPĘ:
+• linia: zamrażalnik / lodówka / opakowania
+• pod spodem: 4x nugetsy | 2 kg ser | 1x papryka worek
+• tylko jedna strefa? → tylko jej nagłówek + towary (reszta magazynu bez zmian)
+• cała strefa? → wszystko co jest; brakuje na liście = 0
+
+━━━━━━━━━━━━━━━━━━━━
+
+SZABLON — SKOPIUJ I UZUPEŁNIJ:
+
+Magazyn — 04.06.2026 14:00
+
+zamrażalnik
+4x nugetsy
+5x skrzydełka
+2x szyszki
+1x papryka worek
+1 pojemnik krewetek
+3 kg frytki
+
+lodówka
+2x jogurt grecki
+2 kg ser mozzarella
+7x salami zwykle
+1x sos czosnkowy
+
+opakowania
+10x kartony małe
+50 opakowań na makarony
+20 x wieczka na makarony
+
+━━━━━━━━━━━━━━━━━━━━
+
+Przykład — sama lodówka:
+
+lodówka
+2x jogurt grecki
+2 kg ser mozzarella
+7x salami zwykle
+
+Pytania → tu na grupie.
