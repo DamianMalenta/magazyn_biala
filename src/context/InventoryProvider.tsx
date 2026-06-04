@@ -4,7 +4,12 @@ import type { Category, InventoryItem, StandardUOM } from '../types/inventory'
 import { loadInventory, saveInventory, resetInventory } from '../lib/storage/inventoryStorage'
 import { createId } from '../lib/utils/text'
 
-export function InventoryProvider({ children }: { children: ReactNode }) {
+interface InventoryProviderProps {
+  children: ReactNode
+  onSkuRenamed?: (oldName: string, newName: string) => void
+}
+
+export function InventoryProvider({ children, onSkuRenamed }: InventoryProviderProps) {
   const [items, setItems] = useState<InventoryItem[]>(() => loadInventory())
 
   const persist = useCallback((next: InventoryItem[]) => {
@@ -26,6 +31,22 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       ])
     },
     [items, persist],
+  )
+
+  const updateItem = useCallback(
+    (id: string, patch: Partial<Pick<InventoryItem, 'name' | 'category' | 'unit' | 'qty'>>) => {
+      const current = items.find((i) => i.id === id)
+      if (!current) return
+
+      if (patch.name && patch.name !== current.name) {
+        onSkuRenamed?.(current.name, patch.name)
+      }
+
+      persist(
+        items.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+      )
+    },
+    [items, persist, onSkuRenamed],
   )
 
   const updateQty = useCallback(
@@ -70,20 +91,47 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     persist(resetInventory())
   }, [persist])
 
+  const replaceAll = useCallback(
+    (next: InventoryItem[]) => {
+      persist(next)
+    },
+    [persist],
+  )
+
   const getItemById = useCallback((id: string) => items.find((item) => item.id === id), [items])
+
+  const countByCategory = useCallback(
+    (category: string) => items.filter((i) => i.category === category).length,
+    [items],
+  )
 
   const value = useMemo(
     () => ({
       items,
       addItem,
+      updateItem,
       updateQty,
       setQty,
       applyBulkUpdates,
       deleteItem,
       resetToDefaults,
+      replaceAll,
       getItemById,
+      countByCategory,
     }),
-    [items, addItem, updateQty, setQty, applyBulkUpdates, deleteItem, resetToDefaults, getItemById],
+    [
+      items,
+      addItem,
+      updateItem,
+      updateQty,
+      setQty,
+      applyBulkUpdates,
+      deleteItem,
+      resetToDefaults,
+      replaceAll,
+      getItemById,
+      countByCategory,
+    ],
   )
 
   return <InventoryContext.Provider value={value}>{children}</InventoryContext.Provider>

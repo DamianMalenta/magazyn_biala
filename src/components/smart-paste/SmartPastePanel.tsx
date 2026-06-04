@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { parseMessengerText } from '../../lib/parser'
 import { useInventory } from '../../hooks/useInventory'
+import { useConfig } from '../../hooks/useConfig'
 import type { ParseLogEntry, QuarantineItem } from '../../types/inventory'
 import { ParseLog } from './ParseLog'
 import { QuarantineZone, type ResolvePayload } from './QuarantineZone'
@@ -27,6 +28,7 @@ opakowania
 
 export function SmartPastePanel() {
   const { items, applyBulkUpdates, setQty, addItem } = useInventory()
+  const { parserConfig, addAliasToSku } = useConfig()
   const [text, setText] = useState('')
   const [logs, setLogs] = useState<ParseLogEntry[]>([])
   const [quarantine, setQuarantine] = useState<QuarantineItem[]>([])
@@ -35,7 +37,7 @@ export function SmartPastePanel() {
   const handleParse = () => {
     if (!text.trim()) return
 
-    const result = parseMessengerText(text, items)
+    const result = parseMessengerText(text, items, parserConfig)
 
     if (result.updates.size > 0) {
       applyBulkUpdates(result.updates)
@@ -66,6 +68,7 @@ export function SmartPastePanel() {
         unit: resolution.unit,
         qty: item.qty,
       })
+      addAliasToSku(resolution.name, resolution.name.toLowerCase())
     }
 
     setQuarantine((prev) => prev.filter((q) => q.id !== item.id))

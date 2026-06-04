@@ -1,5 +1,10 @@
 import type { StandardUOM } from '../../types/inventory'
-import { TRAILING_UNIT_PATTERN } from '../data/dictionary'
+import type { ParserConfig } from '../../types/config'
+import {
+  buildLeadingQtyPattern,
+  buildTrailingUnitPattern,
+  buildUnitAsProductPattern,
+} from './parserHelpers'
 import { isRawUnitToken, normalizeUOM, stripUnitTokensFromName } from './uomNormalizer'
 
 export interface ExtractedLine {
@@ -10,18 +15,15 @@ export interface ExtractedLine {
   cleanName: string
 }
 
-const LEADING_QTY_PATTERN =
-  /^(\d+(?:[.,]\d+)?)\s*(x|kg|g|l|ml|op|opakowanie|opakowań|opakowan|opakowania|worek|worki|pojemnik|pojemniki|paczka|paczki|szt(?:uk|uki|ućce|uce)?|kartony?|karton)?\s*(.*)$/i
-
-const UNIT_IS_PRODUCT_NAME =
-  /^(opakowań|opakowan|opakowania|opakowanie|sztućce|sztuce|pojemnik|pojemniki)$/i
-
 function rejoinNameWhenUnitIsProduct(
   trimmed: string,
   rawUnit: string | null,
   rawName: string,
+  config: ParserConfig,
 ): { rawUnit: string | null; rawName: string } {
-  if (!rawUnit || !UNIT_IS_PRODUCT_NAME.test(rawUnit)) {
+  const unitAsProduct = buildUnitAsProductPattern(config.unitAsProductName)
+
+  if (!rawUnit || !unitAsProduct.test(rawUnit)) {
     return { rawUnit, rawName }
   }
 
@@ -35,28 +37,31 @@ function rejoinNameWhenUnitIsProduct(
   return { rawUnit, rawName }
 }
 
-export function extractQuantityAndName(line: string): ExtractedLine {
+export function extractQuantityAndName(line: string, config: ParserConfig): ExtractedLine {
   const trimmed = line.trim()
   let qty = 1
   let rawUnit: string | null = null
   let rawName = trimmed
 
-  const match = trimmed.match(LEADING_QTY_PATTERN)
+  const leadingPattern = buildLeadingQtyPattern(config.rawUnitTokens)
+  const trailingPattern = buildTrailingUnitPattern(config.rawUnitTokens)
+
+  const match = trimmed.match(leadingPattern)
   if (match) {
     qty = parseFloat(match[1].replace(',', '.'))
     rawUnit = match[2]?.toLowerCase() ?? null
     rawName = match[3]?.trim() || trimmed
 
-    const rejoined = rejoinNameWhenUnitIsProduct(trimmed, rawUnit, rawName)
+    const rejoined = rejoinNameWhenUnitIsProduct(trimmed, rawUnit, rawName, config)
     rawUnit = rejoined.rawUnit
     rawName = rejoined.rawName
   }
 
   if (!rawUnit) {
-    const trailing = rawName.match(TRAILING_UNIT_PATTERN)
+    const trailing = rawName.match(trailingPattern)
     if (trailing) {
       rawUnit = trailing[1].toLowerCase()
-      rawName = rawName.replace(TRAILING_UNIT_PATTERN, '').trim()
+      rawName = rawName.replace(trailingPattern, '').trim()
     }
   }
 
@@ -65,15 +70,15 @@ export function extractQuantityAndName(line: string): ExtractedLine {
     rawUnit = 'kg'
   }
 
-  const unit = normalizeUOM(rawUnit)
-  let cleanName = stripUnitTokensFromName(rawName)
+  const unit = normalizeUOM(rawUnit, config)
+  let cleanName = stripUnitTokensFromName(rawName, config)
 
   if (!cleanName && rawName) {
     cleanName = rawName
   }
 
-  if (rawUnit && isRawUnitToken(rawUnit) && !match?.[3]?.trim()) {
-    cleanName = stripUnitTokensFromName(trimmed.replace(/^\d+(?:[.,]\d+)?\s*/i, ''))
+  if (rawUnit && isRawUnitToken(rawUnit, config) && !match?.[3]?.trim()) {
+    cleanName = stripUnitTokensFromName(trimmed.replace(/^\d+(?:[.,]\d+)?\s*/i, ''), config)
   }
 
   return {

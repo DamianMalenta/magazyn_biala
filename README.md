@@ -4,48 +4,59 @@ Standalone inventory management app for restaurant warehouse staff. Paste raw Me
 
 ## Stack
 
-- **Vite + React 19 + TypeScript** — fast, typed, easy to extend
-- **Tailwind CSS v4** — modern dark UI tuned for warehouse use
-- **localStorage** — no backend required; data persists in the browser
+- **Vite + React 19 + TypeScript**
+- **Tailwind CSS v4**
+- **localStorage** — inventory + full parser config persisted in browser
 
 ## Features
 
 | Module | Description |
 |--------|-------------|
 | **Smart Paste** | Paste Messenger text → auto-parse zones, quantities, aliases |
+| **Panel Ustawień** | Full admin UI for zones, SKUs, aliases, UOM, parser, backup |
 | **Category State Machine** | Headers like `zamrażalnik` / `lodówka` set the active zone |
-| **Alias Dictionary** | Longest-match + fuzzy fallback for typos and shorthand |
-| **Strict UOM** | All units normalized to `kg.`, `szt.`, or `opak.` |
-| **Quarantine** | Unrecognized lines stay visible with one-click SKU assignment |
-| **Manual Controls** | +/- qty, add SKU, reset database |
+| **Alias Dictionary** | Longest-match + fuzzy fallback — editable from UI |
+| **Strict UOM** | All units normalized to `kg.`, `szt.`, or `opak.` — mappings editable |
+| **Quarantine** | Unrecognized lines with one-click SKU assignment |
+| **Import/Export** | JSON backup of config + inventory |
 
 ## Commands
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev
 npm run build
 npm test
-npm run preview
 ```
+
+## Panel Ustawień (⚙️)
+
+| Zakładka | Co konfigurujesz |
+|----------|------------------|
+| **Strefy** | Kategorie magazynowe, aliasy nagłówków, ikony, kolory |
+| **Produkty** | Pełny katalog SKU — nazwa, strefa, jednostka |
+| **Aliasy** | Słownik potocznych nazw → SKU |
+| **Jednostki** | Mapowanie surowych j.m., tokeny parsera |
+| **Parser** | Słowa ignorowane, fuzzy match |
+| **Backup** | Eksport/import JSON, reset do domyślnych |
+
+Konfiguracja zapisywana w `localStorage` pod kluczem `magazyn_config_v1`.
 
 ## Architecture
 
 ```
 src/
-├── lib/parser/          # Pure parsing engine (testable, no React)
-│   ├── categoryStateMachine.ts
-│   ├── quantityExtractor.ts
-│   ├── uomNormalizer.ts
-│   ├── aliasMatcher.ts
-│   └── parseMessenger.ts
-├── lib/data/            # SKU catalog, aliases, defaults
+├── lib/parser/          # Pure parsing engine (reads ParserConfig)
+├── lib/data/            # Default config seed
+├── lib/storage/         # configStorage + inventoryStorage
+├── context/             # ConfigProvider + InventoryProvider
 ├── components/
-│   ├── smart-paste/     # Paste panel, logs, quarantine
-│   └── inventory/       # Category grid, item cards
-└── hooks/useInventory.tsx
+│   ├── smart-paste/
+│   ├── inventory/
+│   └── settings/        # Admin panel tabs
+└── hooks/
 ```
 
 ## Demo
 
-Click **Demo** in the Smart Paste panel to load the example Messenger message from the spec.
+Click **Demo** in Smart Paste to load the example Messenger message.

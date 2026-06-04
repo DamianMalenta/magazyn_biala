@@ -1,28 +1,27 @@
-import type { Category } from '../../types/inventory'
-import { CATEGORY_ALIASES, IGNORE_LINE_KEYWORDS } from '../data/dictionary'
+import type { ParserConfig } from '../../types/config'
 import { normalizeText } from '../utils/text'
 
 export type LineKind = 'ignore' | 'category' | 'item'
 
 export interface LineClassification {
   kind: LineKind
-  category?: Category
+  category?: string
 }
 
 const QUANTITY_PREFIX = /^\d/
 
-export function classifyLine(line: string): LineClassification {
+export function classifyLine(line: string, config: ParserConfig): LineClassification {
   const trimmed = line.trim()
   if (!trimmed) return { kind: 'ignore' }
 
   const normalized = normalizeText(trimmed)
 
-  if (IGNORE_LINE_KEYWORDS.some((keyword) => normalized.includes(keyword))) {
+  if (config.ignoreLineKeywords.some((keyword) => normalized.includes(normalizeText(keyword)))) {
     return { kind: 'ignore' }
   }
 
   if (!QUANTITY_PREFIX.test(trimmed)) {
-    for (const [category, aliases] of Object.entries(CATEGORY_ALIASES) as [Category, string[]][]) {
+    for (const [category, aliases] of Object.entries(config.categoryAliases)) {
       const isHeader = aliases.some((alias) => {
         const aliasNorm = normalizeText(alias)
         return normalized === aliasNorm || normalized.startsWith(`${aliasNorm} `)
@@ -38,13 +37,18 @@ export function classifyLine(line: string): LineClassification {
 }
 
 export class CategoryStateMachine {
-  private current: Category | null = null
+  private current: string | null = null
+  private readonly config: ParserConfig
 
-  get zone(): Category | null {
+  constructor(config: ParserConfig) {
+    this.config = config
+  }
+
+  get zone(): string | null {
     return this.current
   }
 
-  processClassification(classification: LineClassification): Category | null {
+  processClassification(classification: LineClassification): string | null {
     if (classification.kind === 'category' && classification.category) {
       this.current = classification.category
       return this.current
@@ -52,7 +56,7 @@ export class CategoryStateMachine {
     return null
   }
 
-  suggestCategory(): Category {
-    return this.current ?? 'OPAKOWANIA'
+  suggestCategory(): string {
+    return this.current ?? this.config.defaultCategory
   }
 }

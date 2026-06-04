@@ -1,24 +1,34 @@
 import type { InventoryItem, ParseLogEntry, ParseResult, QuarantineItem } from '../../types/inventory'
+import type { ParserConfig } from '../../types/config'
 import { matchSkuName } from './aliasMatcher'
 import { CategoryStateMachine, classifyLine } from './categoryStateMachine'
 import { extractQuantityAndName } from './quantityExtractor'
 import { createId } from '../utils/text'
 
-function resolveSkuMatch(rawLine: string, extracted: ReturnType<typeof extractQuantityAndName>, inventoryNames: string[]) {
+function resolveSkuMatch(
+  rawLine: string,
+  extracted: ReturnType<typeof extractQuantityAndName>,
+  inventoryNames: string[],
+  config: ParserConfig,
+) {
   const fallbackName = rawLine.replace(/^\d+(?:[.,]\d+)?\s*(?:x|kg\.?|g\b)?\s*/i, '').trim()
 
   return (
-    matchSkuName(extracted.cleanName, inventoryNames) ??
-    matchSkuName(extracted.rawName, inventoryNames) ??
-    matchSkuName(fallbackName, inventoryNames)
+    matchSkuName(extracted.cleanName, inventoryNames, config) ??
+    matchSkuName(extracted.rawName, inventoryNames, config) ??
+    matchSkuName(fallbackName, inventoryNames, config)
   )
 }
 
-export function parseMessengerText(rawText: string, inventory: InventoryItem[]): ParseResult {
+export function parseMessengerText(
+  rawText: string,
+  inventory: InventoryItem[],
+  config: ParserConfig,
+): ParseResult {
   const updates = new Map<string, number>()
   const quarantine: QuarantineItem[] = []
   const logs: ParseLogEntry[] = []
-  const stateMachine = new CategoryStateMachine()
+  const stateMachine = new CategoryStateMachine(config)
   const inventoryNames = inventory.map((item) => item.name)
 
   const lines = rawText.split('\n')
@@ -27,7 +37,7 @@ export function parseMessengerText(rawText: string, inventory: InventoryItem[]):
     const trimmed = line.trim()
     if (!trimmed) continue
 
-    const classification = classifyLine(trimmed)
+    const classification = classifyLine(trimmed, config)
 
     if (classification.kind === 'ignore') {
       logs.push({
@@ -48,8 +58,8 @@ export function parseMessengerText(rawText: string, inventory: InventoryItem[]):
       continue
     }
 
-    const extracted = extractQuantityAndName(trimmed)
-    const match = resolveSkuMatch(trimmed, extracted, inventoryNames)
+    const extracted = extractQuantityAndName(trimmed, config)
+    const match = resolveSkuMatch(trimmed, extracted, inventoryNames, config)
 
     const targetItem = match
       ? inventory.find((item) => item.name === match.canonical)
@@ -62,11 +72,9 @@ export function parseMessengerText(rawText: string, inventory: InventoryItem[]):
     if (targetItem) {
       updates.set(targetItem.id, extracted.qty)
 
-      const zoneMismatch =
-        stateMachine.zone !== null && targetItem.category !== stateMachine.zone
+      const zoneMismatch = stateMachine.zone !== null && targetItem.category !== stateMachine.zone
 
-      const confidenceNote =
-        match?.confidence === 'fuzzy' ? ' (dopasowanie rozmyte)' : ''
+      const confidenceNote = match?.confidence === 'fuzzy' ? ' (dopasowanie rozmyte)' : ''
 
       logs.push({
         id: createId('log'),

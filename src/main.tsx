@@ -1,13 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { InventoryProvider } from './context/InventoryProvider'
+import { AppProviders } from './context/AppProviders'
 import App from './App.tsx'
 import './index.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <InventoryProvider>
+    <AppProviders>
       <App />
-    </InventoryProvider>
+    </AppProviders>
   </StrictMode>,
 )

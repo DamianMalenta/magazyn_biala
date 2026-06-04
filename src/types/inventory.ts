@@ -1,6 +1,4 @@
-export const CATEGORIES = ['LODÓWKA', 'ZAMRAŻARKA', 'OPAKOWANIA'] as const
-
-export type Category = (typeof CATEGORIES)[number]
+export type Category = string
 
 export const STANDARD_UOMS = ['kg.', 'szt.', 'opak.'] as const
 

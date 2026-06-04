@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { QuarantineItem, InventoryItem, StandardUOM, Category } from '../../types/inventory'
-import { CATEGORIES, STANDARD_UOMS } from '../../types/inventory'
+import type { QuarantineItem, InventoryItem, StandardUOM } from '../../types/inventory'
+import { useConfig } from '../../hooks/useConfig'
 import { formatQty } from '../../lib/utils/text'
 
 interface QuarantineZoneProps {
@@ -14,7 +14,7 @@ export interface ResolvePayload {
   mode: 'assign-existing' | 'create-new'
   skuId?: string
   name?: string
-  category?: Category
+  category?: string
   unit?: StandardUOM
 }
 
@@ -27,9 +27,7 @@ export function QuarantineZone({ items, inventory, onResolve, onDismiss }: Quara
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-500/20 text-rose-400 text-xs font-bold">
           {items.length}
         </span>
-        <h3 className="text-sm font-bold uppercase tracking-wide text-rose-400">
-          Kwarantanna
-        </h3>
+        <h3 className="text-sm font-bold uppercase tracking-wide text-rose-400">Kwarantanna</h3>
       </header>
       <p className="text-xs text-slate-500 mb-3">
         Pozycje nierozpoznane przez parser. Przypisz do istniejącego SKU jednym kliknięciem
@@ -61,9 +59,10 @@ function QuarantineCard({
   onResolve: (item: QuarantineItem, resolution: ResolvePayload) => void
   onDismiss: (id: string) => void
 }) {
+  const { categoryNames, config } = useConfig()
   const [selectedSku, setSelectedSku] = useState(item.suggestedSkuId ?? '')
   const [newName, setNewName] = useState(item.rawName)
-  const [newCategory, setNewCategory] = useState<Category>(item.suggestedCategory)
+  const [newCategory, setNewCategory] = useState(item.suggestedCategory)
   const [newUnit, setNewUnit] = useState<StandardUOM>(item.unit)
   const [showCreate, setShowCreate] = useState(!item.suggestedSkuId)
 
@@ -86,9 +85,7 @@ function QuarantineCard({
       {!showCreate && suggested && (
         <button
           type="button"
-          onClick={() =>
-            onResolve(item, { mode: 'assign-existing', skuId: suggested.id })
-          }
+          onClick={() => onResolve(item, { mode: 'assign-existing', skuId: suggested.id })}
           className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase py-2.5 px-3 transition active:scale-[0.98]"
         >
           Przypisz do „{suggested.name}" ({formatQty(item.qty)} {item.unit})
@@ -115,9 +112,7 @@ function QuarantineCard({
           <button
             type="button"
             disabled={!selectedSku}
-            onClick={() =>
-              onResolve(item, { mode: 'assign-existing', skuId: selectedSku })
-            }
+            onClick={() => onResolve(item, { mode: 'assign-existing', skuId: selectedSku })}
             className="rounded-lg bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold px-3 transition"
           >
             OK
@@ -145,10 +140,10 @@ function QuarantineCard({
             <div className="grid grid-cols-2 gap-2">
               <select
                 value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value as Category)}
+                onChange={(e) => setNewCategory(e.target.value)}
                 className="rounded-lg bg-slate-900 border border-slate-700 px-2 py-2 text-sm outline-none focus:border-amber-500"
               >
-                {CATEGORIES.map((cat) => (
+                {categoryNames.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>
@@ -159,7 +154,7 @@ function QuarantineCard({
                 onChange={(e) => setNewUnit(e.target.value as StandardUOM)}
                 className="rounded-lg bg-slate-900 border border-slate-700 px-2 py-2 text-sm outline-none focus:border-amber-500"
               >
-                {STANDARD_UOMS.map((u) => (
+                {config.standardUoms.map((u) => (
                   <option key={u} value={u}>
                     {u}
                   </option>

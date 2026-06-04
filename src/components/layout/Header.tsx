@@ -1,19 +1,12 @@
 import { AddItemForm } from '../inventory/AddItemForm'
-import { useInventory } from '../../hooks/useInventory'
+import { Navigation, type AppView } from './Navigation'
 
-export function Header() {
-  const { resetToDefaults } = useInventory()
+interface HeaderProps {
+  activeView: AppView
+  onViewChange: (view: AppView) => void
+}
 
-  const handleReset = () => {
-    if (
-      window.confirm(
-        'Przywrócić domyślną bazę SKU? Spowoduje to utratę bieżących ilości i niestandardowych produktów.',
-      )
-    ) {
-      resetToDefaults()
-    }
-  }
-
+export function Header({ activeView, onViewChange }: HeaderProps) {
   return (
     <header className="shrink-0 rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
       <div className="flex items-center gap-3">
@@ -26,15 +19,9 @@ export function Header() {
         </div>
       </div>
 
-      <AddItemForm />
+      <Navigation active={activeView} onChange={onViewChange} />
 
-      <button
-        type="button"
-        onClick={handleReset}
-        className="text-[10px] text-slate-600 hover:text-slate-400 underline self-end xl:self-center whitespace-nowrap"
-      >
-        Reset bazy
-      </button>
+      {activeView === 'warehouse' && <AddItemForm />}
     </header>
   )
 }

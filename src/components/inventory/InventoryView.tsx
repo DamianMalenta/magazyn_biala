@@ -1,8 +1,9 @@
-import { CATEGORIES } from '../../types/inventory'
+import { useConfig } from '../../hooks/useConfig'
 import { useInventory } from '../../hooks/useInventory'
 import { CategorySection } from './CategorySection'
 
 export function InventoryView() {
+  const { config } = useConfig()
   const { items, updateQty, deleteItem } = useInventory()
   const totalQty = items.reduce((sum, item) => sum + item.qty, 0)
   const zeroItems = items.filter((i) => i.qty === 0).length
@@ -18,18 +19,15 @@ export function InventoryView() {
       <div className="flex flex-wrap gap-4 text-sm">
         <Stat label="Pozycje" value={String(items.length)} />
         <Stat label="Suma szt./kg/opak." value={String(totalQty)} />
-        <Stat
-          label="Brak na stanie"
-          value={String(zeroItems)}
-          alert={zeroItems > 0}
-        />
+        <Stat label="Brak na stanie" value={String(zeroItems)} alert={zeroItems > 0} />
       </div>
 
-      {CATEGORIES.map((category) => (
+      {config.categories.map((cat) => (
         <CategorySection
-          key={category}
-          category={category}
-          items={items.filter((i) => i.category === category)}
+          key={cat.id}
+          category={cat.name}
+          theme={cat.theme}
+          items={items.filter((i) => i.category === cat.name)}
           onIncrement={(id) => updateQty(id, 1)}
           onDecrement={(id) => updateQty(id, -1)}
           onDelete={handleDelete}
