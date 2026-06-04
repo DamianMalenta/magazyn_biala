@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -8,4 +9,12 @@ const base = process.env.GITHUB_PAGES === 'true' ? '/magazyn_biala/' : '/'
 export default defineConfig({
   base,
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        start: resolve(__dirname, 'start.html'),
+      },
+    },
+  },
 })
