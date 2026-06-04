@@ -4,6 +4,7 @@ import { LinkIcon } from './LinkIcon'
 interface QuickLinksGridProps {
   links: QuickLink[]
   activeEmbedId?: string | null
+  embedMinimized?: boolean
   onOpenLink: (link: QuickLink) => void
 }
 
@@ -12,7 +13,7 @@ const OPEN_MODE_BADGE: Partial<Record<QuickLink['openMode'], string>> = {
   window: '⧉',
 }
 
-export function QuickLinksGrid({ links, activeEmbedId, onOpenLink }: QuickLinksGridProps) {
+export function QuickLinksGrid({ links, activeEmbedId, embedMinimized = false, onOpenLink }: QuickLinksGridProps) {
   const pinned = links.filter((l) => l.pinned)
   if (pinned.length === 0) return null
 
@@ -22,13 +23,14 @@ export function QuickLinksGrid({ links, activeEmbedId, onOpenLink }: QuickLinksG
       <div className="links-dock links-dock-compact">
         {pinned.map((link) => {
           const isActive = activeEmbedId === link.id && (link.openMode ?? 'tab') === 'embed'
+          const isMinimized = isActive && embedMinimized
           return (
             <button
               key={link.id}
               type="button"
               onClick={() => onOpenLink(link)}
-              className={`link-tile-dock group ${isActive ? 'link-tile-dock-active' : ''}`}
-              title={`${link.label}${link.openMode === 'tab' ? '' : ` · ${link.openMode === 'embed' ? 'Panel' : 'Okno'}`}${isActive ? ' · kliknij aby zwinąć' : ''}`}
+              className={`link-tile-dock group ${isActive ? 'link-tile-dock-active' : ''} ${isMinimized ? 'link-tile-dock-minimized' : ''}`}
+              title={`${link.label}${link.openMode === 'tab' ? '' : ` · ${link.openMode === 'embed' ? 'Panel' : 'Okno'}`}${isActive ? (embedMinimized ? ' · kliknij aby rozwinąć' : ' · kliknij aby zminimalizować') : ''}`}
               aria-expanded={isActive}
             >
               <div className="link-tile-dock-icon" style={{ '--tile-accent': link.color } as React.CSSProperties}>

@@ -7,16 +7,20 @@ import {
   loadLastStation,
   saveLastStation,
   stationsForCategory,
+  streamUrlsForStation,
   type MusicCategoryId,
   type MusicStation,
 } from '../lib/musicUtils'
 
 interface MusicPanelProps {
   link: QuickLink
+  minimized: boolean
+  onMinimize: () => void
+  onExpand: () => void
   onClose: () => void
 }
 
-export function MusicPanel({ link, onClose }: MusicPanelProps) {
+export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: MusicPanelProps) {
   const height = EMBED_SIZE_HEIGHT[link.embedSize ?? 'medium']
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -57,11 +61,14 @@ export function MusicPanel({ link, onClose }: MusicPanelProps) {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        if (minimized) onExpand()
+        else onMinimize()
+      }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
+  }, [minimized, onExpand, onMinimize])
 
   useEffect(() => {
     const el = audioRef.current
@@ -77,18 +84,36 @@ export function MusicPanel({ link, onClose }: MusicPanelProps) {
     setCurrent(station)
     saveLastStation(station)
 
+    const urls = streamUrlsForStation(station)
     el.pause()
-    el.src = station.streamUrl
-    el.load()
 
-    try {
-      await el.play()
-      setPlaying(true)
-    } catch {
-      setPlaying(false)
-      setError('Nie udało się odtworzyć tej stacji — spróbuj innej lub sprawdź internet.')
+    for (let i = 0; i < urls.length; i++) {
+      el.src = urls[i]
+      el.load()
+      try {
+        await el.play()
+        setPlaying(true)
+        return
+      } catch {
+        if (i === urls.length - 1) {
+          setPlaying(false)
+          setError('Nie udało się odtworzyć tej stacji — spróbuj innej lub sprawdź internet.')
+        }
+      }
     }
   }, [])
+
+  const stopPlayback = useCallback(() => {
+    const el = audioRef.current
+    if (el) {
+      el.pause()
+      el.removeAttribute('src')
+      el.load()
+    }
+    setPlaying(false)
+    setCurrent(null)
+    onClose()
+  }, [onClose])
 
   const togglePlay = async () => {
     const el = audioRef.current
@@ -125,12 +150,51 @@ export function MusicPanel({ link, onClose }: MusicPanelProps) {
     })
   }
 
+  const audioElement = (
+    <audio
+      ref={audioRef}
+      preload="none"
+      onPlay={() => setPlaying(true)}
+      onPause={() => setPlaying(false)}
+      onError={() => {
+        setPlaying(false)
+        setError('Strumień niedostępny — wybierz inną stację.')
+      }}
+    />
+  )
+
+  if (minimized) {
+    return (
+      <div className="music-mini-bar" role="region" aria-label={`Muzyka: ${link.label}`}>
+        {audioElement}
+        <button type="button" onClick={onExpand} className="music-mini-bar-main" title="Rozwiń odtwarzacz">
+          <span className="music-mini-bar-icon">{playing ? '♫' : '♪'}</span>
+          <span className="music-mini-bar-text">
+            <span className="music-mini-bar-title">{current?.name ?? link.label}</span>
+            <span className="music-mini-bar-sub">{playing ? 'Gra w tle' : 'Wstrzymane'}</span>
+          </span>
+        </button>
+        <button type="button" onClick={togglePlay} className="embed-btn embed-btn-primary music-mini-btn" title={playing ? 'Pauza' : 'Odtwórz'}>
+          {playing ? '⏸' : '▶'}
+        </button>
+        <button type="button" onClick={onExpand} className="embed-btn music-mini-btn" title="Rozwiń">
+          ⊞
+        </button>
+        <button type="button" onClick={stopPlayback} className="embed-btn music-mini-btn" title="Zatrzymaj i zamknij">
+          ×
+        </button>
+      </div>
+    )
+  }
+
   return (
     <section
       className="embed-inline-wrap music-panel-wrap"
       aria-label={`Muzyka: ${link.label}`}
       style={{ '--embed-h': height } as React.CSSProperties}
     >
+      {audioElement}
+
       <div className="embed-inline-panel">
         <header className="embed-panel-header">
           <div className="flex items-center gap-2 min-w-0">
@@ -138,7 +202,16 @@ export function MusicPanel({ link, onClose }: MusicPanelProps) {
             <div className="min-w-0">
               <p className="font-bold text-sm truncate">{link.label}</p>
               <p className="text-[10px] text-slate-500 truncate">
-                {current ? `▶ ${current.name}` : 'Radio i strumienie audio — bez wideo'}
+                {current ? (
+                  <>
+                    <span className={playing ? 'text-emerald-400' : 'text-slate-500'}>
+                      {playing ? '● ' : '○ '}
+                    </span>
+                    {current.name}
+                  </>
+                ) : (
+                  'Radio i strumienie audio — bez wideo'
+                )}
               </p>
             </div>
           </div>
@@ -146,24 +219,16 @@ export function MusicPanel({ link, onClose }: MusicPanelProps) {
             <button type="button" onClick={togglePlay} className="embed-btn embed-btn-primary" title={playing ? 'Pauza' : 'Odtwórz'}>
               {playing ? '⏸ Pauza' : '▶ Graj'}
             </button>
-            <button type="button" onClick={onClose} className="embed-btn" title="Zwiń panel">
+            <button type="button" onClick={onMinimize} className="embed-btn" title="Minimalizuj (muzyka gra dalej)">
+              _
+            </button>
+            <button type="button" onClick={stopPlayback} className="embed-btn" title="Zatrzymaj i zamknij">
               ×
             </button>
           </div>
         </header>
 
         <div className="embed-panel-body music-panel-body">
-          <audio
-            ref={audioRef}
-            preload="none"
-            onPlay={() => setPlaying(true)}
-            onPause={() => setPlaying(false)}
-            onError={() => {
-              setPlaying(false)
-              setError('Strumień niedostępny — wybierz inną stację.')
-            }}
-          />
-
           <div className="music-panel-toolbar">
             <div className="music-categories">
               {MUSIC_CATEGORIES.map((cat) => (
@@ -197,7 +262,7 @@ export function MusicPanel({ link, onClose }: MusicPanelProps) {
           {error && <p className="music-error-banner">{error}</p>}
 
           <div className="music-station-list" role="list">
-            {loading && stations.length <= 3 && (
+            {loading && (
               <p className="text-xs text-slate-500 px-3 py-2">Ładowanie stacji z katalogu…</p>
             )}
             {stations.map((station) => (
@@ -234,7 +299,7 @@ export function MusicPanel({ link, onClose }: MusicPanelProps) {
               w eterze) często <strong>nie pozwalaj</strong> na komercyjne użycie w lokalu.
             </p>
             <p className="mt-2">
-              Ten panel odtwarza <strong>same audio</strong> (bez filmów i bez reklam w interfejsie). Stacje Jamendo/SomaFM
+              Ten panel odtwarza <strong>same audio</strong> (bez filmów i bez reklam w interfejsie). Stacje SomaFM
               i radio z katalogu Radio Browser są wygodne technicznie; do pełnej zgodności prawnej w lokalu rozważ np.{' '}
               <a href="https://licensing.jamendo.com/en/in-store" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline">
                 Jamendo In-Store
@@ -249,7 +314,7 @@ export function MusicPanel({ link, onClose }: MusicPanelProps) {
               value={customUrl}
               onChange={(e) => setCustomUrl(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && playCustom()}
-              placeholder="Własny URL strumienia MP3/AAC (opcjonalnie)"
+              placeholder="Własny URL strumienia HTTPS (MP3/AAC)"
               className="embed-youtube-input text-xs"
             />
             <button type="button" onClick={playCustom} className="embed-btn shrink-0">

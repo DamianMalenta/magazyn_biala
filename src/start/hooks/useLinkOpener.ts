@@ -1,9 +1,11 @@
 import { useCallback, useState } from 'react'
 import type { QuickLink } from '../types'
 import { openLinkInWindow } from '../lib/linkOpenUtils'
+import { isMusicLink } from '../lib/musicUtils'
 
 export function useLinkOpener() {
   const [embeddedLink, setEmbeddedLink] = useState<QuickLink | null>(null)
+  const [embedMinimized, setEmbedMinimized] = useState(false)
 
   const openLink = useCallback((link: QuickLink) => {
     const mode = link.openMode ?? 'tab'
@@ -19,18 +21,49 @@ export function useLinkOpener() {
     }
 
     if (mode === 'embed') {
+      const isMusic = isMusicLink(link.url, link.linkType)
+
+      if (isMusic) {
+        setEmbeddedLink((prev) => {
+          if (prev?.id === link.id) {
+            setEmbedMinimized((m) => !m)
+            return prev
+          }
+          setEmbedMinimized(false)
+          return link
+        })
+        return
+      }
+
+      setEmbedMinimized(false)
       setEmbeddedLink((prev) => (prev?.id === link.id ? null : link))
     }
   }, [])
 
-  const closeEmbed = useCallback(() => setEmbeddedLink(null), [])
+  const closeEmbed = useCallback(() => {
+    setEmbeddedLink(null)
+    setEmbedMinimized(false)
+  }, [])
+
+  const minimizeEmbed = useCallback(() => setEmbedMinimized(true), [])
+
+  const expandEmbed = useCallback(() => setEmbedMinimized(false), [])
 
   const openEmbeddedInTab = useCallback(() => {
     if (embeddedLink) {
       window.open(embeddedLink.url, '_blank', 'noopener,noreferrer')
       setEmbeddedLink(null)
+      setEmbedMinimized(false)
     }
   }, [embeddedLink])
 
-  return { openLink, embeddedLink, closeEmbed, openEmbeddedInTab }
+  return {
+    openLink,
+    embeddedLink,
+    embedMinimized,
+    closeEmbed,
+    minimizeEmbed,
+    expandEmbed,
+    openEmbeddedInTab,
+  }
 }
