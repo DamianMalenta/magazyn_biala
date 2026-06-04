@@ -1,3 +1,5 @@
+export type IconMode = 'auto' | 'manual'
+
 export type DayKey = 'pon' | 'wt' | 'sr' | 'czw' | 'pt' | 'sob' | 'nd'
 
 export const DAY_KEYS: DayKey[] = ['pon', 'wt', 'sr', 'czw', 'pt', 'sob', 'nd']
@@ -16,7 +18,10 @@ export interface QuickLink {
   id: string
   label: string
   url: string
+  /** Emoji używane ręcznie lub jako zapas gdy favicon się nie załaduje */
   icon: string
+  /** auto = favicon ze strony, manual = emoji z pola icon */
+  iconMode: IconMode
   color: string
   pinned: boolean
 }

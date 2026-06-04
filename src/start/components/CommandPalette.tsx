@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { InfoCard, QuickLink } from '../types'
+import { LinkIcon } from './LinkIcon'
 
 interface CommandItem {
   id: string
   label: string
   sublabel?: string
   icon: string
+  link?: QuickLink
   action: () => void
 }
 
@@ -29,6 +31,7 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin }:
         label: l.label,
         sublabel: l.url,
         icon: l.icon,
+        link: l,
         action: () => window.open(l.url, '_blank'),
       })),
       ...infoCards.map((c) => ({
@@ -123,7 +126,11 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin }:
                     i === selected ? 'bg-violet-500/20' : 'hover:bg-white/5'
                   }`}
                 >
-                  <span className="text-xl">{item.icon}</span>
+                  {item.link ? (
+                    <LinkIcon link={item.link} size="command" />
+                  ) : (
+                    <span className="text-xl w-6 text-center">{item.icon}</span>
+                  )}
                   <div className="min-w-0">
                     <p className="font-medium truncate">{item.label}</p>
                     {item.sublabel && (

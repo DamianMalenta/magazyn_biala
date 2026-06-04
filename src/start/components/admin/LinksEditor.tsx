@@ -1,6 +1,8 @@
 import { uid } from '../../lib/storage'
 import { moveItem } from '../../lib/arrayUtils'
-import type { QuickLink, StartPageConfig } from '../../types'
+import { extractHostname } from '../../lib/faviconUtils'
+import type { IconMode, QuickLink, StartPageConfig } from '../../types'
+import { LinkIcon } from '../LinkIcon'
 import {
   TabHeader,
   Field,
@@ -9,7 +11,6 @@ import {
   btnGhost,
   btnDanger,
   Toggle,
-  TilePreview,
   ICON_PRESETS,
 } from './AdminUi'
 
@@ -22,17 +23,30 @@ interface LinksEditorProps {
 export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
   const visibleCount = config.quickLinks.filter((l) => l.pinned).length
 
-  const updateLink = (id: string, field: keyof QuickLink, value: string | boolean) => {
+  const updateLink = <K extends keyof QuickLink>(id: string, field: K, value: QuickLink[K]) => {
     patch({
       quickLinks: config.quickLinks.map((l) => (l.id === id ? { ...l, [field]: value } : l)),
     })
+  }
+
+  const setIconMode = (id: string, mode: IconMode) => {
+    updateLink(id, 'iconMode', mode)
+    onToast(mode === 'auto' ? 'Ikona pobierana ze strony' : 'Ikona ręczna (emoji)')
   }
 
   const addLink = () => {
     patch({
       quickLinks: [
         ...config.quickLinks,
-        { id: uid(), label: 'Nowy kafelek', url: 'https://', icon: '⭐', color: '#8b5cf6', pinned: true },
+        {
+          id: uid(),
+          label: 'Nowy kafelek',
+          url: 'https://',
+          icon: '🔗',
+          iconMode: 'auto',
+          color: '#8b5cf6',
+          pinned: true,
+        },
       ],
     })
     onToast('Dodano nowy kafelek')
@@ -46,10 +60,7 @@ export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
 
   const duplicateLink = (link: QuickLink) => {
     patch({
-      quickLinks: [
-        ...config.quickLinks,
-        { ...link, id: uid(), label: `${link.label} (kopia)` },
-      ],
+      quickLinks: [...config.quickLinks, { ...link, id: uid(), label: `${link.label} (kopia)` }],
     })
     onToast('Skopiowano kafelek')
   }
@@ -62,7 +73,7 @@ export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
     <div>
       <TabHeader
         title="Duże kafelki skrótów"
-        description="Dodawaj, usuwaj i układaj kafelki widoczne na stronie startowej. Kolejność na liście = kolejność na ekranie. Wyłącz „Pokaż na stronie”, aby ukryć kafelek bez usuwania."
+        description="Ikony domyślnie pobierają favicon ze strony (URL). Możesz przełączyć na ręczne emoji. Kolejność na liście = kolejność na ekranie."
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5 p-4 rounded-2xl bg-violet-500/10 border border-violet-500/20">
@@ -88,105 +99,17 @@ export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
           </div>
         ) : (
           config.quickLinks.map((link, index) => (
-            <article
+            <LinkCard
               key={link.id}
-              className={`rounded-2xl border overflow-hidden transition ${
-                link.pinned ? 'border-white/10 bg-white/[0.04]' : 'border-slate-700/50 bg-slate-900/40 opacity-80'
-              }`}
-            >
-              <div className="flex flex-col sm:flex-row gap-4 p-4">
-                <TilePreview link={link} />
-
-                <div className="flex-1 min-w-0 space-y-3">
-                  <div className="flex flex-wrap gap-2">
-                    <input
-                      className={`${inputCls} w-14 text-center text-xl shrink-0`}
-                      value={link.icon}
-                      onChange={(e) => updateLink(link.id, 'icon', e.target.value)}
-                      title="Ikona (emoji)"
-                      maxLength={4}
-                    />
-                    <input
-                      className={`${inputCls} flex-1 min-w-[120px]`}
-                      value={link.label}
-                      onChange={(e) => updateLink(link.id, 'label', e.target.value)}
-                      placeholder="Nazwa kafelka"
-                    />
-                    <input
-                      className={`${inputCls} w-12 shrink-0 cursor-pointer`}
-                      type="color"
-                      value={link.color}
-                      onChange={(e) => updateLink(link.id, 'color', e.target.value)}
-                      title="Kolor podświetlenia"
-                    />
-                  </div>
-
-                  <Field label="Adres URL" hint="Pełny link, np. https://smartlunch.pl">
-                    <input
-                      className={inputCls}
-                      value={link.url}
-                      onChange={(e) => updateLink(link.id, 'url', e.target.value)}
-                      placeholder="https://..."
-                    />
-                  </Field>
-
-                  <div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5 block">
-                      Szybki wybór ikony
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {ICON_PRESETS.map((icon) => (
-                        <button
-                          key={icon}
-                          type="button"
-                          onClick={() => updateLink(link.id, 'icon', icon)}
-                          className={`w-9 h-9 rounded-lg text-lg hover:bg-white/10 transition ${
-                            link.icon === icon ? 'bg-violet-600/30 ring-1 ring-violet-500' : 'bg-white/5'
-                          }`}
-                        >
-                          {icon}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/5">
-                    <Toggle
-                      checked={link.pinned}
-                      onChange={(v) => updateLink(link.id, 'pinned', v)}
-                      label="Pokaż na stronie startowej"
-                    />
-
-                    <div className="flex flex-wrap gap-1">
-                      <button
-                        type="button"
-                        disabled={index === 0}
-                        onClick={() => moveLink(index, -1)}
-                        className={btnGhost}
-                        title="Przesuń w lewo / wyżej"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        disabled={index === config.quickLinks.length - 1}
-                        onClick={() => moveLink(index, 1)}
-                        className={btnGhost}
-                        title="Przesuń w prawo / niżej"
-                      >
-                        ↓
-                      </button>
-                      <button type="button" onClick={() => duplicateLink(link)} className={btnGhost}>
-                        Duplikuj
-                      </button>
-                      <button type="button" onClick={() => removeLink(link.id, link.label)} className={btnDanger}>
-                        Usuń
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
+              link={link}
+              index={index}
+              total={config.quickLinks.length}
+              onUpdate={updateLink}
+              onSetIconMode={setIconMode}
+              onMove={moveLink}
+              onDuplicate={() => duplicateLink(link)}
+              onRemove={() => removeLink(link.id, link.label)}
+            />
           ))
         )}
       </div>
@@ -201,5 +124,172 @@ export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
         </button>
       )}
     </div>
+  )
+}
+
+function LinkCard({
+  link,
+  index,
+  total,
+  onUpdate,
+  onSetIconMode,
+  onMove,
+  onDuplicate,
+  onRemove,
+}: {
+  link: QuickLink
+  index: number
+  total: number
+  onUpdate: <K extends keyof QuickLink>(id: string, field: K, value: QuickLink[K]) => void
+  onSetIconMode: (id: string, mode: IconMode) => void
+  onMove: (index: number, dir: -1 | 1) => void
+  onDuplicate: () => void
+  onRemove: () => void
+}) {
+  const hostname = extractHostname(link.url)
+  const isAuto = link.iconMode === 'auto'
+
+  return (
+    <article
+      className={`rounded-2xl border overflow-hidden transition ${
+        link.pinned ? 'border-white/10 bg-white/[0.04]' : 'border-slate-700/50 bg-slate-900/40 opacity-80'
+      }`}
+    >
+      <div className="flex flex-col sm:flex-row gap-4 p-4">
+        <div
+          className="w-32 h-32 relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 shrink-0 mx-auto sm:mx-0"
+        >
+          <div className="absolute inset-0 rounded-2xl opacity-30 blur-xl" style={{ background: link.color }} />
+          <LinkIcon link={link} size="preview" />
+          <span className="relative text-[10px] font-bold uppercase tracking-wide text-center px-1 truncate w-full">
+            {link.label}
+          </span>
+          {!link.pinned && (
+            <span className="absolute top-1 right-1 text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+              ukryty
+            </span>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <input
+              className={`${inputCls} flex-1 min-w-[120px]`}
+              value={link.label}
+              onChange={(e) => onUpdate(link.id, 'label', e.target.value)}
+              placeholder="Nazwa kafelka"
+            />
+            <input
+              className={`${inputCls} w-12 shrink-0 cursor-pointer`}
+              type="color"
+              value={link.color}
+              onChange={(e) => onUpdate(link.id, 'color', e.target.value)}
+              title="Kolor podświetlenia"
+            />
+          </div>
+
+          <Field label="Adres URL" hint="Favicon pobierany automatycznie z tej domeny">
+            <input
+              className={inputCls}
+              value={link.url}
+              onChange={(e) => onUpdate(link.id, 'url', e.target.value)}
+              placeholder="https://smartlunch.pl"
+            />
+            {isAuto && hostname && (
+              <p className="text-[10px] text-emerald-400/80 mt-1.5">Źródło ikony: {hostname}</p>
+            )}
+          </Field>
+
+          <div>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-2 block">
+              Źródło ikony
+            </span>
+            <div className="flex flex-wrap gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => onSetIconMode(link.id, 'auto')}
+                className={`px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                  isAuto ? 'bg-violet-600 text-white' : 'bg-white/5 text-slate-400 hover:text-white'
+                }`}
+              >
+                🌐 Ze strony (auto)
+              </button>
+              <button
+                type="button"
+                onClick={() => onSetIconMode(link.id, 'manual')}
+                className={`px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                  !isAuto ? 'bg-violet-600 text-white' : 'bg-white/5 text-slate-400 hover:text-white'
+                }`}
+              >
+                ✏️ Ręcznie (emoji)
+              </button>
+            </div>
+
+            {isAuto ? (
+              <p className="text-xs text-slate-500">
+                Emoji poniżej = zapas gdy strona nie ma favicon.{' '}
+                <input
+                  className="inline-block w-12 text-center bg-white/5 border border-white/10 rounded-lg mx-1"
+                  value={link.icon}
+                  onChange={(e) => onUpdate(link.id, 'icon', e.target.value)}
+                  maxLength={4}
+                  title="Emoji zapasowe"
+                />
+              </p>
+            ) : (
+              <div>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    className={`${inputCls} w-14 text-center text-xl shrink-0`}
+                    value={link.icon}
+                    onChange={(e) => onUpdate(link.id, 'icon', e.target.value)}
+                    maxLength={4}
+                  />
+                  <button type="button" onClick={() => onSetIconMode(link.id, 'auto')} className={btnGhost}>
+                    Wróć do auto ze strony
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {ICON_PRESETS.map((icon) => (
+                    <button
+                      key={icon}
+                      type="button"
+                      onClick={() => onUpdate(link.id, 'icon', icon)}
+                      className={`w-9 h-9 rounded-lg text-lg hover:bg-white/10 transition ${
+                        link.icon === icon ? 'bg-violet-600/30 ring-1 ring-violet-500' : 'bg-white/5'
+                      }`}
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/5">
+            <Toggle
+              checked={link.pinned}
+              onChange={(v) => onUpdate(link.id, 'pinned', v)}
+              label="Pokaż na stronie startowej"
+            />
+            <div className="flex flex-wrap gap-1">
+              <button type="button" disabled={index === 0} onClick={() => onMove(index, -1)} className={btnGhost}>
+                ↑
+              </button>
+              <button type="button" disabled={index === total - 1} onClick={() => onMove(index, 1)} className={btnGhost}>
+                ↓
+              </button>
+              <button type="button" onClick={onDuplicate} className={btnGhost}>
+                Duplikuj
+              </button>
+              <button type="button" onClick={onRemove} className={btnDanger}>
+                Usuń
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
   )
 }

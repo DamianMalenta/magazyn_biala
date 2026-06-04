@@ -1,4 +1,5 @@
 import { DEFAULT_CONFIG, DEFAULT_SECTIONS } from './defaultConfig'
+import { normalizeQuickLink } from './faviconUtils'
 import type { StartPageConfig } from '../types'
 
 const STORAGE_KEY = 'startpage-config-v1'
@@ -9,13 +10,17 @@ export function normalizePin(pin: string | undefined): string {
   return trimmed && trimmed.length >= 4 ? trimmed : DEFAULT_ADMIN_PIN
 }
 
+function normalizeQuickLinks(links: StartPageConfig['quickLinks']): StartPageConfig['quickLinks'] {
+  return links.map(normalizeQuickLink)
+}
+
 function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
   return {
     ...DEFAULT_CONFIG,
     ...parsed,
     adminPin: normalizePin(parsed.adminPin),
     sections: { ...DEFAULT_SECTIONS, ...parsed.sections },
-    quickLinks: parsed.quickLinks ?? DEFAULT_CONFIG.quickLinks,
+    quickLinks: normalizeQuickLinks(parsed.quickLinks ?? DEFAULT_CONFIG.quickLinks),
     infoCards: parsed.infoCards ?? DEFAULT_CONFIG.infoCards,
     employees: parsed.employees ?? DEFAULT_CONFIG.employees,
     schedule: { ...DEFAULT_CONFIG.schedule, ...parsed.schedule },
@@ -38,7 +43,11 @@ export function loadConfig(): StartPageConfig {
 }
 
 export function saveConfig(config: StartPageConfig): void {
-  const safe = { ...config, adminPin: normalizePin(config.adminPin) }
+  const safe = {
+    ...config,
+    adminPin: normalizePin(config.adminPin),
+    quickLinks: normalizeQuickLinks(config.quickLinks),
+  }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(safe))
 }
 
