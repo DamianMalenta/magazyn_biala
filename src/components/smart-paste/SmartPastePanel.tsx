@@ -26,7 +26,11 @@ opakowania
 20 x wieczka na makarony
 1 sztućce (łyżka i nóż)`
 
-export function SmartPastePanel() {
+interface SmartPastePanelProps {
+  onOpenGuide?: () => void
+}
+
+export function SmartPastePanel({ onOpenGuide }: SmartPastePanelProps) {
   const { items, customAliases, applyBulkUpdates, setQty, addItem, addCustomAlias } =
     useInventory()
   const [text, setText] = useState('')
@@ -104,6 +108,15 @@ export function SmartPastePanel() {
             <p className="text-[11px] text-slate-500">Wklej wiadomość z Messengera</p>
           </div>
         </div>
+        {onOpenGuide && (
+          <button
+            type="button"
+            onClick={onOpenGuide}
+            className="text-[10px] font-semibold text-emerald-500/80 hover:text-emerald-400 underline"
+          >
+            Instrukcja →
+          </button>
+        )}
       </header>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 flex flex-col gap-4">
