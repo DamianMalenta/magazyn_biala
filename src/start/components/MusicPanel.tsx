@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { QuickLink } from '../types'
 import { EMBED_SIZE_HEIGHT } from '../lib/linkOpenUtils'
 import {
@@ -150,179 +151,181 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
     })
   }
 
-  const audioElement = (
-    <audio
-      ref={audioRef}
-      preload="none"
-      onPlay={() => setPlaying(true)}
-      onPause={() => setPlaying(false)}
-      onError={() => {
-        setPlaying(false)
-        setError('Strumień niedostępny — wybierz inną stację.')
-      }}
-    />
-  )
-
-  if (minimized) {
-    return (
-      <div className="music-mini-bar" role="region" aria-label={`Muzyka: ${link.label}`}>
-        {audioElement}
-        <button type="button" onClick={onExpand} className="music-mini-bar-main" title="Rozwiń odtwarzacz">
-          <span className="music-mini-bar-icon">{playing ? '♫' : '♪'}</span>
-          <span className="music-mini-bar-text">
-            <span className="music-mini-bar-title">{current?.name ?? link.label}</span>
-            <span className="music-mini-bar-sub">{playing ? 'Gra w tle' : 'Wstrzymane'}</span>
-          </span>
-        </button>
-        <button type="button" onClick={togglePlay} className="embed-btn embed-btn-primary music-mini-btn" title={playing ? 'Pauza' : 'Odtwórz'}>
-          {playing ? '⏸' : '▶'}
-        </button>
-        <button type="button" onClick={onExpand} className="embed-btn music-mini-btn" title="Rozwiń">
-          ⊞
-        </button>
-        <button type="button" onClick={stopPlayback} className="embed-btn music-mini-btn" title="Zatrzymaj i zamknij">
-          ×
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <section
-      className="embed-inline-wrap music-panel-wrap"
-      aria-label={`Muzyka: ${link.label}`}
-      style={{ '--embed-h': height } as React.CSSProperties}
-    >
-      {audioElement}
-
-      <div className="embed-inline-panel">
-        <header className="embed-panel-header">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-lg shrink-0">{link.icon}</span>
-            <div className="min-w-0">
-              <p className="font-bold text-sm truncate">{link.label}</p>
-              <p className="text-[10px] text-slate-500 truncate">
-                {current ? (
-                  <>
-                    <span className={playing ? 'text-emerald-400' : 'text-slate-500'}>
-                      {playing ? '● ' : '○ '}
-                    </span>
-                    {current.name}
-                  </>
-                ) : (
-                  'Radio i strumienie audio — bez wideo'
-                )}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <button type="button" onClick={togglePlay} className="embed-btn embed-btn-primary" title={playing ? 'Pauza' : 'Odtwórz'}>
-              {playing ? '⏸ Pauza' : '▶ Graj'}
+  const miniBar =
+    typeof document !== 'undefined'
+      ? createPortal(
+          <div className="music-mini-bar" role="region" aria-label={`Muzyka: ${link.label}`}>
+            <button type="button" onClick={onExpand} className="music-mini-bar-main" title="Rozwiń odtwarzacz">
+              <span className={`music-mini-bar-icon ${playing ? 'music-mini-bar-icon-live' : ''}`}>
+                {playing ? '♫' : '♪'}
+              </span>
+              <span className="music-mini-bar-text">
+                <span className="music-mini-bar-title">{current?.name ?? link.label}</span>
+                <span className="music-mini-bar-sub">{playing ? 'Gra w tle — kliknij aby rozwinąć' : 'Wstrzymane'}</span>
+              </span>
             </button>
-            <button type="button" onClick={onMinimize} className="embed-btn" title="Minimalizuj (muzyka gra dalej)">
-              _
+            <button
+              type="button"
+              onClick={() => void togglePlay()}
+              className="embed-btn embed-btn-primary music-mini-btn"
+              title={playing ? 'Pauza' : 'Odtwórz'}
+            >
+              {playing ? '⏸' : '▶'}
             </button>
-            <button type="button" onClick={stopPlayback} className="embed-btn" title="Zatrzymaj i zamknij">
+            <button type="button" onClick={onExpand} className="embed-btn music-mini-btn" title="Rozwiń panel">
+              ⊞
+            </button>
+            <button type="button" onClick={stopPlayback} className="embed-btn music-mini-btn" title="Zatrzymaj i zamknij">
               ×
             </button>
-          </div>
-        </header>
+          </div>,
+          document.body,
+        )
+      : null
 
-        <div className="embed-panel-body music-panel-body">
-          <div className="music-panel-toolbar">
-            <div className="music-categories">
-              {MUSIC_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => void loadCategory(cat.id)}
-                  className={`music-cat-btn ${category === cat.id ? 'music-cat-btn-active' : ''}`}
-                >
-                  <span>{cat.emoji}</span>
-                  <span>{cat.label}</span>
-                </button>
-              ))}
-            </div>
+  return (
+    <>
+      {/* Jeden element audio — nie odmontowywać przy minimalizacji */}
+      <audio
+        ref={audioRef}
+        preload="none"
+        className="sr-only"
+        aria-hidden
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onError={() => {
+          setPlaying(false)
+          setError('Strumień niedostępny — wybierz inną stację.')
+        }}
+      />
 
-            <div className="music-volume-row">
-              <span className="text-[10px] text-slate-500 shrink-0">Głośność</span>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.05}
-                value={volume}
-                onChange={(e) => setVolume(Number(e.target.value))}
-                className="music-volume-slider"
-                aria-label="Głośność"
-              />
-            </div>
-          </div>
-
-          {error && <p className="music-error-banner">{error}</p>}
-
-          <div className="music-station-list" role="list">
-            {loading && (
-              <p className="text-xs text-slate-500 px-3 py-2">Ładowanie stacji z katalogu…</p>
-            )}
-            {stations.map((station) => (
-              <button
-                key={station.id}
-                type="button"
-                role="listitem"
-                onClick={() => void playStation(station)}
-                className={`music-station-row ${current?.id === station.id ? 'music-station-row-active' : ''}`}
-              >
-                {station.favicon ? (
-                  <img src={station.favicon} alt="" className="music-station-favicon" />
-                ) : (
-                  <span className="music-station-favicon music-station-favicon-placeholder">🎧</span>
-                )}
-                <div className="min-w-0 flex-1 text-left">
-                  <p className="text-sm font-semibold truncate">{station.name}</p>
+      {minimized ? (
+        miniBar
+      ) : (
+        <section
+          className="embed-inline-wrap music-panel-wrap"
+          aria-label={`Muzyka: ${link.label}`}
+          style={{ '--embed-h': height } as React.CSSProperties}
+        >
+          <div className="embed-inline-panel">
+            <header className="embed-panel-header">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-lg shrink-0">{link.icon}</span>
+                <div className="min-w-0">
+                  <p className="font-bold text-sm truncate">{link.label}</p>
                   <p className="text-[10px] text-slate-500 truncate">
-                    {[station.country, station.tags].filter(Boolean).join(' · ') || 'strumień audio'}
+                    {current ? (
+                      <>
+                        <span className={playing ? 'text-emerald-400' : 'text-slate-500'}>
+                          {playing ? '● ' : '○ '}
+                        </span>
+                        {current.name}
+                      </>
+                    ) : (
+                      'Radio i strumienie audio — bez wideo'
+                    )}
                   </p>
                 </div>
-                <span className="text-amber-400 text-xs shrink-0">
-                  {current?.id === station.id && playing ? '●' : '▶'}
-                </span>
-              </button>
-            ))}
-          </div>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button type="button" onClick={() => void togglePlay()} className="embed-btn embed-btn-primary" title={playing ? 'Pauza' : 'Odtwórz'}>
+                  {playing ? '⏸ Pauza' : '▶ Graj'}
+                </button>
+                <button type="button" onClick={onMinimize} className="embed-btn" title="Minimalizuj (muzyka gra dalej)">
+                  ▁
+                </button>
+                <button type="button" onClick={stopPlayback} className="embed-btn" title="Zatrzymaj i zamknij">
+                  ×
+                </button>
+              </div>
+            </header>
 
-          <details className="music-legal-note">
-            <summary>Prawa autorskie w lokalu (ważne)</summary>
-            <p>
-              Odtwarzanie muzyki w restauracji to <strong>użycie publiczne</strong> — w Polsce zwykle wymaga opłat
-              dla ZAiKS/STOART (lub licencji zbiorczej). Darmowe strumienie (YouTube, Spotify Free, radio z reklamami
-              w eterze) często <strong>nie pozwalaj</strong> na komercyjne użycie w lokalu.
-            </p>
-            <p className="mt-2">
-              Ten panel odtwarza <strong>same audio</strong> (bez filmów i bez reklam w interfejsie). Stacje SomaFM
-              i radio z katalogu Radio Browser są wygodne technicznie; do pełnej zgodności prawnej w lokalu rozważ np.{' '}
-              <a href="https://licensing.jamendo.com/en/in-store" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline">
-                Jamendo In-Store
-              </a>{' '}
-              (~89 €/rok, bez reklam, certyfikat) lub playlisty royalty-free (np. Pixabay Music) na własnym serwerze.
-            </p>
-          </details>
+            <div className="embed-panel-body music-panel-body">
+              <div className="music-panel-toolbar">
+                <div className="music-categories">
+                  {MUSIC_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => void loadCategory(cat.id)}
+                      className={`music-cat-btn ${category === cat.id ? 'music-cat-btn-active' : ''}`}
+                    >
+                      <span>{cat.emoji}</span>
+                      <span>{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
 
-          <div className="music-custom-stream">
-            <input
-              type="url"
-              value={customUrl}
-              onChange={(e) => setCustomUrl(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && playCustom()}
-              placeholder="Własny URL strumienia HTTPS (MP3/AAC)"
-              className="embed-youtube-input text-xs"
-            />
-            <button type="button" onClick={playCustom} className="embed-btn shrink-0">
-              Odtwórz
-            </button>
+                <div className="music-volume-row">
+                  <span className="text-[10px] text-slate-500 shrink-0">Głośność</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={volume}
+                    onChange={(e) => setVolume(Number(e.target.value))}
+                    className="music-volume-slider"
+                    aria-label="Głośność"
+                  />
+                </div>
+              </div>
+
+              {error && <p className="music-error-banner">{error}</p>}
+
+              <div className="music-station-list" role="list">
+                {loading && <p className="text-xs text-slate-500 px-3 py-2">Ładowanie stacji z katalogu…</p>}
+                {stations.map((station) => (
+                  <button
+                    key={station.id}
+                    type="button"
+                    role="listitem"
+                    onClick={() => void playStation(station)}
+                    className={`music-station-row ${current?.id === station.id ? 'music-station-row-active' : ''}`}
+                  >
+                    {station.favicon ? (
+                      <img src={station.favicon} alt="" className="music-station-favicon" />
+                    ) : (
+                      <span className="music-station-favicon music-station-favicon-placeholder">🎧</span>
+                    )}
+                    <div className="min-w-0 flex-1 text-left">
+                      <p className="text-sm font-semibold truncate">{station.name}</p>
+                      <p className="text-[10px] text-slate-500 truncate">
+                        {[station.country, station.tags].filter(Boolean).join(' · ') || 'strumień audio'}
+                      </p>
+                    </div>
+                    <span className="text-amber-400 text-xs shrink-0">
+                      {current?.id === station.id && playing ? '●' : '▶'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <details className="music-legal-note">
+                <summary>Prawa autorskie w lokalu (ważne)</summary>
+                <p>
+                  Odtwarzanie muzyki w restauracji to <strong>użycie publiczne</strong> — w Polsce zwykle wymaga opłat
+                  dla ZAiKS/STOART (lub licencji zbiorczej).
+                </p>
+              </details>
+
+              <div className="music-custom-stream">
+                <input
+                  type="url"
+                  value={customUrl}
+                  onChange={(e) => setCustomUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && playCustom()}
+                  placeholder="Własny URL strumienia HTTPS (MP3/AAC)"
+                  className="embed-youtube-input text-xs"
+                />
+                <button type="button" onClick={playCustom} className="embed-btn shrink-0">
+                  Odtwórz
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </section>
+        </section>
+      )}
+    </>
   )
 }

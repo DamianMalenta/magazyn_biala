@@ -3,9 +3,15 @@ import type { QuickLink } from '../types'
 import { openLinkInWindow } from '../lib/linkOpenUtils'
 import { isMusicLink } from '../lib/musicUtils'
 
+interface EmbedState {
+  link: QuickLink | null
+  minimized: boolean
+}
+
+const CLOSED: EmbedState = { link: null, minimized: false }
+
 export function useLinkOpener() {
-  const [embeddedLink, setEmbeddedLink] = useState<QuickLink | null>(null)
-  const [embedMinimized, setEmbedMinimized] = useState(false)
+  const [embedState, setEmbedState] = useState<EmbedState>(CLOSED)
 
   const openLink = useCallback((link: QuickLink) => {
     const mode = link.openMode ?? 'tab'
@@ -23,44 +29,43 @@ export function useLinkOpener() {
     if (mode === 'embed') {
       const isMusic = isMusicLink(link.url, link.linkType)
 
-      if (isMusic) {
-        setEmbeddedLink((prev) => {
-          if (prev?.id === link.id) {
-            setEmbedMinimized((m) => !m)
-            return prev
+      setEmbedState((prev) => {
+        if (isMusic) {
+          if (prev.link?.id === link.id) {
+            return { link: prev.link, minimized: !prev.minimized }
           }
-          setEmbedMinimized(false)
-          return link
-        })
-        return
-      }
+          return { link, minimized: false }
+        }
 
-      setEmbedMinimized(false)
-      setEmbeddedLink((prev) => (prev?.id === link.id ? null : link))
+        if (prev.link?.id === link.id) return CLOSED
+        return { link, minimized: false }
+      })
     }
   }, [])
 
-  const closeEmbed = useCallback(() => {
-    setEmbeddedLink(null)
-    setEmbedMinimized(false)
+  const closeEmbed = useCallback(() => setEmbedState(CLOSED), [])
+
+  const minimizeEmbed = useCallback(() => {
+    setEmbedState((prev) => (prev.link ? { ...prev, minimized: true } : prev))
   }, [])
 
-  const minimizeEmbed = useCallback(() => setEmbedMinimized(true), [])
-
-  const expandEmbed = useCallback(() => setEmbedMinimized(false), [])
+  const expandEmbed = useCallback(() => {
+    setEmbedState((prev) => (prev.link ? { ...prev, minimized: false } : prev))
+  }, [])
 
   const openEmbeddedInTab = useCallback(() => {
-    if (embeddedLink) {
-      window.open(embeddedLink.url, '_blank', 'noopener,noreferrer')
-      setEmbeddedLink(null)
-      setEmbedMinimized(false)
-    }
-  }, [embeddedLink])
+    setEmbedState((prev) => {
+      if (prev.link) {
+        window.open(prev.link.url, '_blank', 'noopener,noreferrer')
+      }
+      return CLOSED
+    })
+  }, [])
 
   return {
     openLink,
-    embeddedLink,
-    embedMinimized,
+    embeddedLink: embedState.link,
+    embedMinimized: embedState.minimized,
     closeEmbed,
     minimizeEmbed,
     expandEmbed,

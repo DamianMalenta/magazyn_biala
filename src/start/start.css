@@ -532,9 +532,12 @@
   @apply z-[1];
 }
 
-/* Pasek po minimalizacji — muzyka gra w tle */
+/* Pasek po minimalizacji — portal na body, muzyka gra w tle */
 .music-mini-bar {
-  @apply fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-2 py-2 rounded-2xl border border-violet-500/35 shadow-2xl backdrop-blur-xl;
+  @apply fixed z-[55] flex items-center gap-1.5 px-2 py-2 rounded-2xl border border-violet-500/35 shadow-2xl backdrop-blur-xl;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
   width: min(96vw, 28rem);
   background: linear-gradient(180deg, rgba(20, 16, 32, 0.97) 0%, rgba(10, 12, 18, 0.98) 100%);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(139, 92, 246, 0.15);
@@ -544,12 +547,22 @@
 @keyframes music-mini-in {
   from {
     opacity: 0;
-    transform: translate(-50%, 12px);
+    translate: 0 10px;
   }
   to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    translate: 0 0;
   }
+}
+
+.music-mini-bar-icon-live {
+  @apply bg-emerald-500/25 text-emerald-300;
+  animation: music-mini-pulse 2s ease-in-out infinite;
+}
+
+@keyframes music-mini-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
 }
 
 .music-mini-bar-main {
