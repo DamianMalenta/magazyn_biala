@@ -15,11 +15,11 @@ export interface InstructionRule {
 }
 
 export const QUICK_STEPS = [
-  'Otwórz link magazynu (zapisz w telefonie).',
-  'Skopiuj całą wiadomość ze stanem od szefa.',
+  'Używaj wyłącznie komputera w pracy (nie telefonu).',
+  'Otwórz link magazynu w przeglądarce na PC.',
+  'Skopiuj całą wiadomość ze stanem od szefa (Messenger).',
   'Wklej w Smart Paste → kliknij Przetwórz tekst.',
   'Po prawej widać tylko towary na stanie.',
-  'Popraw ręcznie: liczba między − i +, jednostka szt/kg/opak.',
 ] as const
 
 export const INSTRUCTION_STEPS: InstructionStep[] = [
@@ -68,16 +68,10 @@ export const INSTRUCTION_STEPS: InstructionStep[] = [
     image: '06-reczna-ilosc-jednostka.png',
     imageAlt: 'Ręczna zmiana ilości i jednostki',
   },
-  {
-    id: 'mobile',
-    step: 6,
-    title: 'Na telefonie',
-    description:
-      'Dodaj skrót na ekran główny. Działa tak samo — wklejasz wiadomość i przetwarzasz.',
-    image: '07-telefon-po-lodowce.png',
-    imageAlt: 'Widok aplikacji na telefonie',
-  },
 ]
+
+export const PHONE_POLICY_NOTE =
+  'Magazyn działa tylko na komputerze w pracy. Telefon służy do odbierania wiadomości na Messengerze — stan wprowadzacie na PC.'
 
 export const INSTRUCTION_RULES: InstructionRule[] = [
   {

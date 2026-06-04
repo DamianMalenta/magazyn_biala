@@ -5,6 +5,7 @@ import {
   INSTRUCTION_STEPS,
   MESSENGER_RULES_SHORT,
   MESSENGER_TEMPLATE,
+  PHONE_POLICY_NOTE,
   QUICK_STEPS,
 } from '../../lib/data/instructionContent'
 
@@ -47,9 +48,12 @@ export function InstructionView() {
         <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
           Jak korzystać z magazynu
         </h2>
-        <p className="text-slate-400 text-sm md:text-base leading-relaxed mb-6">
+        <p className="text-slate-400 text-sm md:text-base leading-relaxed mb-4">
           Wklejasz wiadomość z Messengera — aplikacja sama ustawia stany. Całość zajmuje około
           minuty.
+        </p>
+        <p className="text-sm text-amber-200/90 bg-amber-950/40 border border-amber-500/30 rounded-lg px-3 py-2 mb-6">
+          🖥️ {PHONE_POLICY_NOTE}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3">

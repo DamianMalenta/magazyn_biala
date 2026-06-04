@@ -18,7 +18,7 @@ export default function App() {
       {tab === 'magazyn' ? (
         <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
           <div className="w-full lg:w-[380px] xl:w-[420px] shrink-0 lg:max-h-[calc(100vh-10rem)] lg:sticky lg:top-6">
-            <SmartPastePanel />
+            <SmartPastePanel onOpenGuide={() => setTab('instrukcja')} />
           </div>
 
           <main className="flex-1 min-h-0 overflow-y-auto scrollbar-thin rounded-2xl border border-slate-800 bg-slate-950/50 p-4 md:p-6">

@@ -62,7 +62,7 @@ lodówka
 
 ## Po wysłaniu wiadomości
 
-1. Otwórz aplikację magazynu (link od szefa).
+1. Otwórz aplikację magazynu **na komputerze w pracy** (nie na telefonie).
 2. Wklej całą wiadomość w **Smart Paste**.
 3. Kliknij **Przetwórz tekst**.
 4. Sprawdź listę po prawej — widać tylko towary **na stanie**.
