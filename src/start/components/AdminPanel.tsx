@@ -3,6 +3,7 @@ import { uid } from '../lib/storage'
 import { moveItem } from '../lib/arrayUtils'
 import type { StartPageConfig } from '../types'
 import { LinksEditor } from './admin/LinksEditor'
+import { WorkspaceEditor } from './admin/WorkspaceEditor'
 import { MentionTextarea } from './MentionTextarea'
 import { extractMentions } from '../lib/mentionUtils'
 import { ScheduleEditor } from './admin/ScheduleEditor'
@@ -18,7 +19,7 @@ import {
   ICON_PRESETS,
 } from './admin/AdminUi'
 
-type AdminTab = 'ustawienia' | 'wyglad' | 'linki' | 'info' | 'grafik' | 'przekazania' | 'backup'
+type AdminTab = 'ustawienia' | 'stanowisko' | 'wyglad' | 'linki' | 'info' | 'grafik' | 'przekazania' | 'backup'
 
 interface AdminPanelProps {
   config: StartPageConfig
@@ -32,6 +33,7 @@ interface AdminPanelProps {
 
 const TABS: { id: AdminTab; label: string; icon: string }[] = [
   { id: 'ustawienia', label: 'Ogólne', icon: '⚙️' },
+  { id: 'stanowisko', label: 'Stanowisko', icon: '🖥️' },
   { id: 'wyglad', label: 'Sekcje', icon: '👁️' },
   { id: 'linki', label: 'Kafelki', icon: '🔗' },
   { id: 'info', label: 'Instrukcje', icon: '📋' },
@@ -112,6 +114,7 @@ export function AdminPanel({
 
         <div className="flex-1 overflow-y-auto scrollbar-thin p-6">
           {tab === 'ustawienia' && <SettingsTab config={config} patch={patch} />}
+          {tab === 'stanowisko' && <WorkspaceEditor config={config} patch={patch} onToast={notify} />}
           {tab === 'wyglad' && <SectionsTab config={config} patch={patch} />}
           {tab === 'linki' && <LinksEditor config={config} patch={patch} onToast={notify} />}
           {tab === 'info' && <InfoTab config={config} patch={patch} onToast={notify} />}
@@ -467,7 +470,10 @@ function BackupTab({
         </div>
 
         <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-          <h3 className="font-bold text-emerald-400 mb-2">Chrome — strona startowa</h3>
+          <h3 className="font-bold text-emerald-400 mb-2">Chrome / Windows — strona startowa</h3>
+          <p className="text-sm text-slate-400 mb-3">
+            Pełna konfiguracja stanowiska (pełny ekran, autostart Windows, skróty) jest w zakładce <strong>Stanowisko</strong>.
+          </p>
           <ol className="text-sm text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
             <li>Zainstaluj rozszerzenie <strong>Custom New Tab URL</strong></li>
             <li>Ustaw URL: <code className="text-emerald-300">…/start.html</code></li>

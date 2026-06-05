@@ -11,6 +11,7 @@ interface QuickLinksGridProps {
 const OPEN_MODE_BADGE: Partial<Record<QuickLink['openMode'], string>> = {
   embed: '⊞',
   window: '⧉',
+  shell: '⛶',
 }
 
 export function QuickLinksGrid({ links, activeEmbedId, embedMinimized = false, onOpenLink }: QuickLinksGridProps) {

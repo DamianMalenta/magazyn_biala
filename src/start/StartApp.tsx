@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useStartPageConfig } from './hooks/useStartPageConfig'
 import { useClock } from './hooks/useClock'
 import { useAdminAuth } from './hooks/useAdminAuth'
+import { useFullscreen } from './hooks/useFullscreen'
 import { isFirstVisit } from './lib/storage'
 import { HeroHeader } from './components/HeroHeader'
 import { QuickLinksGrid } from './components/QuickLinksGrid'
@@ -14,12 +15,14 @@ import { AdminLogin } from './components/AdminLogin'
 import { AdminPanel } from './components/AdminPanel'
 import { useLinkOpener } from './hooks/useLinkOpener'
 import { EmbeddedPanel } from './components/EmbeddedPanel'
-import { MusicPanel } from './components/MusicPanel'
+import { MusicPanel, GlobalMusicOverlay } from './components/MusicPanel'
 import { isMusicLink } from './lib/musicUtils'
 import { WeatherWidget } from './components/WeatherWidget'
 import { useWeather } from './hooks/useWeather'
+import { MusicProvider } from './context/MusicProvider'
+import { AppShell } from './components/AppShell'
 
-export default function StartApp() {
+function StartAppInner() {
   const { config, update, reset, resetAdminPin, exportBackup, importBackup } = useStartPageConfig()
   const { time, date } = useClock()
   const { isAdmin, showLogin, setShowLogin, login, logout } = useAdminAuth()
@@ -30,15 +33,24 @@ export default function StartApp() {
     openLink,
     embeddedLink,
     embedMinimized,
+    shellLink,
     closeEmbed,
     minimizeEmbed,
     expandEmbed,
     openEmbeddedInTab,
+    closeShell,
+    switchShellLink,
   } = useLinkOpener()
-  const { sections } = config
+  const { sections, workspace } = config
+
+  const { active: fullscreenActive, toggle: toggleFullscreen } = useFullscreen({
+    enabled: workspace.forceFullscreen,
+    lock: workspace.lockFullscreen,
+  })
 
   const openHandoverCount = config.handoverNotes.filter((n) => !n.done).length
   const weatherState = useWeather(config.weather, sections.showWeather)
+  const pinnedLinks = config.quickLinks.filter((l) => l.pinned && !isMusicLink(l.url, l.linkType))
 
   useEffect(() => {
     if (firstVisit) setShowLogin(true)
@@ -64,6 +76,48 @@ export default function StartApp() {
     const ok = login(pin)
     if (ok) setAdminOpen(true)
     return ok
+  }
+
+  if (shellLink) {
+    return (
+      <>
+        <AppShell
+          link={shellLink}
+          companyName={config.companyName}
+          time={time}
+          pinnedLinks={pinnedLinks}
+          windowsShortcuts={workspace.windowsShortcuts}
+          onBack={closeShell}
+          onSwitchLink={switchShellLink}
+          onToggleFullscreen={() => void toggleFullscreen()}
+          fullscreenActive={fullscreenActive}
+        />
+        <GlobalMusicOverlay />
+        {showLogin && !isAdmin && (
+          <AdminLogin
+            onLogin={handleLogin}
+            onClose={() => setShowLogin(false)}
+            isFirstVisit={firstVisit}
+            onResetPin={resetAdminPin}
+            onFullReset={reset}
+          />
+        )}
+        {adminOpen && isAdmin && (
+          <AdminPanel
+            config={config}
+            onUpdate={update}
+            onClose={() => setAdminOpen(false)}
+            onLogout={() => { logout(); setAdminOpen(false) }}
+            onExport={exportBackup}
+            onImport={async (file) => {
+              const r = await importBackup(file)
+              return r.ok ? { ok: true } : { ok: false, error: r.error }
+            }}
+            onReset={() => { reset(); setAdminOpen(false) }}
+          />
+        )}
+      </>
+    )
   }
 
   return (
@@ -119,7 +173,7 @@ export default function StartApp() {
               embedMinimized={embedMinimized}
               onOpenLink={openLink}
             />
-            {embeddedLink && (embeddedLink.openMode ?? 'tab') === 'embed' && (
+            {embeddedLink && (embeddedLink.openMode ?? 'shell') === 'embed' && (
               isMusicLink(embeddedLink.url, embeddedLink.linkType) ? (
                 <MusicPanel
                   link={embeddedLink}
@@ -165,6 +219,11 @@ export default function StartApp() {
         <footer className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/[0.06] text-[11px] text-slate-600">
           <p>{config.tagline}</p>
           <div className="flex items-center gap-3">
+            {workspace.forceFullscreen && (
+              <button type="button" onClick={() => void toggleFullscreen()} className="hover:text-amber-400/80 transition">
+                {fullscreenActive ? '⤢ Ekran' : '⛶ Pełny ekran'}
+              </button>
+            )}
             <button type="button" onClick={() => setCommandOpen(true)} className="hover:text-amber-400/80 transition flex items-center gap-1.5">
               <kbd className="px-1.5 py-0.5 rounded-md bg-white/[0.06] border border-white/[0.08] font-mono text-[10px]">Ctrl+K</kbd>
               Szukaj
@@ -175,6 +234,8 @@ export default function StartApp() {
           </div>
         </footer>
       </div>
+
+      <GlobalMusicOverlay />
 
       <CommandPalette
         open={commandOpen}
@@ -210,5 +271,13 @@ export default function StartApp() {
         />
       )}
     </>
+  )
+}
+
+export default function StartApp() {
+  return (
+    <MusicProvider>
+      <StartAppInner />
+    </MusicProvider>
   )
 }

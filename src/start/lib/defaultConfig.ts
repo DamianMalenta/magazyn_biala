@@ -1,4 +1,4 @@
-import type { StartPageConfig } from '../types'
+import type { StartPageConfig, WorkspaceSettings } from '../types'
 
 export const DEFAULT_SECTIONS: StartPageConfig['sections'] = {
   showSearch: true,
@@ -10,6 +10,44 @@ export const DEFAULT_SECTIONS: StartPageConfig['sections'] = {
   showWeather: true,
 }
 
+export const DEFAULT_WINDOWS_SHORTCUTS: WorkspaceSettings['windowsShortcuts'] = [
+  {
+    id: 'calc',
+    label: 'Kalkulator',
+    icon: '🔢',
+    description: 'Kalkulator Windows',
+    target: 'calculator:',
+    targetType: 'protocol',
+    enabled: true,
+  },
+  {
+    id: 'explorer',
+    label: 'Pliki',
+    icon: '📁',
+    description: 'Eksplorator plików',
+    target: 'file:///C:/',
+    targetType: 'protocol',
+    enabled: true,
+  },
+  {
+    id: 'notepad',
+    label: 'Notatnik',
+    icon: '📝',
+    description: 'Notatnik Windows — uruchom z menu Start jeśli skrót nie działa w Chrome',
+    target: 'notepad',
+    targetType: 'info',
+    enabled: false,
+  },
+]
+
+export const DEFAULT_WORKSPACE: WorkspaceSettings = {
+  forceFullscreen: false,
+  lockFullscreen: true,
+  defaultLinkOpenMode: 'shell',
+  panelUrl: '',
+  windowsShortcuts: DEFAULT_WINDOWS_SHORTCUTS,
+}
+
 export const DEFAULT_CONFIG: StartPageConfig = {
   version: 1,
   companyName: 'Biała Restauracja',
@@ -18,13 +56,14 @@ export const DEFAULT_CONFIG: StartPageConfig = {
   searchEngine: 'google',
   weather: { city: 'Białystok', latitude: null, longitude: null },
   sections: DEFAULT_SECTIONS,
+  workspace: DEFAULT_WORKSPACE,
   quickLinks: [
     {
       id: 'pos',
       label: 'POS',
       url: 'https://pos.example.com',
       iconMode: 'auto',
-      openMode: 'tab',
+      openMode: 'shell',
       embedSize: 'medium',
       icon: '🧾',
       color: '#10b981',
@@ -35,7 +74,7 @@ export const DEFAULT_CONFIG: StartPageConfig = {
       label: 'Poczta',
       url: 'https://mail.google.com',
       iconMode: 'auto',
-      openMode: 'tab',
+      openMode: 'shell',
       embedSize: 'medium',
       icon: '📧',
       color: '#3b82f6',
@@ -46,7 +85,7 @@ export const DEFAULT_CONFIG: StartPageConfig = {
       label: 'Facebook',
       url: 'https://www.facebook.com',
       iconMode: 'auto',
-      openMode: 'tab',
+      openMode: 'shell',
       embedSize: 'medium',
       icon: '📘',
       color: '#1877f2',
@@ -57,7 +96,7 @@ export const DEFAULT_CONFIG: StartPageConfig = {
       label: 'Magazyn',
       url: 'https://damianmalenta.github.io/magazyn_biala/',
       iconMode: 'auto',
-      openMode: 'tab',
+      openMode: 'shell',
       embedSize: 'medium',
       icon: '🏭',
       color: '#f59e0b',
@@ -68,7 +107,7 @@ export const DEFAULT_CONFIG: StartPageConfig = {
       label: 'SmartLunch',
       url: 'https://smartlunch.pl',
       iconMode: 'auto',
-      openMode: 'tab',
+      openMode: 'shell',
       embedSize: 'medium',
       icon: '🍽️',
       color: '#ec4899',

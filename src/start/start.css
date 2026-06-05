@@ -701,3 +701,132 @@
 .mention-tag {
   @apply font-semibold text-amber-300 bg-amber-500/15 px-1 rounded;
 }
+
+/* ── Powłoka aplikacji (shell) ── */
+
+.app-shell {
+  @apply fixed inset-0 z-50 flex flex-col bg-[#0a0c10];
+}
+
+.shell-toolbar {
+  @apply flex flex-wrap items-center gap-2 px-3 py-2 border-b border-white/10 shrink-0;
+  background: linear-gradient(180deg, rgba(15, 14, 12, 0.98) 0%, rgba(10, 12, 16, 0.95) 100%);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.shell-toolbar-zone {
+  @apply flex items-center gap-2 min-w-0;
+}
+
+.shell-toolbar-left {
+  @apply flex-1 min-w-[200px];
+}
+
+.shell-toolbar-nav {
+  @apply flex-1 justify-center overflow-x-auto scrollbar-thin py-0.5;
+  max-width: 100%;
+}
+
+.shell-toolbar-right {
+  @apply flex-1 justify-end flex-wrap;
+}
+
+.shell-btn {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white transition shrink-0;
+}
+
+.shell-btn-back {
+  @apply border-amber-500/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20;
+}
+
+.shell-btn-icon-only {
+  @apply px-2 min-w-[2.25rem] justify-center;
+}
+
+.shell-btn-icon {
+  @apply text-base leading-none;
+}
+
+.shell-title-block {
+  @apply flex items-center gap-2 min-w-0 ml-1;
+}
+
+.shell-title {
+  @apply text-sm font-black truncate text-white leading-tight;
+}
+
+.shell-subtitle {
+  @apply text-[10px] text-slate-500 truncate;
+}
+
+.shell-nav-pill {
+  @apply inline-flex items-center gap-1.5 px-2 py-1 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] transition shrink-0 text-[11px] font-semibold text-slate-400;
+}
+
+.shell-nav-pill-active {
+  @apply border-white/20 bg-white/10 text-white;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pill-accent, #f59e0b) 35%, transparent);
+}
+
+.shell-nav-label {
+  @apply hidden lg:inline truncate max-w-[5rem];
+}
+
+.shell-win-shortcuts {
+  @apply flex items-center gap-1 border-r border-white/10 pr-2 mr-1;
+}
+
+.shell-music-cluster {
+  @apply flex items-center gap-1 border-r border-white/10 pr-2 mr-1;
+}
+
+.shell-music-btn {
+  @apply inline-flex items-center gap-1.5 px-2 py-1 rounded-xl text-[11px] font-semibold border border-violet-500/25 bg-violet-500/10 text-violet-200 hover:bg-violet-500/20 transition max-w-[9rem];
+}
+
+.shell-music-btn-live {
+  @apply border-emerald-500/35 bg-emerald-500/10 text-emerald-200;
+  animation: music-mini-pulse 2s ease-in-out infinite;
+}
+
+.shell-music-label {
+  @apply truncate hidden sm:inline;
+}
+
+.shell-clock {
+  @apply font-mono text-xs text-slate-500 tabular-nums px-1 hidden md:inline;
+}
+
+.app-shell-body {
+  @apply flex-1 min-h-0 flex flex-col relative;
+}
+
+.app-shell-hint {
+  @apply text-[10px] text-amber-400/70 px-3 py-1.5 bg-amber-500/10 border-b border-amber-500/15 shrink-0;
+}
+
+.app-shell-iframe {
+  @apply flex-1 w-full min-h-0 border-0 bg-white;
+}
+
+.app-shell-fallback {
+  @apply flex-1 flex flex-col items-center justify-center p-8;
+}
+
+.global-music-overlay {
+  @apply fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4;
+}
+
+.global-music-overlay-backdrop {
+  @apply absolute inset-0 bg-black/60 backdrop-blur-sm;
+}
+
+.global-music-overlay-panel {
+  @apply relative w-full max-w-2xl z-10;
+}
+
+.music-mini-bar-inline {
+  @apply relative left-auto bottom-auto transform-none w-full mt-2;
+  animation: none;
+}
+

@@ -1,4 +1,4 @@
-import { DEFAULT_CONFIG, DEFAULT_SECTIONS } from './defaultConfig'
+import { DEFAULT_CONFIG, DEFAULT_SECTIONS, DEFAULT_WORKSPACE } from './defaultConfig'
 const DEFAULT_WEATHER = DEFAULT_CONFIG.weather
 import { normalizeQuickLink } from './faviconUtils'
 import { normalizeHandoverNote } from './handoverUtils'
@@ -16,6 +16,16 @@ function normalizeQuickLinks(links: StartPageConfig['quickLinks']): StartPageCon
   return links.map(normalizeQuickLink)
 }
 
+function mergeWorkspace(parsed: Partial<StartPageConfig>['workspace']): StartPageConfig['workspace'] {
+  const base = DEFAULT_WORKSPACE
+  if (!parsed) return { ...base, windowsShortcuts: [...base.windowsShortcuts] }
+  return {
+    ...base,
+    ...parsed,
+    windowsShortcuts: parsed.windowsShortcuts ?? base.windowsShortcuts,
+  }
+}
+
 function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
   return {
     ...DEFAULT_CONFIG,
@@ -23,6 +33,7 @@ function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
     adminPin: normalizePin(parsed.adminPin),
     sections: { ...DEFAULT_SECTIONS, ...parsed.sections },
     weather: { ...DEFAULT_WEATHER, ...parsed.weather },
+    workspace: mergeWorkspace(parsed.workspace),
     quickLinks: normalizeQuickLinks(parsed.quickLinks ?? DEFAULT_CONFIG.quickLinks),
     infoCards: parsed.infoCards ?? DEFAULT_CONFIG.infoCards,
     employees: parsed.employees ?? DEFAULT_CONFIG.employees,

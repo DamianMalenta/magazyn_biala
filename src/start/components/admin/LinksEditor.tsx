@@ -51,7 +51,7 @@ export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
           url: 'https://',
           icon: '🔗',
           iconMode: 'auto',
-          openMode: 'tab',
+          openMode: config.workspace.defaultLinkOpenMode,
           embedSize: 'medium',
           color: '#8b5cf6',
           pinned: true,
@@ -290,7 +290,7 @@ function LinkCard({
               Sposób otwierania
             </span>
             <div className="flex flex-wrap gap-2 mb-2">
-              {(['tab', 'embed', 'window'] as LinkOpenMode[]).map((mode) => (
+              {(['shell', 'tab', 'embed', 'window'] as LinkOpenMode[]).map((mode) => (
                 <button
                   key={mode}
                   type="button"

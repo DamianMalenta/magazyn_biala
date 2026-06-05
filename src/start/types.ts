@@ -1,5 +1,6 @@
 export type IconMode = 'auto' | 'manual'
-export type LinkOpenMode = 'tab' | 'embed' | 'window'
+/** `shell` = pełne okno z paskiem panelu (iframe + muzyka w tle). */
+export type LinkOpenMode = 'tab' | 'embed' | 'window' | 'shell'
 /** `music` = wbudowany odtwarzacz audio (bez iframe / YouTube). */
 export type QuickLinkType = 'link' | 'music'
 export type EmbedSize = 'compact' | 'medium' | 'large' | 'fullscreen'
@@ -73,6 +74,32 @@ export interface WeatherConfig {
   longitude: number | null
 }
 
+export type WindowsShortcutTargetType = 'web' | 'protocol' | 'info'
+
+export interface WindowsShortcut {
+  id: string
+  label: string
+  icon: string
+  description?: string
+  /** URL, protokół (np. calculator:) lub tekst instrukcji */
+  target: string
+  targetType: WindowsShortcutTargetType
+  enabled: boolean
+}
+
+export interface WorkspaceSettings {
+  /** Wymuś pełny ekran przy starcie strony (F11 / Fullscreen API). */
+  forceFullscreen: boolean
+  /** Po wyjściu z pełnego ekranu — automatycznie wróć (tylko gdy forceFullscreen). */
+  lockFullscreen: boolean
+  /** Domyślny sposób otwierania nowych kafelków. */
+  defaultLinkOpenMode: LinkOpenMode
+  /** Adres panelu do skryptów Windows (auto-wykrywany, można nadpisać). */
+  panelUrl: string
+  /** Skróty Windows / narzędzia widoczne na pasku powłoki. */
+  windowsShortcuts: WindowsShortcut[]
+}
+
 export interface PageSections {
   showSearch: boolean
   showQuickLinks: boolean
@@ -96,4 +123,5 @@ export interface StartPageConfig {
   searchEngine: 'google' | 'duckduckgo'
   weather: WeatherConfig
   sections: PageSections
+  workspace: WorkspaceSettings
 }
