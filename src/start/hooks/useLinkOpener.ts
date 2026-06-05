@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import type { QuickLink, WorkspaceSettings } from '../types'
-import { openLinkInWindow } from '../lib/linkOpenUtils'
+import { openLinkInTab, openLinkInWindow } from '../lib/linkOpenUtils'
 import { isMusicLink } from '../lib/musicUtils'
 import { useWorkspace } from './useWorkspace'
 
@@ -15,19 +15,33 @@ export function useLinkOpener(workspace: WorkspaceSettings) {
   const [embedState, setEmbedState] = useState<EmbedState>(CLOSED)
   const ws = useWorkspace(workspace)
 
+  const leaveWorkspace = useCallback(() => {
+    if (ws.isActive) ws.closeWorkspace()
+  }, [ws])
+
   const openLink = useCallback(
     (link: QuickLink) => {
       const mode = link.openMode ?? 'shell'
 
       if (isMusicLink(link.url, link.linkType)) {
         if (mode === 'tab') {
-          window.open(link.url, '_blank', 'noopener,noreferrer')
+          leaveWorkspace()
+          setEmbedState(CLOSED)
+          openLinkInTab(link.url)
           return
         }
         if (mode === 'window') {
+          leaveWorkspace()
+          setEmbedState(CLOSED)
           openLinkInWindow(link.url, link.label)
           return
         }
+        if (mode === 'shell') {
+          leaveWorkspace()
+          setEmbedState({ link, minimized: false })
+          return
+        }
+        leaveWorkspace()
         setEmbedState((prev) => {
           if (prev.link?.id === link.id) {
             return { link: prev.link, minimized: !prev.minimized }
@@ -43,8 +57,11 @@ export function useLinkOpener(workspace: WorkspaceSettings) {
         return
       }
 
+      leaveWorkspace()
+      setEmbedState(CLOSED)
+
       if (mode === 'tab') {
-        window.open(link.url, '_blank', 'noopener,noreferrer')
+        openLinkInTab(link.url)
         return
       }
 
@@ -60,7 +77,7 @@ export function useLinkOpener(workspace: WorkspaceSettings) {
         })
       }
     },
-    [ws],
+    [leaveWorkspace, ws],
   )
 
   const closeEmbed = useCallback(() => setEmbedState(CLOSED), [])
@@ -75,9 +92,7 @@ export function useLinkOpener(workspace: WorkspaceSettings) {
 
   const openEmbeddedInTab = useCallback(() => {
     setEmbedState((prev) => {
-      if (prev.link) {
-        window.open(prev.link.url, '_blank', 'noopener,noreferrer')
-      }
+      if (prev.link) openLinkInTab(prev.link.url)
       return CLOSED
     })
   }, [])

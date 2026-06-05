@@ -29,12 +29,11 @@ function isSameDocument(a: URL, b: URL): boolean {
   return a.origin === b.origin && a.pathname === b.pathname && a.search === b.search
 }
 
-/** Czy URL to moduł własny (ta sama domena) — wyświetlany pod paskiem ekranu głównego w iframe. */
+/** Czy URL to moduł własny (ta sama domena). */
 export function isInternalModuleUrl(url: string): boolean {
   const target = parseTargetUrl(url)
   if (!target) return false
   if (target.origin !== window.location.origin) return false
-  // Nie osadzaj dokładnie tej samej strony (np. start.html w sobie — pętla).
   try {
     const current = new URL(window.location.href)
     if (isSameDocument(target, current)) return false
@@ -44,7 +43,7 @@ export function isInternalModuleUrl(url: string): boolean {
   return true
 }
 
-/** Adres do osadzenia modułu własnego (np. magazyn) pod paskiem. */
+/** Adres do osadzenia modułu własnego (np. magazyn) — mapuje katalogi i start.html na index.html. */
 export function resolveInternalEmbedUrl(url: string): string {
   const target = parseTargetUrl(url)
   if (!target) return url
@@ -60,4 +59,11 @@ export function resolveInternalEmbedUrl(url: string): string {
   }
   target.pathname = pathname
   return target.href
+}
+
+/** Adres iframe w trybie „pod paskiem” — zawsze wewnątrz tego samego okna przeglądarki. */
+export function resolveShellFrameUrl(url: string): string {
+  const resolved = resolveQuickLinkUrl(url)
+  if (isInternalModuleUrl(resolved)) return resolveInternalEmbedUrl(url)
+  return resolved
 }

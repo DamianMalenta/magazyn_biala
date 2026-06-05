@@ -31,7 +31,7 @@ export function QuickLinksGrid({ links, activeEmbedId, embedMinimized = false, o
               type="button"
               onClick={() => onOpenLink(link)}
               className={`link-tile-dock group ${isActive ? 'link-tile-dock-active' : ''} ${isMinimized ? 'link-tile-dock-minimized' : ''}`}
-              title={`${link.label}${link.openMode === 'tab' ? '' : ` · ${link.openMode === 'embed' ? 'Panel' : 'Okno'}`}${isActive ? (embedMinimized ? ' · kliknij aby rozwinąć' : ' · kliknij aby zminimalizować') : ''}`}
+              title={`${link.label}${link.openMode === 'tab' ? ' · Nowa karta' : link.openMode === 'embed' ? ' · Panel' : link.openMode === 'window' ? ' · Osobne okno' : link.openMode === 'shell' ? ' · Pod paskiem' : ''}${isActive ? (embedMinimized ? ' · kliknij aby rozwinąć' : ' · kliknij aby zminimalizować') : ''}`}
               aria-expanded={isActive}
             >
               <div className="link-tile-dock-icon" style={{ '--tile-accent': link.color } as React.CSSProperties}>

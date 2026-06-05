@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { isInternalModuleUrl, resolveInternalEmbedUrl, resolveQuickLinkUrl } from './internalLinks'
+import {
+  isInternalModuleUrl,
+  resolveInternalEmbedUrl,
+  resolveQuickLinkUrl,
+  resolveShellFrameUrl,
+} from './internalLinks'
 
 const ORIGIN = 'https://damianmalenta.github.io'
 const START = `${ORIGIN}/magazyn_biala/start.html`
@@ -51,5 +56,10 @@ describe('internalLinks', () => {
 
   it('appends index.html for directory URLs', () => {
     expect(resolveInternalEmbedUrl(ROOT)).toBe(INDEX)
+  })
+
+  it('resolveShellFrameUrl uses index for internal and raw URL for external', () => {
+    expect(resolveShellFrameUrl(ROOT)).toBe(INDEX)
+    expect(resolveShellFrameUrl('https://www.facebook.com')).toBe('https://www.facebook.com/')
   })
 })

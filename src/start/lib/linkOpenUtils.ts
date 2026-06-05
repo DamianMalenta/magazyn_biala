@@ -1,3 +1,5 @@
+import { resolveQuickLinkUrl } from './internalLinks'
+
 export type LinkOpenMode = 'tab' | 'embed' | 'window' | 'shell'
 export type EmbedSize = 'compact' | 'medium' | 'large' | 'fullscreen'
 export type EmbedKind = 'iframe' | 'youtube-home' | 'blocked'
@@ -99,7 +101,7 @@ export function getEmbedInfo(pageUrl: string): EmbedInfo {
       url: url.href,
       supportsEmbed: true,
       kind: 'iframe',
-      hint: 'Niektóre strony (Facebook, banki, POS) blokują podgląd — wtedy użyj „Pełna strona”.',
+      hint: 'Niektóre strony (Facebook, banki, POS) blokują podgląd — wtedy użyj „Nowa karta”.',
     }
   } catch {
     return { url: '', supportsEmbed: false, kind: 'blocked' }
@@ -130,10 +132,10 @@ export const OPEN_MODE_LABELS: Record<LinkOpenMode, string> = {
 }
 
 export const OPEN_MODE_DESCRIPTIONS: Record<LinkOpenMode, string> = {
-  tab: 'Otwiera pełną stronę w nowej karcie Chrome — zalecane dla Facebooka, POS i banków.',
-  embed: 'Rozsuwa panel pod kafelkami — muzyka (audio), YouTube (film), Vimeo i mapy.',
-  window: 'Otwiera osobne okno (np. na drugi monitor).',
-  shell: 'Pod paskiem ekranu głównego — moduły własne inline, linki zewnętrzne jako pełna strona.',
+  tab: 'Otwiera pełną stronę w nowej karcie Chrome.',
+  embed: 'Rozsuwa panel pod kafelkami na ekranie głównym — muzyka, YouTube, mapy.',
+  window: 'Otwiera osobne okno przeglądarki (np. na drugi monitor).',
+  shell: 'Otwiera treść wewnątrz tego samego okna, pod paskiem ekranu głównego (iframe).',
 }
 
 export const EMBED_SIZE_HEIGHT: Record<EmbedSize, string> = {
@@ -143,7 +145,31 @@ export const EMBED_SIZE_HEIGHT: Record<EmbedSize, string> = {
   fullscreen: 'min(78vh, 720px)',
 }
 
+/** Nowa karta Chrome — pełna strona. */
+export function openLinkInTab(url: string): void {
+  const resolved = resolveQuickLinkUrl(url)
+  const opened = window.open(resolved, '_blank', 'noopener,noreferrer')
+  if (!opened) window.location.assign(resolved)
+}
+
+/** Osobne okno przeglądarki z rozmiarem. */
 export function openLinkInWindow(url: string, label: string): void {
-  window.open(url, '_blank', 'noopener,noreferrer,width=1280,height=800')
-  void label
+  const resolved = resolveQuickLinkUrl(url)
+  const name = `biala-win-${label.replace(/\s+/g, '-').slice(0, 24)}`
+  const features = [
+    'noopener',
+    'noreferrer',
+    'width=1280',
+    'height=800',
+    'left=80',
+    'top=48',
+    'menubar=yes',
+    'toolbar=yes',
+    'location=yes',
+    'status=yes',
+    'scrollbars=yes',
+    'resizable=yes',
+  ].join(',')
+  const opened = window.open(resolved, name, features)
+  if (!opened) openLinkInTab(url)
 }

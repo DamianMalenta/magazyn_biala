@@ -17,7 +17,6 @@ interface CommandBarProps {
   onSwitchTab: (linkId: string) => void
   onCloseTab: (linkId: string) => void
   onOpenLink: (link: QuickLink) => void
-  onFocusExternal: () => void
   onOpenAdmin: () => void
   onToggleFullscreen: () => void
   fullscreenActive: boolean
@@ -36,7 +35,6 @@ export function CommandBar({
   onSwitchTab,
   onCloseTab,
   onOpenLink,
-  onFocusExternal,
   onOpenAdmin,
   onToggleFullscreen,
   fullscreenActive,
@@ -63,19 +61,12 @@ export function CommandBar({
         </button>
         <div className="command-bar-brand">
           <span className="command-bar-brand-name">{companyName}</span>
-          {activeTab && (
-            <span className="command-bar-active-label">
-              {activeTab.link.label}
-              {activeTab.kind === 'external' && (
-                <span className="command-bar-external-badge"> pełna strona</span>
-              )}
-            </span>
-          )}
+          {activeTab && <span className="command-bar-active-label">{activeTab.link.label}</span>}
         </div>
       </div>
 
       <nav className="command-bar-zone command-bar-tabs" aria-label="Otwarte skróty">
-        {tabs.map(({ link, kind }) => {
+        {tabs.map(({ link }) => {
           const active = link.id === activeId
           return (
             <div key={link.id} className={`command-tab ${active ? 'command-tab-active' : ''}`}>
@@ -88,7 +79,6 @@ export function CommandBar({
               >
                 <LinkIcon link={link} size="shellNav" />
                 <span className="command-tab-label">{link.label}</span>
-                {kind === 'external' && <span className="command-tab-dot" title="Pełna strona pod paskiem">↗</span>}
               </button>
               <button
                 type="button"
@@ -163,12 +153,6 @@ export function CommandBar({
         </div>
 
         <span className="shell-clock">{time}</span>
-
-        {activeTab?.kind === 'external' && (
-          <button type="button" onClick={onFocusExternal} className="shell-btn shell-btn-icon-only" title="Przełącz na otwartą stronę">
-            ↗
-          </button>
-        )}
 
         <button type="button" onClick={onToggleFullscreen} className="shell-btn shell-btn-icon-only" title={fullscreenActive ? 'Wyjdź z pełnego ekranu' : 'Pełny ekran'}>
           {fullscreenActive ? '⤢' : '⛶'}

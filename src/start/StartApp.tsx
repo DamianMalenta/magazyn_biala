@@ -123,7 +123,6 @@ function StartAppInner() {
           onSwitchTab={ws.switchTab}
           onCloseTab={ws.closeTab}
           onOpenLink={openLink}
-          onFocusExternal={ws.focusExternal}
           onOpenAdmin={openAdmin}
           onToggleFullscreen={() => void toggleFullscreen()}
           fullscreenActive={fullscreenActive}

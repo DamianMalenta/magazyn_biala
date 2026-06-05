@@ -1,5 +1,5 @@
 export type IconMode = 'auto' | 'manual'
-/** `shell` = pełne okno z paskiem ekranu głównego (moduły własne inline, linki zewnętrzne pod paskiem). */
+/** `shell` = treść pod paskiem ekranu głównego w tym samym oknie (iframe). */
 export type LinkOpenMode = 'tab' | 'embed' | 'window' | 'shell'
 export type BarPosition = 'top' | 'bottom'
 /** `music` = wbudowany odtwarzacz audio (bez iframe / YouTube). */

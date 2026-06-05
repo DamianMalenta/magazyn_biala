@@ -6,7 +6,6 @@ import {
   OPEN_MODE_LABELS,
   getEmbedInfo,
 } from '../../lib/linkOpenUtils'
-import { isInternalModuleUrl, resolveQuickLinkUrl } from '../../lib/internalLinks'
 import { isMusicLink } from '../../lib/musicUtils'
 import type { EmbedSize, LinkOpenMode, QuickLinkType } from '../../types'
 import type { IconMode, QuickLink, StartPageConfig } from '../../types'
@@ -313,12 +312,9 @@ function LinkCard({
               {OPEN_MODE_DESCRIPTIONS[link.openMode ?? defaultOpenMode]}
             </p>
             {!isMusic && (link.openMode ?? defaultOpenMode) === 'shell' && link.url.length > 8 && (
-              <p
-                className={`text-[10px] mb-2 ${isInternalModuleUrl(resolveQuickLinkUrl(link.url)) ? 'text-emerald-400/90' : 'text-amber-400/90'}`}
-              >
-                {isInternalModuleUrl(resolveQuickLinkUrl(link.url))
-                  ? '✓ Moduł własny — otworzy się wewnątrz (iframe) pod paskiem'
-                  : '↗ Link zewnętrzny — otworzy osobne okno pod paskiem (Facebook, banki itd.)'}
+              <p className="text-[10px] text-slate-500 mb-2">
+                Treść otworzy się <strong className="text-slate-400">wewnątrz tego samego okna</strong> pod paskiem.
+                Jeśli strona jest pusta (blokada iframe), wybierz „Nowa karta” lub „Osobne okno”.
               </p>
             )}
             {(link.openMode ?? defaultOpenMode) === 'embed' && (

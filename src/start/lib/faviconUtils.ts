@@ -59,12 +59,7 @@ export function normalizeQuickLink(link: QuickLink): QuickLink {
     ...link,
     iconMode,
     linkType,
-    openMode:
-      linkType === 'music'
-        ? 'embed'
-        : link.openMode === 'tab'
-          ? 'shell'
-          : (link.openMode ?? 'shell'),
+    openMode: linkType === 'music' ? 'embed' : (link.openMode ?? 'shell'),
     embedSize: link.embedSize ?? 'medium',
     icon: link.icon?.trim() || '🔗',
     url: linkType === 'music' && !link.url.trim() ? 'music://player' : link.url,
