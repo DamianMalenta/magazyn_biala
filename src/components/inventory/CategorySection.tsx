@@ -5,6 +5,8 @@ import { ItemCard } from './ItemCard'
 interface CategorySectionProps {
   category: Category
   items: InventoryItem[]
+  countLabel: string
+  highlightItemId?: string | null
   onIncrement: (id: string) => void
   onDecrement: (id: string) => void
   onSetQty: (id: string, qty: number) => void
@@ -15,6 +17,8 @@ interface CategorySectionProps {
 export function CategorySection({
   category,
   items,
+  countLabel,
+  highlightItemId,
   onIncrement,
   onDecrement,
   onSetQty,
@@ -30,21 +34,25 @@ export function CategorySection({
           <span className="text-xl">{meta.icon}</span>
           <h2 className={`text-xl font-black tracking-wide ${meta.accent}`}>{category}</h2>
         </div>
-        <span className="text-xs text-slate-500">{items.length} na stanie</span>
+        <span className="text-xs text-slate-500">
+          {items.length} {countLabel}
+        </span>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-          {items.map((item) => (
+        {items.map((item) => (
+          <div key={item.id} id={`sku-card-${item.id}`}>
             <ItemCard
-              key={item.id}
               item={item}
+              highlight={highlightItemId === item.id}
               onIncrement={() => onIncrement(item.id)}
               onDecrement={() => onDecrement(item.id)}
               onSetQty={(qty) => onSetQty(item.id, qty)}
               onSetUnit={(unit) => onSetUnit(item.id, unit)}
               onDelete={() => onDelete(item.id)}
             />
-          ))}
+          </div>
+        ))}
       </div>
     </section>
   )

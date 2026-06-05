@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
-import { InventoryContext } from './inventoryContext'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
+import { InventoryContext, type AddItemResult } from './inventoryContext'
 import type { Category, InventoryItem, StandardUOM } from '../types/inventory'
+import { findItemByName } from '../lib/inventory/itemMatch'
 import {
   exportStateBlob,
   importStateFromJson,
@@ -15,6 +16,14 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const [customAliases, setCustomAliases] = useState<Record<string, string[]>>(
     () => loadState().customAliases,
   )
+  const [highlightItemId, setHighlightItemId] = useState<string | null>(null)
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const flashHighlight = useCallback((id: string) => {
+    if (highlightTimer.current) clearTimeout(highlightTimer.current)
+    setHighlightItemId(id)
+    highlightTimer.current = setTimeout(() => setHighlightItemId(null), 4000)
+  }, [])
 
   const persist = useCallback(
     (nextItems: InventoryItem[], nextAliases: Record<string, string[]> = customAliases) => {
@@ -26,20 +35,47 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   )
 
   const addItem = useCallback(
-    (payload: { name: string; category: Category; unit: StandardUOM; qty?: number }) => {
+    (payload: { name: string; category: Category; unit: StandardUOM; qty?: number }): AddItemResult => {
+      const trimmed = payload.name.trim()
+      const qty = Math.max(0, payload.qty ?? 1)
+      const existing = findItemByName(items, trimmed)
+
+      if (existing) {
+        if (qty > 0) {
+          const next = items.map((item) =>
+            item.id === existing.id
+              ? {
+                  ...item,
+                  qty: item.qty + qty,
+                  category: payload.category,
+                  unit: payload.unit,
+                }
+              : item,
+          )
+          persist(next)
+          flashHighlight(existing.id)
+          return { status: 'updated', id: existing.id, name: existing.name, addedQty: qty }
+        }
+        flashHighlight(existing.id)
+        return { status: 'exists', id: existing.id, name: existing.name }
+      }
+
+      const id = createId('sku')
       const next = [
         ...items,
         {
-          id: createId('sku'),
-          name: payload.name.trim(),
+          id,
+          name: trimmed,
           category: payload.category,
           unit: payload.unit,
-          qty: payload.qty ?? 0,
+          qty,
         },
       ]
       persist(next)
+      flashHighlight(id)
+      return { status: 'created', id, name: trimmed }
     },
-    [items, persist],
+    [flashHighlight, items, persist],
   )
 
   const updateQty = useCallback(
@@ -94,6 +130,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     const fresh = resetState()
     setItems(fresh.inventory)
     setCustomAliases(fresh.customAliases)
+    setHighlightItemId(null)
   }, [])
 
   const getItemById = useCallback((id: string) => items.find((item) => item.id === id), [items])
@@ -142,6 +179,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     () => ({
       items,
       customAliases,
+      highlightItemId,
       addItem,
       updateQty,
       setQty,
@@ -157,6 +195,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     [
       items,
       customAliases,
+      highlightItemId,
       addItem,
       updateQty,
       setQty,
