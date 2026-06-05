@@ -137,7 +137,7 @@ export function AddItemForm() {
         </p>
       )}
       <p className="text-[10px] text-slate-500 max-w-xl">
-        Bez renamentu: dodaj produkt tutaj albo ustaw stan na karcie w sekcji „W bazie (stan 0)”.
+        Bez renamentu — ustaw też stan na karcie w sekcji „W bazie (stan 0)” poniżej.
       </p>
     </div>
   )

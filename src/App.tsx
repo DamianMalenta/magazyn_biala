@@ -9,27 +9,37 @@ export default function App() {
   const [tab, setTab] = useState<AppTab>('magazyn')
 
   return (
-    <div className="min-h-screen flex flex-col p-4 md:p-6 gap-4 max-w-[1600px] mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <Header compact={tab === 'instrukcja'} />
-        <AppTabs active={tab} onChange={setTab} />
-      </div>
+    <div className="magazyn-app min-h-screen flex flex-col">
+      <div className="magazyn-mesh pointer-events-none" aria-hidden />
 
-      {tab === 'magazyn' ? (
-        <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
-          <div className="w-full lg:w-[380px] xl:w-[420px] shrink-0 lg:max-h-[calc(100vh-10rem)] lg:sticky lg:top-6">
-            <SmartPastePanel onOpenGuide={() => setTab('instrukcja')} />
-          </div>
-
-          <main className="flex-1 min-h-0 overflow-y-auto scrollbar-thin rounded-2xl border border-slate-800 bg-slate-950/50 p-4 md:p-6">
-            <InventoryView />
-          </main>
+      <div className="relative z-10 flex flex-col flex-1 p-4 md:p-6 gap-4 max-w-[1680px] w-full mx-auto">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          <Header compact={tab === 'instrukcja'} />
+          <AppTabs active={tab} onChange={setTab} />
         </div>
-      ) : (
-        <main className="flex-1 min-h-0 overflow-y-auto scrollbar-thin rounded-2xl border border-slate-800 bg-slate-950/50 p-4 md:p-8">
-          <InstructionView />
-        </main>
-      )}
+
+        {tab === 'magazyn' ? (
+          <div className="flex flex-col gap-4 flex-1 min-h-0">
+            <SmartPastePanel onOpenGuide={() => setTab('instrukcja')} />
+
+            <main className="magazyn-main flex-1 min-h-0 overflow-y-auto scrollbar-thin">
+              <div className="magazyn-main-inner">
+                <div className="magazyn-main-head">
+                  <h2 className="text-lg font-black text-white tracking-tight">Stany magazynowe</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Ustaw ilości na kartach (+/−) lub dodaj nowy produkt u góry strony
+                  </p>
+                </div>
+                <InventoryView />
+              </div>
+            </main>
+          </div>
+        ) : (
+          <main className="magazyn-main flex-1 min-h-0 overflow-y-auto scrollbar-thin p-4 md:p-8">
+            <InstructionView />
+          </main>
+        )}
+      </div>
     </div>
   )
 }

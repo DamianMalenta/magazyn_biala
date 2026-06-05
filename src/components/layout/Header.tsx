@@ -32,29 +32,27 @@ export function Header({ compact = false }: HeaderProps) {
   }
 
   return (
-    <header
-      className={[
-        'shrink-0 rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur p-4 flex flex-col gap-4',
-        compact ? '' : 'xl:flex-row xl:items-center xl:justify-between',
-      ].join(' ')}
-    >
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-xl">
+    <header className="magazyn-header shrink-0 w-full lg:max-w-4xl">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 text-2xl ring-1 ring-emerald-500/20">
           🏭
         </div>
         <div>
-          <h1 className="text-xl font-black tracking-tight text-white">Magazyn Główny</h1>
+          <h1 className="text-xl md:text-2xl font-black tracking-tight text-white">Magazyn Główny</h1>
           <p className="text-xs text-slate-500">
-            {compact ? 'Instrukcja dla pracowników' : 'Inteligentny panel inwentaryzacji'}
+            {compact ? 'Instrukcja dla pracowników' : 'Panel stanów · lodówka, zamrażarka, opakowania'}
           </p>
         </div>
       </div>
 
       {!compact && (
-        <>
+        <div className="rounded-2xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm p-4 space-y-3">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-sky-400/90">
+            Dodaj produkt ręcznie
+          </p>
           <AddItemForm />
 
-          <div className="flex flex-wrap items-center gap-3 self-end xl:self-center">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-2 border-t border-slate-800/80">
             <button
               type="button"
               onClick={exportBackup}
@@ -82,12 +80,12 @@ export function Header({ compact = false }: HeaderProps) {
             <button
               type="button"
               onClick={handleReset}
-              className="text-[10px] text-slate-600 hover:text-slate-400 underline whitespace-nowrap"
+              className="text-[10px] text-slate-600 hover:text-slate-400 underline"
             >
               Reset bazy
             </button>
           </div>
-        </>
+        </div>
       )}
     </header>
   )
