@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { QuickLink, WorkspaceSettings } from '../types'
-import { isInternalModuleUrl } from '../lib/internalLinks'
+import { isInternalModuleUrl, resolveQuickLinkUrl } from '../lib/internalLinks'
 import {
   closeDockedWindow,
   DEFAULT_BAR_HEIGHT,
@@ -35,7 +35,12 @@ export function useWorkspace(workspace: WorkspaceSettings) {
         const win = dockWindows.current.get(tab.link.id) ?? null
         if (tab.link.id === nextActiveId) {
           if (!win || win.closed) {
-            const opened = openDockedContent(tab.link.url, tab.link.id, barHeight, barPosition)
+            const opened = openDockedContent(
+              resolveQuickLinkUrl(tab.link.url),
+              tab.link.id,
+              barHeight,
+              barPosition,
+            )
             if (opened) dockWindows.current.set(tab.link.id, opened)
           } else {
             focusDockedWindow(win, barHeight, barPosition)
@@ -50,7 +55,8 @@ export function useWorkspace(workspace: WorkspaceSettings) {
 
   const openTab = useCallback(
     (link: QuickLink) => {
-      const kind: WorkspaceTabKind = isInternalModuleUrl(link.url) ? 'internal' : 'external'
+      const resolvedUrl = resolveQuickLinkUrl(link.url)
+      const kind: WorkspaceTabKind = isInternalModuleUrl(resolvedUrl) ? 'internal' : 'external'
 
       setTabs((prev) => {
         const exists = prev.some((t) => t.link.id === link.id)
@@ -104,7 +110,12 @@ export function useWorkspace(workspace: WorkspaceSettings) {
     if (!activeTab || activeTab.kind !== 'external') return
     const win = dockWindows.current.get(activeTab.link.id)
     if (!win || win.closed) {
-      const opened = openDockedContent(activeTab.link.url, activeTab.link.id, barHeight, barPosition)
+      const opened = openDockedContent(
+        resolveQuickLinkUrl(activeTab.link.url),
+        activeTab.link.id,
+        barHeight,
+        barPosition,
+      )
       if (opened) dockWindows.current.set(activeTab.link.id, opened)
     } else {
       focusDockedWindow(win, barHeight, barPosition)

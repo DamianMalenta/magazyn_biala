@@ -1,24 +1,63 @@
-/** Czy URL to moduł własny (ta sama domena) — wyświetlany pod paskiem ekranu głównego. */
-export function isInternalModuleUrl(url: string): boolean {
+/** Bazowa ścieżka aplikacji (np. `/magazyn_biala/` na GitHub Pages). */
+function appBaseUrl(): string {
+  const base = import.meta.env.BASE_URL || '/'
+  return new URL(base, window.location.origin).href
+}
+
+/** Rozwiązuje adres skrótu względem domeny / bazy aplikacji (nie względem bieżącej podstrony). */
+export function resolveQuickLinkUrl(url: string): string {
+  const trimmed = url.trim()
+  if (!trimmed) return trimmed
   try {
-    const target = new URL(url.includes('://') ? url : new URL(url, window.location.href).href)
-    if (target.origin !== window.location.origin) return false
-    return !target.pathname.includes('start.html')
+    if (trimmed.includes('://')) return new URL(trimmed).href
+    if (trimmed.startsWith('/')) return new URL(trimmed, window.location.origin).href
+    return new URL(trimmed, appBaseUrl()).href
   } catch {
-    return false
+    return trimmed
   }
+}
+
+function parseTargetUrl(url: string): URL | null {
+  try {
+    return new URL(resolveQuickLinkUrl(url))
+  } catch {
+    return null
+  }
+}
+
+function isSameDocument(a: URL, b: URL): boolean {
+  return a.origin === b.origin && a.pathname === b.pathname && a.search === b.search
+}
+
+/** Czy URL to moduł własny (ta sama domena) — wyświetlany pod paskiem ekranu głównego w iframe. */
+export function isInternalModuleUrl(url: string): boolean {
+  const target = parseTargetUrl(url)
+  if (!target) return false
+  if (target.origin !== window.location.origin) return false
+  // Nie osadzaj dokładnie tej samej strony (np. start.html w sobie — pętla).
+  try {
+    const current = new URL(window.location.href)
+    if (isSameDocument(target, current)) return false
+  } catch {
+    /* ignore */
+  }
+  return true
 }
 
 /** Adres do osadzenia modułu własnego (np. magazyn) pod paskiem. */
 export function resolveInternalEmbedUrl(url: string): string {
-  try {
-    const parsed = new URL(url.includes('://') ? url : new URL(url, window.location.href).href)
-    const last = parsed.pathname.split('/').pop() ?? ''
-    if (parsed.pathname.endsWith('/') || !last.includes('.')) {
-      parsed.pathname = `${parsed.pathname.replace(/\/?$/, '')}/index.html`
+  const target = parseTargetUrl(url)
+  if (!target) return url
+
+  let pathname = target.pathname
+  if (/start\.html$/i.test(pathname)) {
+    pathname = pathname.replace(/start\.html$/i, 'index.html')
+  } else {
+    const last = pathname.split('/').pop() ?? ''
+    if (pathname.endsWith('/') || !last.includes('.')) {
+      pathname = `${pathname.replace(/\/?$/, '')}/index.html`
     }
-    return parsed.href
-  } catch {
-    return url
   }
+  target.pathname = pathname
+  return target.href
 }

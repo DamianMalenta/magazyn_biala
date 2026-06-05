@@ -23,7 +23,7 @@ export function QuickLinksGrid({ links, activeEmbedId, embedMinimized = false, o
       <p className="links-dock-label">Szybki dostęp</p>
       <div className="links-dock links-dock-compact">
         {pinned.map((link) => {
-          const isActive = activeEmbedId === link.id && (link.openMode ?? 'tab') === 'embed'
+          const isActive = activeEmbedId === link.id && (link.openMode ?? 'shell') === 'embed'
           const isMinimized = isActive && embedMinimized
           return (
             <button

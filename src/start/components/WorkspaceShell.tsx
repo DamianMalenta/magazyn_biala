@@ -78,7 +78,7 @@ export function WorkspaceShell({
     activeTab.kind === 'internal' ? (
       <iframe
         key={activeTab.link.id}
-        src={resolveInternalEmbedUrl(activeTab.link.url)}
+        src={resolveInternalEmbedUrl(activeTab.link.url.trim())}
         title={activeTab.link.label}
         className="workspace-iframe"
         allow="clipboard-write"

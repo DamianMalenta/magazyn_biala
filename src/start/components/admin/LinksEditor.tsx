@@ -6,6 +6,7 @@ import {
   OPEN_MODE_LABELS,
   getEmbedInfo,
 } from '../../lib/linkOpenUtils'
+import { isInternalModuleUrl, resolveQuickLinkUrl } from '../../lib/internalLinks'
 import { isMusicLink } from '../../lib/musicUtils'
 import type { EmbedSize, LinkOpenMode, QuickLinkType } from '../../types'
 import type { IconMode, QuickLink, StartPageConfig } from '../../types'
@@ -137,6 +138,7 @@ export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
             <LinkCard
               key={link.id}
               link={link}
+              defaultOpenMode={config.workspace.defaultLinkOpenMode}
               index={index}
               total={config.quickLinks.length}
               onUpdate={updateLink}
@@ -164,6 +166,7 @@ export function LinksEditor({ config, patch, onToast }: LinksEditorProps) {
 
 function LinkCard({
   link,
+  defaultOpenMode,
   index,
   total,
   onUpdate,
@@ -173,6 +176,7 @@ function LinkCard({
   onRemove,
 }: {
   link: QuickLink
+  defaultOpenMode: LinkOpenMode
   index: number
   total: number
   onUpdate: <K extends keyof QuickLink>(id: string, field: K, value: QuickLink[K]) => void
@@ -296,7 +300,7 @@ function LinkCard({
                   type="button"
                   onClick={() => onUpdate(link.id, 'openMode', mode)}
                   className={`px-3 py-2 rounded-xl text-xs font-semibold transition ${
-                    (link.openMode ?? 'tab') === mode
+                    (link.openMode ?? defaultOpenMode) === mode
                       ? 'bg-amber-600 text-white'
                       : 'bg-white/5 text-slate-400 hover:text-white'
                   }`}
@@ -306,9 +310,18 @@ function LinkCard({
               ))}
             </div>
             <p className="text-[11px] text-slate-500 mb-2">
-              {OPEN_MODE_DESCRIPTIONS[link.openMode ?? 'tab']}
+              {OPEN_MODE_DESCRIPTIONS[link.openMode ?? defaultOpenMode]}
             </p>
-            {(link.openMode ?? 'tab') === 'embed' && (
+            {!isMusic && (link.openMode ?? defaultOpenMode) === 'shell' && link.url.length > 8 && (
+              <p
+                className={`text-[10px] mb-2 ${isInternalModuleUrl(resolveQuickLinkUrl(link.url)) ? 'text-emerald-400/90' : 'text-amber-400/90'}`}
+              >
+                {isInternalModuleUrl(resolveQuickLinkUrl(link.url))
+                  ? '✓ Moduł własny — otworzy się wewnątrz (iframe) pod paskiem'
+                  : '↗ Link zewnętrzny — otworzy osobne okno pod paskiem (Facebook, banki itd.)'}
+              </p>
+            )}
+            {(link.openMode ?? defaultOpenMode) === 'embed' && (
               <div className="flex flex-wrap gap-2 items-center">
                 <span className="text-[10px] text-slate-500">Wysokość panelu:</span>
                 {(['compact', 'medium', 'large', 'fullscreen'] as EmbedSize[]).map((sz) => (

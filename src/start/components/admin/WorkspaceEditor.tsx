@@ -132,7 +132,10 @@ export function WorkspaceEditor({ config, patch, onToast }: WorkspaceEditorProps
             />
           </Field>
 
-          <Field label="Domyślny sposób otwierania nowych kafelków">
+          <Field
+            label="Domyślny sposób otwierania nowych kafelków"
+            hint="Dotyczy tylko nowo dodanych kafelków — istniejące ustaw w zakładce Kafelki lub użyj przycisku poniżej."
+          >
             <div className="flex flex-wrap gap-2">
               {(['shell', 'tab', 'embed', 'window'] as LinkOpenMode[]).map((mode) => (
                 <button
@@ -149,6 +152,33 @@ export function WorkspaceEditor({ config, patch, onToast }: WorkspaceEditorProps
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                const mode = ws.defaultLinkOpenMode ?? 'shell'
+                const count = config.quickLinks.filter((l) => l.linkType !== 'music' && l.openMode !== mode).length
+                if (count === 0) {
+                  onToast('Wszystkie kafelki mają już ten sposób otwierania')
+                  return
+                }
+                if (
+                  !window.confirm(
+                    `Ustawić „${OPEN_MODE_LABELS[mode]}” dla ${count} kafelków? (muzyka zostaje bez zmian)`,
+                  )
+                ) {
+                  return
+                }
+                patch({
+                  quickLinks: config.quickLinks.map((l) =>
+                    l.linkType === 'music' ? l : { ...l, openMode: mode },
+                  ),
+                })
+                onToast(`Zaktualizowano ${count} kafelków`)
+              }}
+              className="mt-3 px-3 py-2 rounded-xl text-xs font-semibold bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white transition"
+            >
+              Zastosuj domyślny tryb do wszystkich kafelków
+            </button>
           </Field>
         </div>
       </section>
