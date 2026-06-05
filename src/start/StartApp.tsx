@@ -20,7 +20,7 @@ import { isMusicLink } from './lib/musicUtils'
 import { WeatherWidget } from './components/WeatherWidget'
 import { useWeather } from './hooks/useWeather'
 import { MusicProvider } from './context/MusicProvider'
-import { AppShell } from './components/AppShell'
+import { WorkspaceShell } from './components/WorkspaceShell'
 
 function StartAppInner() {
   const { config, update, reset, resetAdminPin, exportBackup, importBackup } = useStartPageConfig()
@@ -29,19 +29,19 @@ function StartAppInner() {
   const [commandOpen, setCommandOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
   const [firstVisit] = useState(() => isFirstVisit())
+  const { sections, workspace } = config
+
   const {
     openLink,
     embeddedLink,
     embedMinimized,
-    shellLink,
     closeEmbed,
     minimizeEmbed,
     expandEmbed,
     openEmbeddedInTab,
-    closeShell,
-    switchShellLink,
-  } = useLinkOpener()
-  const { sections, workspace } = config
+    exitWorkspace,
+    workspace: ws,
+  } = useLinkOpener(workspace)
 
   const { active: fullscreenActive, toggle: toggleFullscreen } = useFullscreen({
     enabled: workspace.forceFullscreen,
@@ -50,7 +50,6 @@ function StartAppInner() {
 
   const openHandoverCount = config.handoverNotes.filter((n) => !n.done).length
   const weatherState = useWeather(config.weather, sections.showWeather)
-  const pinnedLinks = config.quickLinks.filter((l) => l.pinned && !isMusicLink(l.url, l.linkType))
 
   useEffect(() => {
     if (firstVisit) setShowLogin(true)
@@ -78,44 +77,59 @@ function StartAppInner() {
     return ok
   }
 
-  if (shellLink) {
+  const adminOverlay = (
+    <>
+      {showLogin && !isAdmin && (
+        <AdminLogin
+          onLogin={handleLogin}
+          onClose={() => setShowLogin(false)}
+          isFirstVisit={firstVisit}
+          onResetPin={resetAdminPin}
+          onFullReset={reset}
+        />
+      )}
+      {adminOpen && isAdmin && (
+        <AdminPanel
+          config={config}
+          onUpdate={update}
+          onClose={() => setAdminOpen(false)}
+          onLogout={() => { logout(); setAdminOpen(false) }}
+          onExport={exportBackup}
+          onImport={async (file) => {
+            const r = await importBackup(file)
+            return r.ok ? { ok: true } : { ok: false, error: r.error }
+          }}
+          onReset={() => { reset(); setAdminOpen(false) }}
+        />
+      )}
+    </>
+  )
+
+  if (ws.isActive) {
     return (
       <>
-        <AppShell
-          link={shellLink}
+        <WorkspaceShell
           companyName={config.companyName}
           time={time}
-          pinnedLinks={pinnedLinks}
+          tabs={ws.tabs}
+          activeTab={ws.activeTab}
+          activeId={ws.activeId}
+          quickLinks={config.quickLinks}
           windowsShortcuts={workspace.windowsShortcuts}
-          onBack={closeShell}
-          onSwitchLink={switchShellLink}
+          openHandoverCount={openHandoverCount}
+          barHeight={ws.barHeight}
+          barPosition={ws.barPosition}
+          onBack={exitWorkspace}
+          onSwitchTab={ws.switchTab}
+          onCloseTab={ws.closeTab}
+          onOpenLink={openLink}
+          onFocusExternal={ws.focusExternal}
+          onOpenAdmin={openAdmin}
           onToggleFullscreen={() => void toggleFullscreen()}
           fullscreenActive={fullscreenActive}
         />
         <GlobalMusicOverlay />
-        {showLogin && !isAdmin && (
-          <AdminLogin
-            onLogin={handleLogin}
-            onClose={() => setShowLogin(false)}
-            isFirstVisit={firstVisit}
-            onResetPin={resetAdminPin}
-            onFullReset={reset}
-          />
-        )}
-        {adminOpen && isAdmin && (
-          <AdminPanel
-            config={config}
-            onUpdate={update}
-            onClose={() => setAdminOpen(false)}
-            onLogout={() => { logout(); setAdminOpen(false) }}
-            onExport={exportBackup}
-            onImport={async (file) => {
-              const r = await importBackup(file)
-              return r.ok ? { ok: true } : { ok: false, error: r.error }
-            }}
-            onReset={() => { reset(); setAdminOpen(false) }}
-          />
-        )}
+        {adminOverlay}
       </>
     )
   }
@@ -131,7 +145,7 @@ function StartAppInner() {
             onClick={() => setShowLogin(true)}
             className="w-full p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-sm font-semibold hover:bg-amber-500/20 transition text-center"
           >
-            🎉 Pierwsza konfiguracja — kliknij tutaj (PIN: 2024)
+            🎉 Pierwsza konfiguracja ekranu głównego — kliknij tutaj (PIN: 2024)
           </button>
         </div>
       )}
@@ -246,30 +260,7 @@ function StartAppInner() {
         onOpenLink={openLink}
       />
 
-      {showLogin && !isAdmin && (
-        <AdminLogin
-          onLogin={handleLogin}
-          onClose={() => setShowLogin(false)}
-          isFirstVisit={firstVisit}
-          onResetPin={resetAdminPin}
-          onFullReset={reset}
-        />
-      )}
-
-      {adminOpen && isAdmin && (
-        <AdminPanel
-          config={config}
-          onUpdate={update}
-          onClose={() => setAdminOpen(false)}
-          onLogout={() => { logout(); setAdminOpen(false) }}
-          onExport={exportBackup}
-          onImport={async (file) => {
-            const r = await importBackup(file)
-            return r.ok ? { ok: true } : { ok: false, error: r.error }
-          }}
-          onReset={() => { reset(); setAdminOpen(false) }}
-        />
-      )}
+      {adminOverlay}
     </>
   )
 }

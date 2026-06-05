@@ -1,6 +1,7 @@
 export type IconMode = 'auto' | 'manual'
-/** `shell` = pełne okno z paskiem panelu (iframe + muzyka w tle). */
+/** `shell` = pełne okno z paskiem ekranu głównego (moduły własne inline, linki zewnętrzne pod paskiem). */
 export type LinkOpenMode = 'tab' | 'embed' | 'window' | 'shell'
+export type BarPosition = 'top' | 'bottom'
 /** `music` = wbudowany odtwarzacz audio (bez iframe / YouTube). */
 export type QuickLinkType = 'link' | 'music'
 export type EmbedSize = 'compact' | 'medium' | 'large' | 'fullscreen'
@@ -96,8 +97,12 @@ export interface WorkspaceSettings {
   defaultLinkOpenMode: LinkOpenMode
   /** Adres panelu do skryptów Windows (auto-wykrywany, można nadpisać). */
   panelUrl: string
-  /** Skróty Windows / narzędzia widoczne na pasku powłoki. */
+  /** Skróty Windows widoczne na pasku powłoki. */
   windowsShortcuts: WindowsShortcut[]
+  /** Pozycja paska podczas pracy ze skrótami. */
+  barPosition: BarPosition
+  /** Wysokość paska (px). */
+  barHeight: number
 }
 
 export interface PageSections {

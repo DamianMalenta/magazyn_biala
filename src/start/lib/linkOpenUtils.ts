@@ -126,14 +126,14 @@ export const OPEN_MODE_LABELS: Record<LinkOpenMode, string> = {
   tab: 'Nowa karta (pełna strona)',
   embed: 'Panel pod kafelkami',
   window: 'Osobne okno przeglądarki',
-  shell: 'Pełne okno z paskiem panelu',
+  shell: 'Pod paskiem ekranu głównego',
 }
 
 export const OPEN_MODE_DESCRIPTIONS: Record<LinkOpenMode, string> = {
   tab: 'Otwiera pełną stronę w nowej karcie Chrome — zalecane dla Facebooka, POS i banków.',
   embed: 'Rozsuwa panel pod kafelkami — muzyka (audio), YouTube (film), Vimeo i mapy.',
   window: 'Otwiera osobne okno (np. na drugi monitor).',
-  shell: 'Pełny ekran z naszym paskiem — muzyka gra dalej, szybki powrót do panelu. Zalecane dla stanowisk pracy.',
+  shell: 'Pod paskiem ekranu głównego — moduły własne inline, linki zewnętrzne jako pełna strona.',
 }
 
 export const EMBED_SIZE_HEIGHT: Record<EmbedSize, string> = {

@@ -830,3 +830,123 @@
   animation: none;
 }
 
+/* ── Workspace — ekran główny ze skrótami ── */
+
+.workspace-shell {
+  @apply fixed inset-0 z-50 flex flex-col bg-[#0a0c10];
+}
+
+.workspace-shell-bottom {
+  @apply flex-col-reverse;
+}
+
+.workspace-content {
+  @apply flex-1 min-h-0 flex flex-col;
+  height: calc(100vh - var(--bar-h, 52px));
+}
+
+.workspace-shell-bottom .workspace-content {
+  @apply flex-1;
+}
+
+.workspace-iframe {
+  @apply flex-1 w-full min-h-0 border-0 bg-white;
+}
+
+.workspace-external-slot {
+  @apply flex-1 flex items-center justify-center p-8 bg-[#0a0c10];
+}
+
+.workspace-external-card {
+  @apply text-center max-w-lg rounded-3xl border border-white/[0.08] bg-white/[0.035] backdrop-blur-xl p-8;
+}
+
+.workspace-empty {
+  @apply flex-1 flex items-center justify-center;
+}
+
+.command-bar {
+  @apply flex flex-wrap items-center gap-2 px-3 shrink-0 border-white/10;
+  height: var(--bar-h, 52px);
+  min-height: var(--bar-h, 52px);
+  background: linear-gradient(180deg, rgba(15, 14, 12, 0.98) 0%, rgba(10, 12, 16, 0.95) 100%);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.command-bar-top {
+  @apply border-b;
+}
+
+.command-bar-bottom {
+  @apply border-t;
+}
+
+.command-bar-zone {
+  @apply flex items-center gap-2 min-w-0;
+}
+
+.command-bar-left {
+  @apply shrink-0;
+}
+
+.command-bar-tabs {
+  @apply flex-1 overflow-x-auto scrollbar-thin py-1;
+}
+
+.command-bar-right {
+  @apply shrink-0 flex-wrap justify-end;
+}
+
+.command-bar-brand {
+  @apply hidden md:flex flex-col min-w-0 ml-1;
+}
+
+.command-bar-brand-name {
+  @apply text-[10px] font-bold uppercase tracking-wider text-slate-500;
+}
+
+.command-bar-active-label {
+  @apply text-xs font-semibold text-white truncate;
+}
+
+.command-bar-external-badge {
+  @apply text-slate-500 font-normal;
+}
+
+.command-tab {
+  @apply inline-flex items-stretch shrink-0 rounded-xl border border-white/10 overflow-hidden;
+}
+
+.command-tab-active {
+  @apply border-amber-500/40 bg-amber-500/10;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--tab-accent, #f59e0b) 25%, transparent);
+}
+
+.command-tab-main {
+  @apply inline-flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-semibold text-slate-300 hover:text-white transition;
+}
+
+.command-tab-label {
+  @apply max-w-[6rem] truncate;
+}
+
+.command-tab-dot {
+  @apply text-[9px] text-slate-500;
+}
+
+.command-tab-close {
+  @apply px-1.5 text-slate-500 hover:text-white hover:bg-white/10 border-l border-white/10 text-sm leading-none;
+}
+
+.command-bar-add-wrap {
+  @apply shrink-0;
+}
+
+.command-bar-add-select {
+  @apply px-2 py-1.5 rounded-xl text-[11px] font-semibold bg-white/5 border border-white/10 text-slate-400;
+}
+
+.command-bar-badge {
+  @apply px-2 py-1 rounded-xl text-[11px] font-bold bg-amber-500/15 border border-amber-500/30 text-amber-200;
+}
+

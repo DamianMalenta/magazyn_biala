@@ -71,8 +71,8 @@ export function WorkspaceEditor({ config, patch, onToast }: WorkspaceEditorProps
     <div className="space-y-8">
       <section>
         <TabHeader
-          title="Tryb stanowiska pracy"
-          description="Wymuś pełny ekran w przeglądarce i ustaw domyślny sposób otwierania kafelków. Pracownicy widzą te ustawienia od razu po starcie."
+          title="Ekran główny lokalu — stanowisko"
+          description="Pełny ekran, pasek nad lub pod otwartymi skrótami, autostart Windows. Wszystko konfigurujesz tutaj — pracownicy widzą gotowy ekran po włączeniu PC."
         />
 
         <div className="space-y-3">
@@ -80,7 +80,7 @@ export function WorkspaceEditor({ config, patch, onToast }: WorkspaceEditorProps
             <div>
               <p className="font-semibold text-sm">Wymuś pełny ekran przy starcie</p>
               <p className="text-xs text-slate-500 mt-0.5">
-                Panel wchodzi w tryb F11 automatycznie — idealne dla stanowisk POS i kuchni.
+                Ekran główny wchodzi w tryb F11 automatycznie po starcie.
               </p>
             </div>
             <Toggle
@@ -103,6 +103,34 @@ export function WorkspaceEditor({ config, patch, onToast }: WorkspaceEditorProps
               label=""
             />
           </div>
+
+          <Field label="Pozycja paska przy otwartych skrótach">
+            <div className="flex flex-wrap gap-2">
+              {(['top', 'bottom'] as const).map((pos) => (
+                <button
+                  key={pos}
+                  type="button"
+                  onClick={() => patchWorkspace({ barPosition: pos })}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                    ws.barPosition === pos ? 'bg-violet-600 text-white' : 'bg-white/5 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {pos === 'top' ? '↑ Nad treścią' : '↓ Pod treścią'}
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Wysokość paska (px)" hint="Domyślnie 52 — zostaw bez zmian jeśli nie wiesz">
+            <input
+              className={inputCls}
+              type="number"
+              min={40}
+              max={80}
+              value={ws.barHeight}
+              onChange={(e) => patchWorkspace({ barHeight: Number(e.target.value) || 52 })}
+            />
+          </Field>
 
           <Field label="Domyślny sposób otwierania nowych kafelków">
             <div className="flex flex-wrap gap-2">

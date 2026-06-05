@@ -46,12 +46,14 @@ export const DEFAULT_WORKSPACE: WorkspaceSettings = {
   defaultLinkOpenMode: 'shell',
   panelUrl: '',
   windowsShortcuts: DEFAULT_WINDOWS_SHORTCUTS,
+  barPosition: 'top',
+  barHeight: 52,
 }
 
 export const DEFAULT_CONFIG: StartPageConfig = {
   version: 1,
   companyName: 'Biała Restauracja',
-  tagline: 'Panel startowy zespołu',
+  tagline: 'Ekran główny lokalu',
   adminPin: '2024',
   searchEngine: 'google',
   weather: { city: 'Białystok', latitude: null, longitude: null },

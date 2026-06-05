@@ -22,6 +22,8 @@ function mergeWorkspace(parsed: Partial<StartPageConfig>['workspace']): StartPag
   return {
     ...base,
     ...parsed,
+    barPosition: parsed.barPosition ?? base.barPosition,
+    barHeight: parsed.barHeight ?? base.barHeight,
     windowsShortcuts: parsed.windowsShortcuts ?? base.windowsShortcuts,
   }
 }
