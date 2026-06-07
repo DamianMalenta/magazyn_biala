@@ -9,23 +9,68 @@ export interface ShiftPreset {
   end: string
 }
 
-export const SHIFT_PRESETS: ShiftPreset[] = [
-  { id: 'rano', label: 'Rano 7–15', short: '7–15', start: '07:00', end: '15:00' },
-  { id: 'standard', label: 'Standard 8–16', short: '8–16', start: '08:00', end: '16:00' },
-  { id: 'sala', label: 'Sala 10–18', short: '10–18', start: '10:00', end: '18:00' },
-  { id: 'bar', label: 'Bar 12–20', short: '12–20', start: '12:00', end: '20:00' },
-  { id: 'wieczor', label: 'Wieczór 14–22', short: '14–22', start: '14:00', end: '22:00' },
-  { id: 'dlugi', label: 'Długa 10–22', short: '10–22', start: '10:00', end: '22:00' },
+/** Domyślne szablony — skrót „11:22” = 11:00–22:00 */
+export const DEFAULT_SHIFT_PRESETS: ShiftPreset[] = [
+  { id: 'p1122', label: '11:00–22:00', short: '11:22', start: '11:00', end: '22:00' },
+  { id: 'p1123', label: '11:00–23:00', short: '11:23', start: '11:00', end: '23:00' },
+  { id: 'p1222', label: '12:00–22:00', short: '12:22', start: '12:00', end: '22:00' },
+  { id: 'p1223', label: '12:00–23:00', short: '12:23', start: '12:00', end: '23:00' },
+  { id: 'p1117', label: '11:00–17:00', short: '11:17', start: '11:00', end: '17:00' },
+  { id: 'p1217', label: '12:00–17:00', short: '12:17', start: '12:00', end: '17:00' },
+  { id: 'p1722', label: '17:00–22:00', short: '17:22', start: '17:00', end: '22:00' },
+  { id: 'p1723', label: '17:00–23:00', short: '17:23', start: '17:00', end: '23:00' },
+  { id: 'p1017', label: '10:00–17:00', short: '10:17', start: '10:00', end: '17:00' },
+  { id: 'p1015', label: '10:00–15:00', short: '10:15', start: '10:00', end: '15:00' },
+  { id: 'p1522', label: '15:00–22:00', short: '15:22', start: '15:00', end: '22:00' },
+  { id: 'p1523', label: '15:00–23:00', short: '15:23', start: '15:00', end: '23:00' },
 ]
+
+/** @deprecated Użyj DEFAULT_SHIFT_PRESETS lub config.shiftPresets */
+export const SHIFT_PRESETS = DEFAULT_SHIFT_PRESETS
 
 export function padTime(time: string): string {
   const [h, m] = time.split(':')
   return `${h.padStart(2, '0')}:${m}`
 }
 
+/** Skrót godzinowy: 11:22 → 11:00–22:00 (obie liczby to godziny 0–23). */
+function parseHourShorthand(value: string): { start: string; end: string } | null {
+  const match = value.match(/^(\d{1,2}):(\d{1,2})$/)
+  if (!match) return null
+  const startH = parseInt(match[1], 10)
+  const endH = parseInt(match[2], 10)
+  if (startH < 0 || startH > 23 || endH < 0 || endH > 23 || endH <= startH) return null
+  return { start: padTime(`${startH}:00`), end: padTime(`${endH}:00`) }
+}
+
+export function buildPresetShort(start: string, end: string): string {
+  const [sh, sm] = start.split(':').map(Number)
+  const [eh, em] = end.split(':').map(Number)
+  if (sm === 0 && em === 0) return `${sh}:${eh}`
+  const s = start.replace(':00', '')
+  const e = end.replace(':00', '')
+  return `${s}–${e}`
+}
+
+export function normalizeShiftPreset(preset: ShiftPreset): ShiftPreset {
+  const start = padTime(preset.start)
+  const end = padTime(preset.end)
+  return {
+    ...preset,
+    start,
+    end,
+    short: preset.short.trim() || buildPresetShort(start, end),
+    label: preset.label.trim() || `${start}–${end}`,
+  }
+}
+
 export function parseShiftInput(value: string): { start: string; end: string; note?: string } | null {
   const trimmed = value.trim()
   if (!trimmed || trimmed === '-') return null
+
+  const shorthand = parseHourShorthand(trimmed)
+  if (shorthand) return shorthand
+
   const match = trimmed.match(/^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})(?:\s+(.*))?$/)
   if (!match) return null
   const [, start, end, note] = match
@@ -98,6 +143,9 @@ export function fillWeekWithPreset(
 }
 
 export function formatShiftShort(shift: ShiftEntry): string {
+  const [sh, sm] = shift.start.split(':').map(Number)
+  const [eh, em] = shift.end.split(':').map(Number)
+  if (sm === 0 && em === 0) return `${sh}:${eh}`
   const s = shift.start.replace(':00', '')
   const e = shift.end.replace(':00', '')
   return `${s}–${e}`

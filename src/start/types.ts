@@ -55,6 +55,14 @@ export interface ShiftEntry {
   note?: string
 }
 
+export interface ShiftPreset {
+  id: string
+  label: string
+  short: string
+  start: string
+  end: string
+}
+
 export type WeekSchedule = Record<DayKey, ShiftEntry[]>
 
 export interface HandoverNote {
@@ -123,6 +131,7 @@ export interface StartPageConfig {
   quickLinks: QuickLink[]
   infoCards: InfoCard[]
   employees: Employee[]
+  shiftPresets: ShiftPreset[]
   schedule: WeekSchedule
   handoverNotes: HandoverNote[]
   searchEngine: 'google' | 'duckduckgo'

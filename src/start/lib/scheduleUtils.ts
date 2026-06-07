@@ -1,4 +1,5 @@
 import { DAY_KEYS, type DayKey, type Employee, type ShiftEntry, type WeekSchedule } from '../types'
+import { formatShiftShort } from './shiftPresets'
 
 const DAY_INDEX_TO_KEY: DayKey[] = ['nd', 'pon', 'wt', 'sr', 'czw', 'pt', 'sob']
 
@@ -29,7 +30,7 @@ export function getEmployeeMap(employees: Employee[]): Map<string, Employee> {
 }
 
 export function formatShiftTime(shift: ShiftEntry): string {
-  return `${shift.start}–${shift.end}`
+  return formatShiftShort(shift)
 }
 
 export function getGreeting(now = new Date()): string {

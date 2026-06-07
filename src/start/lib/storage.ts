@@ -1,4 +1,5 @@
 import { DEFAULT_CONFIG, DEFAULT_SECTIONS, DEFAULT_WORKSPACE } from './defaultConfig'
+import { DEFAULT_SHIFT_PRESETS, normalizeShiftPreset } from './shiftPresets'
 const DEFAULT_WEATHER = DEFAULT_CONFIG.weather
 import { normalizeQuickLink } from './faviconUtils'
 import { normalizeHandoverNote } from './handoverUtils'
@@ -28,6 +29,11 @@ function mergeWorkspace(parsed: Partial<StartPageConfig>['workspace']): StartPag
   }
 }
 
+function mergeShiftPresets(parsed: StartPageConfig['shiftPresets'] | undefined): StartPageConfig['shiftPresets'] {
+  const source = parsed?.length ? parsed : DEFAULT_SHIFT_PRESETS
+  return source.map(normalizeShiftPreset)
+}
+
 function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
   return {
     ...DEFAULT_CONFIG,
@@ -38,6 +44,7 @@ function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
     workspace: mergeWorkspace(parsed.workspace),
     quickLinks: normalizeQuickLinks(parsed.quickLinks ?? DEFAULT_CONFIG.quickLinks),
     infoCards: parsed.infoCards ?? DEFAULT_CONFIG.infoCards,
+    shiftPresets: mergeShiftPresets(parsed.shiftPresets),
     employees: parsed.employees ?? DEFAULT_CONFIG.employees,
     schedule: { ...DEFAULT_CONFIG.schedule, ...parsed.schedule },
     handoverNotes: (parsed.handoverNotes ?? DEFAULT_CONFIG.handoverNotes).map(normalizeHandoverNote),

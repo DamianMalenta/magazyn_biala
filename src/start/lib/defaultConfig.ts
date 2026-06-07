@@ -1,4 +1,5 @@
 import type { StartPageConfig, WorkspaceSettings } from '../types'
+import { DEFAULT_SHIFT_PRESETS } from './shiftPresets'
 
 export const DEFAULT_SECTIONS: StartPageConfig['sections'] = {
   showSearch: true,
@@ -151,6 +152,7 @@ export const DEFAULT_CONFIG: StartPageConfig = {
       pinned: true,
     },
   ],
+  shiftPresets: DEFAULT_SHIFT_PRESETS.map((p) => ({ ...p })),
   employees: [
     { id: 'e1', name: 'Anna', color: '#10b981', role: 'Kuchnia' },
     { id: 'e2', name: 'Piotr', color: '#3b82f6', role: 'Sala' },
