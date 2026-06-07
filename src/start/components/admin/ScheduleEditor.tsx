@@ -24,6 +24,8 @@ interface ScheduleEditorProps {
 
 type EditCell = { employeeId: string; day: DayKey }
 
+const ROW_HEIGHT = 'min-h-[58px]'
+
 export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) {
   const today = getTodayKey()
   const presets = config.shiftPresets
@@ -124,7 +126,6 @@ export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) 
         description="Kliknij komórkę dnia → wybierz gotowy schemat godzin. Skrót 11:22 = 11:00–22:00."
       />
 
-      {/* Edytowalne szablony */}
       <div className="mb-4 rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
         <button
           type="button"
@@ -192,56 +193,39 @@ export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) 
       </div>
 
       <div className="overflow-x-auto scrollbar-thin rounded-2xl border border-white/10">
-        <table className="w-full min-w-[760px] border-collapse text-sm">
+        <table className="w-full min-w-[820px] border-collapse table-fixed text-sm">
+          <colgroup>
+            <col className="w-[196px]" />
+            {DAY_KEYS.map((d) => (
+              <col key={d} className="w-[76px]" />
+            ))}
+            <col className="w-[108px]" />
+          </colgroup>
           <thead>
-            <tr className="bg-white/5 text-slate-500 uppercase tracking-wider text-xs">
-              <th className="p-2.5 text-left w-[160px] sticky left-0 bg-slate-900/95 z-10">Osoba</th>
+            <tr className="bg-white/5 text-slate-500 uppercase tracking-wider text-[11px]">
+              <th className="p-2 text-left sticky left-0 z-20 bg-slate-900/95 border-r border-white/5">Osoba</th>
               {DAY_KEYS.map((d) => (
                 <th
                   key={d}
-                  className={`p-2.5 text-center min-w-[80px] ${d === today ? 'text-violet-300 bg-violet-500/10' : ''}`}
+                  className={`p-2 text-center ${d === today ? 'text-violet-300 bg-violet-500/10' : ''}`}
                 >
                   {DAY_LABELS[d]}
                 </th>
               ))}
-              <th className="p-2.5 text-center w-[110px]">Szybko</th>
+              <th className="p-2 text-center">Szybko</th>
             </tr>
           </thead>
           <tbody>
             {config.employees.map((emp) => (
-              <tr key={emp.id} className="border-t border-white/5 group">
-                <td className="p-2 sticky left-0 bg-slate-900/95 z-10">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={emp.color}
-                      onChange={(e) => updateEmployee(emp.id, 'color', e.target.value)}
-                      className="h-10 w-10 shrink-0 rounded-xl border border-white/20 bg-transparent cursor-pointer p-0.5"
-                      title="Kolor"
-                    />
-                    <div className="flex-1 min-w-0 space-y-0.5">
-                      <input
-                        value={emp.name}
-                        onChange={(e) => updateEmployee(emp.id, 'name', e.target.value)}
-                        placeholder="Imię"
-                        className="w-full px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 outline-none focus:border-violet-500 text-sm font-semibold"
-                      />
-                      <input
-                        value={emp.role}
-                        onChange={(e) => updateEmployee(emp.id, 'role', e.target.value)}
-                        placeholder="Rola"
-                        className="w-full px-2 py-0.5 rounded bg-transparent border-0 outline-none text-xs text-slate-500 placeholder:text-slate-600"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeEmployee(emp.id, emp.name)}
-                      className="opacity-0 group-hover:opacity-100 shrink-0 w-8 h-8 rounded-lg text-red-400 hover:bg-red-500/15 text-base transition"
-                      title="Usuń"
-                    >
-                      ×
-                    </button>
-                  </div>
+              <tr key={emp.id} className="border-t border-white/5 group align-top">
+                <td className="p-1.5 sticky left-0 z-20 bg-slate-900/95 border-r border-white/5">
+                  <EmployeeCell
+                    employee={emp}
+                    onColorChange={(v) => updateEmployee(emp.id, 'color', v)}
+                    onNameChange={(v) => updateEmployee(emp.id, 'name', v)}
+                    onRoleChange={(v) => updateEmployee(emp.id, 'role', v)}
+                    onRemove={() => removeEmployee(emp.id, emp.name)}
+                  />
                 </td>
 
                 {DAY_KEYS.map((day) => {
@@ -250,55 +234,39 @@ export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) 
                   const isToday = day === today
 
                   return (
-                    <td key={day} className={`p-1.5 relative ${isToday ? 'bg-violet-500/5' : ''}`}>
-                      <ShiftCellButton
-                        shift={shift}
-                        isToday={isToday}
-                        isOpen={isOpen}
-                        onClick={() => {
-                          setEditCell(isOpen ? null : { employeeId: emp.id, day })
-                          setCustomTime(shift ? formatShiftShort(shift) : '')
-                        }}
-                      />
-                      {isOpen && (
-                        <ShiftPopover
-                          presets={presets}
-                          customTime={customTime}
-                          onCustomChange={setCustomTime}
-                          onPreset={(id) => applyPreset(emp.id, day, id)}
-                          onCustom={() => applyCustom(emp.id, day)}
-                          onClear={() => clearCell(emp.id, day)}
-                          onClose={() => setEditCell(null)}
+                    <td key={day} className={`p-1.5 align-top ${isToday ? 'bg-violet-500/5' : ''}`}>
+                      <div className="relative h-full">
+                        <ShiftCellButton
+                          shift={shift}
+                          isToday={isToday}
+                          isOpen={isOpen}
+                          onClick={() => {
+                            setEditCell(isOpen ? null : { employeeId: emp.id, day })
+                            setCustomTime(shift ? formatShiftShort(shift) : '')
+                          }}
                         />
-                      )}
+                        {isOpen && (
+                          <ShiftPopover
+                            presets={presets}
+                            customTime={customTime}
+                            onCustomChange={setCustomTime}
+                            onPreset={(id) => applyPreset(emp.id, day, id)}
+                            onCustom={() => applyCustom(emp.id, day)}
+                            onClear={() => clearCell(emp.id, day)}
+                            onClose={() => setEditCell(null)}
+                          />
+                        )}
+                      </div>
                     </td>
                   )
                 })}
 
-                <td className="p-1.5">
-                  <div className="flex flex-col gap-1">
-                    <select
-                      className="w-full px-1.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs outline-none focus:border-violet-500"
-                      defaultValue=""
-                      onChange={(e) => {
-                        if (e.target.value) fillWeek(emp.id, e.target.value)
-                        e.target.value = ''
-                      }}
-                    >
-                      <option value="">Cały tydz.…</option>
-                      {presets.map((p) => (
-                        <option key={p.id} value={p.id}>{p.short}</option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => copyMondayToWeek(emp.id)}
-                      className="px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 text-[11px] text-slate-400 hover:text-white transition"
-                      title="Kopiuj poniedziałek na cały tydzień"
-                    >
-                      Pon→tydz.
-                    </button>
-                  </div>
+                <td className="p-1.5 align-top">
+                  <QuickActionsCell
+                    presets={presets}
+                    onFillWeek={(presetId) => fillWeek(emp.id, presetId)}
+                    onCopyMonday={() => copyMondayToWeek(emp.id)}
+                  />
                 </td>
               </tr>
             ))}
@@ -308,6 +276,92 @@ export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) 
 
       <button type="button" onClick={addEmployee} className={`${btnPrimary} w-full mt-4`}>
         + Dodaj pracownika do grafiku
+      </button>
+    </div>
+  )
+}
+
+function EmployeeCell({
+  employee,
+  onColorChange,
+  onNameChange,
+  onRoleChange,
+  onRemove,
+}: {
+  employee: Employee
+  onColorChange: (v: string) => void
+  onNameChange: (v: string) => void
+  onRoleChange: (v: string) => void
+  onRemove: () => void
+}) {
+  return (
+    <div
+      className={`group/emp relative flex items-center gap-2 ${ROW_HEIGHT} px-2 py-1.5 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.07] transition`}
+    >
+      <input
+        type="color"
+        value={employee.color}
+        onChange={(e) => onColorChange(e.target.value)}
+        className="h-9 w-9 shrink-0 rounded-lg border border-white/20 bg-transparent cursor-pointer p-0.5"
+        title="Kolor"
+      />
+      <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
+        <input
+          value={employee.name}
+          onChange={(e) => onNameChange(e.target.value)}
+          placeholder="Imię"
+          className="w-full px-0 py-0 bg-transparent border-0 outline-none text-sm font-semibold text-white/95 placeholder:text-slate-500 truncate"
+        />
+        <input
+          value={employee.role}
+          onChange={(e) => onRoleChange(e.target.value)}
+          placeholder="Rola"
+          className="w-full px-0 py-0 bg-transparent border-0 outline-none text-[11px] text-slate-400 placeholder:text-slate-600 truncate"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute -top-1.5 -right-1.5 opacity-0 group-hover/emp:opacity-100 w-6 h-6 rounded-full bg-red-500/90 text-white text-xs leading-none hover:bg-red-500 transition shadow"
+        title="Usuń"
+      >
+        ×
+      </button>
+    </div>
+  )
+}
+
+function QuickActionsCell({
+  presets,
+  onFillWeek,
+  onCopyMonday,
+}: {
+  presets: ShiftPreset[]
+  onFillWeek: (presetId: string) => void
+  onCopyMonday: () => void
+}) {
+  return (
+    <div className={`flex flex-col justify-center gap-1.5 ${ROW_HEIGHT} px-1.5 py-1.5 rounded-xl border border-white/10 bg-white/[0.03]`}>
+      <select
+        className="w-full px-1.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[11px] outline-none focus:border-violet-500"
+        defaultValue=""
+        onChange={(e) => {
+          if (e.target.value) onFillWeek(e.target.value)
+          e.target.value = ''
+        }}
+      >
+        <option value="">Cały tydz.…</option>
+        {presets.map((p) => (
+          <option key={p.id} value={p.id}>{p.short}</option>
+        ))}
+      </select>
+      <button
+        type="button"
+        onClick={onCopyMonday}
+        className="w-full px-1 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-slate-400 hover:text-white transition"
+        title="Kopiuj poniedziałek na cały tydzień"
+      >
+        Pon→tydz.
       </button>
     </div>
   )
@@ -328,7 +382,7 @@ function ShiftCellButton({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full min-h-[52px] px-1.5 py-2 rounded-xl border text-center font-mono text-sm leading-tight transition ${
+      className={`w-full h-full ${ROW_HEIGHT} px-1.5 py-1.5 rounded-xl border text-center font-mono leading-tight transition flex flex-col items-center justify-center ${
         isOpen
           ? 'border-violet-500 bg-violet-500/20 ring-2 ring-violet-500/50'
           : shift
@@ -340,11 +394,11 @@ function ShiftCellButton({
     >
       {shift ? (
         <>
-          <span className="font-bold text-base">{formatShiftShort(shift)}</span>
-          {shift.note && <span className="block text-[10px] text-slate-400 truncate mt-0.5">{shift.note}</span>}
+          <span className="font-bold text-sm">{formatShiftShort(shift)}</span>
+          {shift.note && <span className="block text-[10px] text-slate-400 truncate max-w-full mt-0.5">{shift.note}</span>}
         </>
       ) : (
-        <span className="text-lg text-slate-500">+</span>
+        <span className="text-base text-slate-500">+</span>
       )}
     </button>
   )

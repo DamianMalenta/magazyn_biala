@@ -7,6 +7,9 @@ interface WeeklyScheduleViewProps {
   employees: Employee[]
 }
 
+const GRID_COLS = 'grid-cols-[minmax(148px,1.35fr)_repeat(7,minmax(68px,1fr))]'
+const ROW_HEIGHT = 'min-h-[58px]'
+
 export function WeeklyScheduleView({ schedule, employees }: WeeklyScheduleViewProps) {
   const today = getTodayKey()
   const empMap = getEmployeeMap(employees)
@@ -52,14 +55,14 @@ export function WeeklyScheduleView({ schedule, employees }: WeeklyScheduleViewPr
       </div>
 
       <div className="overflow-x-auto scrollbar-thin -mx-1 px-1">
-        <div className="min-w-[680px]">
-          <div className="grid grid-cols-8 gap-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-            <div className="p-2">Osoba</div>
+        <div className="min-w-[720px]">
+          <div className={`grid ${GRID_COLS} gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5`}>
+            <div className="p-2 sticky left-0 z-10 bg-slate-900/90 rounded-lg">Osoba</div>
             {DAY_KEYS.map((day) => (
               <div
                 key={day}
                 className={`p-2 text-center rounded-lg ${
-                  day === today ? 'bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/30' : ''
+                  day === today ? 'bg-amber-500/20 text-amber-200 ring-1 ring-amber-500/30' : 'bg-white/[0.03]'
                 }`}
               >
                 {DAY_LABELS[day]}
@@ -69,10 +72,15 @@ export function WeeklyScheduleView({ schedule, employees }: WeeklyScheduleViewPr
           </div>
 
           {employees.map((emp) => (
-            <div key={emp.id} className="grid grid-cols-8 gap-1 mb-1">
-              <div className="p-2 flex items-center gap-2 rounded-lg bg-white/[0.04]">
+            <div key={emp.id} className={`grid ${GRID_COLS} gap-1.5 mb-1.5 items-stretch`}>
+              <div
+                className={`sticky left-0 z-10 flex items-center gap-2 px-2.5 py-1.5 ${ROW_HEIGHT} rounded-xl border border-white/10 bg-slate-900/90`}
+              >
                 <span className="w-3 h-3 rounded-full shrink-0" style={{ background: emp.color }} />
-                <span className="font-medium truncate text-sm">{emp.name}</span>
+                <div className="min-w-0">
+                  <p className="font-semibold truncate text-sm text-white/95">{emp.name || '—'}</p>
+                  {emp.role && <p className="text-[11px] text-slate-400 truncate">{emp.role}</p>}
+                </div>
               </div>
               {DAY_KEYS.map((day) => (
                 <DayCell key={day} day={day} today={today} employeeId={emp.id} schedule={schedule} empMap={empMap} />
@@ -103,8 +111,12 @@ function DayCell({
 
   return (
     <div
-      className={`p-1.5 min-h-[48px] rounded-lg text-center text-sm leading-tight flex items-center justify-center ${
-        isToday ? 'bg-amber-500/10 ring-1 ring-amber-500/25 font-semibold' : 'bg-white/[0.02]'
+      className={`${ROW_HEIGHT} px-1.5 py-1.5 rounded-xl border text-center text-sm leading-tight flex items-center justify-center ${
+        isToday
+          ? 'bg-amber-500/10 border-amber-500/25 font-semibold'
+          : shifts.length > 0
+            ? 'bg-white/[0.04] border-white/10'
+            : 'bg-white/[0.02] border-white/5'
       }`}
     >
       {shifts.length === 0 ? (
@@ -117,7 +129,7 @@ function DayCell({
               <div key={i}>
                 <span
                   style={{ color: isToday ? undefined : emp?.color }}
-                  className={`font-mono font-semibold ${isToday ? 'text-amber-100' : ''}`}
+                  className={`font-mono font-semibold text-sm ${isToday ? 'text-amber-100' : ''}`}
                 >
                   {formatShiftTime(s)}
                 </span>
