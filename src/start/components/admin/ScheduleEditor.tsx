@@ -394,7 +394,9 @@ function ShiftCellButton({
     >
       {shift ? (
         <>
-          <span className="font-bold text-sm">{formatShiftShort(shift)}</span>
+          <span className="font-bold text-sm" title={`${shift.start}–${shift.end}`}>
+            {formatShiftShort(shift)}
+          </span>
           {shift.note && <span className="block text-[10px] text-slate-400 truncate max-w-full mt-0.5">{shift.note}</span>}
         </>
       ) : (

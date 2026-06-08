@@ -3,7 +3,7 @@ import { DEFAULT_SHIFT_PRESETS, normalizeShiftPreset } from './shiftPresets'
 const DEFAULT_WEATHER = DEFAULT_CONFIG.weather
 import { normalizeQuickLink } from './faviconUtils'
 import { normalizeHandoverNote } from './handoverUtils'
-import type { StartPageConfig } from '../types'
+import type { StartPageConfig, WeekSchedule } from '../types'
 
 const STORAGE_KEY = 'startpage-config-v1'
 export const DEFAULT_ADMIN_PIN = '2024'
@@ -34,6 +34,24 @@ function mergeShiftPresets(parsed: StartPageConfig['shiftPresets'] | undefined):
   return source.map(normalizeShiftPreset)
 }
 
+function emptyWeekSchedule(): WeekSchedule {
+  return {
+    pon: [],
+    wt: [],
+    sr: [],
+    czw: [],
+    pt: [],
+    sob: [],
+    nd: [],
+  }
+}
+
+/** Nie mieszaj zapisanego grafiku z domyślnymi godzinami demo — brakujące dni = puste. */
+export function mergeSchedule(parsed: Partial<WeekSchedule> | undefined): WeekSchedule {
+  if (!parsed) return structuredClone(DEFAULT_CONFIG.schedule)
+  return { ...emptyWeekSchedule(), ...parsed }
+}
+
 function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
   return {
     ...DEFAULT_CONFIG,
@@ -46,7 +64,7 @@ function mergeConfig(parsed: Partial<StartPageConfig>): StartPageConfig {
     infoCards: parsed.infoCards ?? DEFAULT_CONFIG.infoCards,
     shiftPresets: mergeShiftPresets(parsed.shiftPresets),
     employees: parsed.employees ?? DEFAULT_CONFIG.employees,
-    schedule: { ...DEFAULT_CONFIG.schedule, ...parsed.schedule },
+    schedule: mergeSchedule(parsed.schedule),
     handoverNotes: (parsed.handoverNotes ?? DEFAULT_CONFIG.handoverNotes).map(normalizeHandoverNote),
   }
 }
@@ -71,6 +89,7 @@ export function saveConfig(config: StartPageConfig): void {
     adminPin: normalizePin(config.adminPin),
     quickLinks: normalizeQuickLinks(config.quickLinks),
     handoverNotes: config.handoverNotes.map(normalizeHandoverNote),
+    schedule: mergeSchedule(config.schedule),
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(safe))
 }

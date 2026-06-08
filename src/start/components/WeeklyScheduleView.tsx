@@ -130,6 +130,7 @@ function DayCell({
                 <span
                   style={{ color: isToday ? undefined : emp?.color }}
                   className={`font-mono font-semibold text-sm ${isToday ? 'text-amber-100' : ''}`}
+                  title={`${s.start}–${s.end}`}
                 >
                   {formatShiftTime(s)}
                 </span>
