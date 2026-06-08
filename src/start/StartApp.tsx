@@ -153,7 +153,7 @@ function StartAppInner() {
         {sections.showShiftPulse && (
           <HeroHeader
             employees={config.employees}
-            schedule={config.schedule}
+            schedules={config.schedules}
             companyName={config.companyName}
             time={time}
             date={date}
@@ -212,7 +212,7 @@ function StartAppInner() {
           >
             {sections.showSchedule && (
               <div className={sections.showHandover ? 'xl:col-span-3' : ''}>
-                <WeeklyScheduleView schedule={config.schedule} employees={config.employees} />
+                <WeeklyScheduleView schedules={config.schedules} employees={config.employees} />
               </div>
             )}
             {sections.showHandover && (

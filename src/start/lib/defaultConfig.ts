@@ -1,5 +1,35 @@
-import type { StartPageConfig, WorkspaceSettings } from '../types'
+import type { StartPageConfig, WeekSchedule, WorkspaceSettings } from '../types'
 import { DEFAULT_SHIFT_PRESETS } from './shiftPresets'
+
+export const DEMO_WEEK_SCHEDULE: WeekSchedule = {
+  pon: [
+    { employeeId: 'e1', start: '08:00', end: '16:00' },
+    { employeeId: 'e2', start: '10:00', end: '18:00' },
+    { employeeId: 'e4', start: '07:00', end: '15:00' },
+  ],
+  wt: [
+    { employeeId: 'e3', start: '12:00', end: '20:00' },
+    { employeeId: 'e2', start: '10:00', end: '18:00' },
+  ],
+  sr: [
+    { employeeId: 'e1', start: '08:00', end: '16:00' },
+    { employeeId: 'e4', start: '07:00', end: '15:00' },
+  ],
+  czw: [
+    { employeeId: 'e3', start: '12:00', end: '20:00' },
+    { employeeId: 'e2', start: '10:00', end: '18:00' },
+  ],
+  pt: [
+    { employeeId: 'e1', start: '08:00', end: '16:00' },
+    { employeeId: 'e2', start: '10:00', end: '22:00' },
+    { employeeId: 'e3', start: '14:00', end: '22:00' },
+  ],
+  sob: [
+    { employeeId: 'e2', start: '10:00', end: '22:00' },
+    { employeeId: 'e3', start: '12:00', end: '22:00' },
+  ],
+  nd: [],
+}
 
 export const DEFAULT_SECTIONS: StartPageConfig['sections'] = {
   showSearch: true,
@@ -159,35 +189,7 @@ export const DEFAULT_CONFIG: StartPageConfig = {
     { id: 'e3', name: 'Kasia', color: '#f59e0b', role: 'Bar' },
     { id: 'e4', name: 'Marek', color: '#ec4899', role: 'Magazyn' },
   ],
-  schedule: {
-    pon: [
-      { employeeId: 'e1', start: '08:00', end: '16:00' },
-      { employeeId: 'e2', start: '10:00', end: '18:00' },
-      { employeeId: 'e4', start: '07:00', end: '15:00' },
-    ],
-    wt: [
-      { employeeId: 'e3', start: '12:00', end: '20:00' },
-      { employeeId: 'e2', start: '10:00', end: '18:00' },
-    ],
-    sr: [
-      { employeeId: 'e1', start: '08:00', end: '16:00' },
-      { employeeId: 'e4', start: '07:00', end: '15:00' },
-    ],
-    czw: [
-      { employeeId: 'e3', start: '12:00', end: '20:00' },
-      { employeeId: 'e2', start: '10:00', end: '18:00' },
-    ],
-    pt: [
-      { employeeId: 'e1', start: '08:00', end: '16:00' },
-      { employeeId: 'e2', start: '10:00', end: '22:00' },
-      { employeeId: 'e3', start: '14:00', end: '22:00' },
-    ],
-    sob: [
-      { employeeId: 'e2', start: '10:00', end: '22:00' },
-      { employeeId: 'e3', start: '12:00', end: '22:00' },
-    ],
-    nd: [],
-  },
+  schedules: {},
   handoverNotes: [
     {
       id: 'h1',

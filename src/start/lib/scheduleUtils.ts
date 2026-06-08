@@ -1,7 +1,37 @@
-import { DAY_KEYS, type DayKey, type Employee, type ShiftEntry, type WeekSchedule } from '../types'
-import { formatShiftShort } from './shiftPresets'
+import { DAY_KEYS, type DayKey, type Employee, type ScheduleByWeek, type ShiftEntry, type WeekSchedule } from '../types'
+import { clearEmployeeRow, formatShiftShort } from './shiftPresets'
+import { getWeekKey } from './weekCalendar'
 
-const DAY_INDEX_TO_KEY: DayKey[] = ['nd', 'pon', 'wt', 'sr', 'czw', 'pt', 'sob']
+export const DAY_INDEX_TO_KEY: DayKey[] = ['nd', 'pon', 'wt', 'sr', 'czw', 'pt', 'sob']
+
+export function emptyWeekSchedule(): WeekSchedule {
+  return { pon: [], wt: [], sr: [], czw: [], pt: [], sob: [], nd: [] }
+}
+
+export function getWeekSchedule(schedules: ScheduleByWeek, weekKey: string): WeekSchedule {
+  return schedules[weekKey] ?? emptyWeekSchedule()
+}
+
+export function getCurrentWeekSchedule(schedules: ScheduleByWeek, now = new Date()): WeekSchedule {
+  return getWeekSchedule(schedules, getWeekKey(now))
+}
+
+export function setWeekSchedule(schedules: ScheduleByWeek, weekKey: string, week: WeekSchedule): ScheduleByWeek {
+  return { ...schedules, [weekKey]: week }
+}
+
+export function copyWeekSchedule(schedules: ScheduleByWeek, fromWeekKey: string, toWeekKey: string): ScheduleByWeek {
+  const source = getWeekSchedule(schedules, fromWeekKey)
+  return setWeekSchedule(schedules, toWeekKey, structuredClone(source))
+}
+
+export function clearEmployeeFromAllSchedules(schedules: ScheduleByWeek, employeeId: string): ScheduleByWeek {
+  const next: ScheduleByWeek = {}
+  for (const [weekKey, week] of Object.entries(schedules)) {
+    next[weekKey] = clearEmployeeRow(week, employeeId)
+  }
+  return next
+}
 
 export function getTodayKey(): DayKey {
   return DAY_INDEX_TO_KEY[new Date().getDay()]

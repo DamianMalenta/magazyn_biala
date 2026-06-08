@@ -3,7 +3,6 @@ import { uid } from '../../lib/storage'
 import {
   applyPresetToCell,
   buildPresetShort,
-  clearEmployeeRow,
   copyDayToWeek,
   fillWeekWithPreset,
   formatShiftShort,
@@ -12,8 +11,23 @@ import {
   parseShiftInput,
   setShiftForCell,
 } from '../../lib/shiftPresets'
-import { DAY_KEYS, DAY_LABELS, type DayKey, type Employee, type ShiftPreset, type StartPageConfig } from '../../types'
-import { getTodayKey } from '../../lib/scheduleUtils'
+import { DAY_KEYS, DAY_LABELS, type DayKey, type Employee, type ShiftPreset, type StartPageConfig, type WeekSchedule } from '../../types'
+import {
+  clearEmployeeFromAllSchedules,
+  copyWeekSchedule,
+  getWeekSchedule,
+  setWeekSchedule,
+} from '../../lib/scheduleUtils'
+import {
+  addWeeks,
+  formatWeekLabel,
+  formatWeekLabelLong,
+  getDayKeyInWeek,
+  getWeekKey,
+  isCurrentWeek,
+  listWeekKeys,
+} from '../../lib/weekCalendar'
+import { WeekNavigator } from '../WeekNavigator'
 import { TabHeader, btnPrimary } from './AdminUi'
 
 interface ScheduleEditorProps {
@@ -27,13 +41,19 @@ type EditCell = { employeeId: string; day: DayKey }
 const ROW_HEIGHT = 'min-h-[58px]'
 
 export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) {
-  const today = getTodayKey()
   const presets = config.shiftPresets
+  const [editWeekKey, setEditWeekKey] = useState(() => getWeekKey())
   const [editCell, setEditCell] = useState<EditCell | null>(null)
   const [customTime, setCustomTime] = useState('')
   const [showPresetEditor, setShowPresetEditor] = useState(false)
 
-  const updateSchedule = (schedule: StartPageConfig['schedule']) => patch({ schedule })
+  const weekSchedule = getWeekSchedule(config.schedules, editWeekKey)
+  const todayInWeek = isCurrentWeek(editWeekKey) ? getDayKeyInWeek(editWeekKey) : null
+  const weekOptions = listWeekKeys(getWeekKey(), 8, 26)
+
+  const updateWeekSchedule = (schedule: WeekSchedule) => {
+    patch({ schedules: setWeekSchedule(config.schedules, editWeekKey, schedule) })
+  }
 
   const updatePresets = (shiftPresets: ShiftPreset[]) => patch({ shiftPresets })
 
@@ -77,7 +97,7 @@ export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) 
     if (!window.confirm(`Usunąć ${label} z grafiku?`)) return
     patch({
       employees: config.employees.filter((e) => e.id !== id),
-      schedule: clearEmployeeRow(config.schedule, id),
+      schedules: clearEmployeeFromAllSchedules(config.schedules, id),
     })
     onToast('Usunięto z grafiku')
   }
@@ -85,13 +105,13 @@ export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) 
   const applyPreset = (employeeId: string, day: DayKey, presetId: string) => {
     const preset = presets.find((p) => p.id === presetId)
     if (!preset) return
-    updateSchedule(applyPresetToCell(config.schedule, day, employeeId, preset))
+    updateWeekSchedule(applyPresetToCell(weekSchedule, day, employeeId, preset))
     setEditCell(null)
     onToast(`${DAY_LABELS[day]}: ${preset.short}`)
   }
 
   const clearCell = (employeeId: string, day: DayKey) => {
-    updateSchedule(setShiftForCell(config.schedule, day, employeeId, null))
+    updateWeekSchedule(setShiftForCell(weekSchedule, day, employeeId, null))
     setEditCell(null)
   }
 
@@ -101,7 +121,7 @@ export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) 
       onToast('Format: 11:22 lub 11:00-22:00')
       return
     }
-    updateSchedule(setShiftForCell(config.schedule, day, employeeId, parsed))
+    updateWeekSchedule(setShiftForCell(weekSchedule, day, employeeId, parsed))
     setCustomTime('')
     setEditCell(null)
     onToast('Zapisano zmianę')
@@ -110,21 +130,79 @@ export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) 
   const fillWeek = (employeeId: string, presetId: string) => {
     const preset = presets.find((p) => p.id === presetId)
     if (!preset) return
-    updateSchedule(fillWeekWithPreset(config.schedule, employeeId, preset))
+    updateWeekSchedule(fillWeekWithPreset(weekSchedule, employeeId, preset))
     onToast(`Cały tydzień: ${preset.short}`)
   }
 
   const copyMondayToWeek = (employeeId: string) => {
-    updateSchedule(copyDayToWeek(config.schedule, employeeId, 'pon'))
+    updateWeekSchedule(copyDayToWeek(weekSchedule, employeeId, 'pon'))
     onToast('Skopiowano Pon → cały tydzień')
+  }
+
+  const copyFromPreviousWeek = () => {
+    const prevKey = addWeeks(editWeekKey, -1)
+    patch({ schedules: copyWeekSchedule(config.schedules, prevKey, editWeekKey) })
+    onToast(`Skopiowano grafik z ${formatWeekLabel(prevKey)}`)
+  }
+
+  const copyToNextWeek = () => {
+    const nextKey = addWeeks(editWeekKey, 1)
+    patch({ schedules: copyWeekSchedule(config.schedules, editWeekKey, nextKey) })
+    setEditWeekKey(nextKey)
+    onToast(`Skopiowano grafik na ${formatWeekLabel(nextKey)}`)
   }
 
   return (
     <div>
       <TabHeader
         title="Grafik tygodniowy"
-        description="Kliknij komórkę dnia → wybierz gotowy schemat godzin. Skrót 11:22 = 11:00–22:00."
+        description="Wybierz tydzień kalendarzowy, potem kliknij komórkę dnia. Skrót 11:22 = 11:00–22:00."
       />
+
+      <div className="mb-4 p-3 rounded-2xl bg-violet-500/8 border border-violet-500/20 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+          <label className="text-xs font-semibold text-violet-200/90 shrink-0">Edytujesz tydzień:</label>
+          <select
+            value={editWeekKey}
+            onChange={(e) => {
+              setEditWeekKey(e.target.value)
+              setEditCell(null)
+            }}
+            className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-slate-900/60 border border-white/15 text-sm outline-none focus:border-violet-400"
+          >
+            {weekOptions.map((key) => (
+              <option key={key} value={key}>
+                {formatWeekLabel(key)}
+                {isCurrentWeek(key) ? ' (bieżący)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        <WeekNavigator
+          weekKey={editWeekKey}
+          onWeekChange={(key) => {
+            setEditWeekKey(key)
+            setEditCell(null)
+          }}
+        />
+        <p className="text-[11px] text-slate-400">{formatWeekLabelLong(editWeekKey)}</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={copyFromPreviousWeek}
+            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-slate-300 transition"
+          >
+            ← Kopiuj z poprzedniego tygodnia
+          </button>
+          <button
+            type="button"
+            onClick={copyToNextWeek}
+            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-slate-300 transition"
+          >
+            Kopiuj do następnego tygodnia →
+          </button>
+        </div>
+      </div>
 
       <div className="mb-4 rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
         <button
@@ -207,7 +285,7 @@ export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) 
               {DAY_KEYS.map((d) => (
                 <th
                   key={d}
-                  className={`p-2 text-center ${d === today ? 'text-violet-300 bg-violet-500/10' : ''}`}
+                  className={`p-2 text-center ${d === todayInWeek ? 'text-violet-300 bg-violet-500/10' : ''}`}
                 >
                   {DAY_LABELS[d]}
                 </th>
@@ -229,9 +307,9 @@ export function ScheduleEditor({ config, patch, onToast }: ScheduleEditorProps) 
                 </td>
 
                 {DAY_KEYS.map((day) => {
-                  const shift = getShiftForCell(config.schedule, day, emp.id)
+                  const shift = getShiftForCell(weekSchedule, day, emp.id)
                   const isOpen = editCell?.employeeId === emp.id && editCell.day === day
-                  const isToday = day === today
+                  const isToday = day === todayInWeek
 
                   return (
                     <td key={day} className={`p-1.5 align-top ${isToday ? 'bg-violet-500/5' : ''}`}>

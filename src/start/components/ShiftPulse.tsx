@@ -1,18 +1,18 @@
-import { getActiveShifts, getEmployeeMap, getGreeting, getTodayKey, formatShiftTime } from '../lib/scheduleUtils'
-import type { Employee, WeekSchedule } from '../types'
+import { getActiveShifts, getCurrentWeekSchedule, getEmployeeMap, getGreeting, getTodayKey, formatShiftTime } from '../lib/scheduleUtils'
+import type { Employee, ScheduleByWeek } from '../types'
 import { DAY_LABELS } from '../types'
 
 interface ShiftPulseProps {
   employees: Employee[]
-  schedule: WeekSchedule
+  schedules: ScheduleByWeek
   companyName: string
   time: string
   date: string
 }
 
-export function ShiftPulse({ employees, schedule, companyName, time, date }: ShiftPulseProps) {
+export function ShiftPulse({ employees, schedules, companyName, time, date }: ShiftPulseProps) {
   const today = getTodayKey()
-  const active = getActiveShifts(schedule, today)
+  const active = getActiveShifts(getCurrentWeekSchedule(schedules), today)
   const empMap = getEmployeeMap(employees)
   const greeting = getGreeting()
 

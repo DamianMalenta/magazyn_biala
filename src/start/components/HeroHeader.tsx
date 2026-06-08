@@ -7,7 +7,8 @@ import {
   formatShiftTime,
 } from '../lib/scheduleUtils'
 import { loadHandoverAuthor, sortHandoverNotes } from '../lib/handoverUtils'
-import type { Employee, HandoverNote, WeekSchedule } from '../types'
+import type { Employee, HandoverNote, ScheduleByWeek } from '../types'
+import { getCurrentWeekSchedule } from '../lib/scheduleUtils'
 import { DAY_LABELS } from '../types'
 import { SearchBar } from './SearchBar'
 import { WeatherWidget } from './WeatherWidget'
@@ -17,7 +18,7 @@ import { HandoverCard } from './HandoverCard'
 
 interface HeroHeaderProps {
   employees: Employee[]
-  schedule: WeekSchedule
+  schedules: ScheduleByWeek
   companyName: string
   time: string
   date: string
@@ -32,7 +33,7 @@ interface HeroHeaderProps {
 
 export function HeroHeader({
   employees,
-  schedule,
+  schedules,
   companyName,
   time,
   date,
@@ -45,7 +46,7 @@ export function HeroHeader({
   onHandoverUpdate,
 }: HeroHeaderProps) {
   const today = getTodayKey()
-  const active = getActiveShifts(schedule, today)
+  const active = getActiveShifts(getCurrentWeekSchedule(schedules), today)
   const empMap = getEmployeeMap(employees)
   const greeting = getGreeting()
 

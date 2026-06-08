@@ -65,6 +65,9 @@ export interface ShiftPreset {
 
 export type WeekSchedule = Record<DayKey, ShiftEntry[]>
 
+/** Grafiki tygodniowe — klucz = data poniedziałku (YYYY-MM-DD). */
+export type ScheduleByWeek = Record<string, WeekSchedule>
+
 export interface HandoverNote {
   id: string
   author: string
@@ -132,7 +135,7 @@ export interface StartPageConfig {
   infoCards: InfoCard[]
   employees: Employee[]
   shiftPresets: ShiftPreset[]
-  schedule: WeekSchedule
+  schedules: ScheduleByWeek
   handoverNotes: HandoverNote[]
   searchEngine: 'google' | 'duckduckgo'
   weather: WeatherConfig
