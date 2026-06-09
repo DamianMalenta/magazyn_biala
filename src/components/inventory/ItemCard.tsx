@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { InventoryItem, StandardUOM } from '../../types/inventory'
 import { STANDARD_UOMS } from '../../types/inventory'
 import { formatQty } from '../../lib/utils/text'
@@ -37,10 +37,12 @@ export function ItemCard({
   highlight,
 }: ItemCardProps) {
   const [qtyDraft, setQtyDraft] = useState(() => formatQty(item.qty))
+  const [prevQty, setPrevQty] = useState(item.qty)
 
-  useEffect(() => {
+  if (item.qty !== prevQty) {
+    setPrevQty(item.qty)
     setQtyDraft(formatQty(item.qty))
-  }, [item.qty])
+  }
 
   const commitQty = () => {
     const parsed = parseQtyInput(qtyDraft)

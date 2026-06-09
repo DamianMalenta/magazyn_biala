@@ -28,7 +28,8 @@ import {
   listWeekKeys,
 } from '../../lib/weekCalendar'
 import { WeekNavigator } from '../WeekNavigator'
-import { TabHeader, btnPrimary } from './AdminUi'
+import { TabHeader } from './AdminUi'
+import { btnPrimary } from './adminUiStyles'
 
 interface ScheduleEditorProps {
   config: StartPageConfig

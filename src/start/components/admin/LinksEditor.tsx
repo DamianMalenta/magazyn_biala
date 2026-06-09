@@ -11,16 +11,8 @@ import { isMusicLink } from '../../lib/musicUtils'
 import type { EmbedSize, LinkOpenMode, QuickLinkType } from '../../types'
 import type { IconMode, QuickLink, StartPageConfig } from '../../types'
 import { LinkIcon } from '../LinkIcon'
-import {
-  TabHeader,
-  Field,
-  inputCls,
-  btnPrimary,
-  btnGhost,
-  btnDanger,
-  Toggle,
-  ICON_PRESETS,
-} from './AdminUi'
+import { TabHeader, Field, Toggle } from './AdminUi'
+import { ICON_PRESETS, btnDanger, btnGhost, btnPrimary, inputCls } from './adminUiStyles'
 
 interface LinksEditorProps {
   config: StartPageConfig

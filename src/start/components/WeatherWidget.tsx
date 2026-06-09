@@ -19,13 +19,16 @@ interface WeatherWidgetProps {
 const DEFAULT_SELECTION: WeatherSelection = { mode: 'now', dayIndex: 0 }
 
 export function WeatherWidget({ data, loading, error, compact = false }: WeatherWidgetProps) {
+  const dataRevision = data ? `${data.cityLabel}:${data.fetchedAt}` : ''
   const [open, setOpen] = useState(false)
   const [selection, setSelection] = useState<WeatherSelection>(DEFAULT_SELECTION)
+  const [prevRevision, setPrevRevision] = useState(dataRevision)
 
-  useEffect(() => {
+  if (dataRevision !== prevRevision) {
+    setPrevRevision(dataRevision)
     setSelection(DEFAULT_SELECTION)
     setOpen(false)
-  }, [data?.cityLabel, data?.fetchedAt])
+  }
 
   useEffect(() => {
     if (!open) return

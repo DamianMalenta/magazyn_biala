@@ -8,17 +8,15 @@ interface EmbeddedPanelProps {
   onOpenTab: () => void
 }
 
-export function EmbeddedPanel({ link, onClose, onOpenTab }: EmbeddedPanelProps) {
+export function EmbeddedPanel(props: EmbeddedPanelProps) {
+  return <EmbeddedPanelContent key={`${props.link.id}:${props.link.url}`} {...props} />
+}
+
+function EmbeddedPanelContent({ link, onClose, onOpenTab }: EmbeddedPanelProps) {
   const embed = getEmbedInfo(link.url)
   const height = EMBED_SIZE_HEIGHT[link.embedSize ?? 'medium']
   const [iframeUrl, setIframeUrl] = useState(embed.kind === 'iframe' ? embed.url : '')
   const [videoInput, setVideoInput] = useState('')
-
-  useEffect(() => {
-    const next = getEmbedInfo(link.url)
-    setIframeUrl(next.kind === 'iframe' ? next.url : '')
-    setVideoInput('')
-  }, [link.id, link.url])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

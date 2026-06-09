@@ -2,7 +2,7 @@ import type { QuickLink, WindowsShortcut } from '../types'
 import type { WorkspaceTab } from '../hooks/useWorkspace'
 import { launchWindowsShortcut } from '../lib/windowsDeploy'
 import { LinkIcon } from './LinkIcon'
-import { useMusic } from '../context/MusicProvider'
+import { useMusic } from '../hooks/useMusic'
 
 interface CommandBarProps {
   companyName: string

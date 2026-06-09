@@ -20,7 +20,18 @@ interface CommandPaletteProps {
   onOpenLink: (link: QuickLink) => void
 }
 
-export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin, onOpenLink }: CommandPaletteProps) {
+export function CommandPalette(props: CommandPaletteProps) {
+  if (!props.open) return null
+  return <CommandPaletteDialog {...props} />
+}
+
+function CommandPaletteDialog({
+  onClose,
+  links,
+  infoCards,
+  onOpenAdmin,
+  onOpenLink,
+}: CommandPaletteProps) {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -58,20 +69,14 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin, o
     )
   }, [links, infoCards, query, onOpenAdmin, onOpenLink])
 
-  useEffect(() => {
-    if (open) {
-      setQuery('')
-      setSelected(0)
-      setTimeout(() => inputRef.current?.focus(), 50)
-    }
-  }, [open])
+  const activeIndex = items.length === 0 ? 0 : Math.min(selected, items.length - 1)
 
   useEffect(() => {
-    setSelected(0)
-  }, [query])
+    const timer = window.setTimeout(() => inputRef.current?.focus(), 50)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
-    if (!open) return
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
       if (e.key === 'ArrowDown') {
@@ -82,17 +87,15 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin, o
         e.preventDefault()
         setSelected((s) => Math.max(s - 1, 0))
       }
-      if (e.key === 'Enter' && items[selected]) {
+      if (e.key === 'Enter' && items[activeIndex]) {
         e.preventDefault()
-        items[selected].action()
+        items[activeIndex].action()
         onClose()
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, items, selected, onClose])
-
-  if (!open) return null
+  }, [items, activeIndex, onClose])
 
   return (
     <div className="command-overlay" onClick={onClose}>
@@ -105,7 +108,10 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin, o
           <input
             ref={inputRef}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setSelected(0)
+            }}
             placeholder="Szukaj stron, instrukcji, akcji…"
             className="flex-1 bg-transparent outline-none text-lg placeholder:text-slate-600"
           />
@@ -124,7 +130,7 @@ export function CommandPalette({ open, onClose, links, infoCards, onOpenAdmin, o
                     onClose()
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${
-                    i === selected ? 'bg-amber-500/15' : 'hover:bg-white/5'
+                    i === activeIndex ? 'bg-amber-500/15' : 'hover:bg-white/5'
                   }`}
                 >
                   {item.link ? (

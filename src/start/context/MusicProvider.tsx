@@ -1,34 +1,11 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   loadLastStation,
   saveLastStation,
   streamUrlsForStation,
   type MusicStation,
 } from '../lib/musicUtils'
-
-interface MusicContextValue {
-  current: MusicStation | null
-  playing: boolean
-  volume: number
-  error: string | null
-  playerExpanded: boolean
-  setVolume: (v: number) => void
-  setPlayerExpanded: (v: boolean) => void
-  playStation: (station: MusicStation) => Promise<void>
-  togglePlay: () => Promise<void>
-  stop: () => void
-  clearError: () => void
-}
-
-const MusicContext = createContext<MusicContextValue | null>(null)
+import { MusicContext } from './musicContext'
 
 export function MusicProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -136,10 +113,4 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       {children}
     </MusicContext.Provider>
   )
-}
-
-export function useMusic() {
-  const ctx = useContext(MusicContext)
-  if (!ctx) throw new Error('useMusic must be used within MusicProvider')
-  return ctx
 }

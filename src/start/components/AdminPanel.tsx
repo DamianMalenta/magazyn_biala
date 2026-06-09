@@ -7,17 +7,8 @@ import { WorkspaceEditor } from './admin/WorkspaceEditor'
 import { MentionTextarea } from './MentionTextarea'
 import { extractMentions } from '../lib/mentionUtils'
 import { ScheduleEditor } from './admin/ScheduleEditor'
-import {
-  TabHeader,
-  Field,
-  inputCls,
-  btnPrimary,
-  btnGhost,
-  btnDanger,
-  Toggle,
-  Toast,
-  ICON_PRESETS,
-} from './admin/AdminUi'
+import { TabHeader, Field, Toggle, Toast } from './admin/AdminUi'
+import { ICON_PRESETS, btnDanger, btnGhost, btnPrimary, inputCls } from './admin/adminUiStyles'
 
 type AdminTab = 'ustawienia' | 'stanowisko' | 'wyglad' | 'linki' | 'info' | 'grafik' | 'przekazania' | 'backup'
 

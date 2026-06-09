@@ -10,16 +10,8 @@ import {
 import type { StartPageConfig, WindowsShortcut, WindowsShortcutTargetType } from '../../types'
 import { OPEN_MODE_LABELS, resolveLinkOpenMode } from '../../lib/linkOpenUtils'
 import type { LinkOpenMode } from '../../types'
-import {
-  TabHeader,
-  Field,
-  inputCls,
-  btnPrimary,
-  btnGhost,
-  btnDanger,
-  Toggle,
-  ICON_PRESETS,
-} from './AdminUi'
+import { TabHeader, Field, Toggle } from './AdminUi'
+import { ICON_PRESETS, btnDanger, btnGhost, btnPrimary, inputCls } from './adminUiStyles'
 
 interface WorkspaceEditorProps {
   config: StartPageConfig

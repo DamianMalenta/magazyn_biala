@@ -8,7 +8,7 @@ import {
   type MusicCategoryId,
   type MusicStation,
 } from '../lib/musicUtils'
-import { useMusic } from '../context/MusicProvider'
+import { useMusic } from '../hooks/useMusic'
 
 interface MusicPanelProps {
   link: QuickLink
@@ -50,8 +50,34 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
   }, [music])
 
   useEffect(() => {
-    void loadCategory('lounge')
-  }, [loadCategory])
+    let cancelled = false
+    const catId: MusicCategoryId = 'lounge'
+    const presets = stationsForCategory(catId)
+    const cat = MUSIC_CATEGORIES.find((c) => c.id === catId)
+
+    void (async () => {
+      await Promise.resolve()
+      if (cancelled) return
+      music.clearError()
+      setLoading(true)
+      try {
+        const online = cat?.search ? await fetchRadioStations(cat.search, 8) : []
+        const merged = [...presets]
+        for (const s of online) {
+          if (!merged.some((m) => m.streamUrl === s.streamUrl)) merged.push(s)
+        }
+        if (!cancelled) setStations(merged)
+      } catch {
+        if (!cancelled) setStations(presets)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [music])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

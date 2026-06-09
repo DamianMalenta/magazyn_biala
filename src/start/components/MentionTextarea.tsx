@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Employee } from '../types'
 import { filterEmployeesForMention } from '../lib/mentionUtils'
 
@@ -20,23 +20,20 @@ export function MentionTextarea({
   rows = 3,
 }: MentionTextareaProps) {
   const ref = useRef<HTMLTextAreaElement>(null)
-  const [mentionQuery, setMentionQuery] = useState<string | null>(null)
-  const [mentionIndex, setMentionIndex] = useState(0)
+  const [mention, setMention] = useState<{ query: string; index: number } | null>(null)
 
   const suggestions =
-    mentionQuery !== null ? filterEmployeesForMention(employees, mentionQuery).slice(0, 6) : []
-
-  useEffect(() => {
-    setMentionIndex(0)
-  }, [mentionQuery])
+    mention !== null ? filterEmployeesForMention(employees, mention.query).slice(0, 6) : []
+  const mentionIndex = mention?.index ?? 0
 
   const detectMention = (text: string, cursor: number) => {
     const before = text.slice(0, cursor)
     const match = before.match(/@([\p{L}\d_.-]*)$/u)
     if (match) {
-      setMentionQuery(match[1])
+      const query = match[1]
+      setMention((prev) => (prev?.query === query ? prev : { query, index: 0 }))
     } else {
-      setMentionQuery(null)
+      setMention(null)
     }
   }
 
@@ -52,7 +49,7 @@ export function MentionTextarea({
     const firstName = emp.name.trim().split(/\s+/)[0]
     const next = value.slice(0, start) + `@${firstName} ` + after
     onChange(next)
-    setMentionQuery(null)
+    setMention(null)
     requestAnimationFrame(() => {
       el.focus()
       const pos = start + firstName.length + 2
@@ -71,15 +68,17 @@ export function MentionTextarea({
         }}
         onClick={(e) => detectMention(value, e.currentTarget.selectionStart)}
         onKeyDown={(e) => {
-          if (mentionQuery !== null && suggestions.length > 0) {
+          if (mention !== null && suggestions.length > 0) {
             if (e.key === 'ArrowDown') {
               e.preventDefault()
-              setMentionIndex((i) => Math.min(i + 1, suggestions.length - 1))
+              setMention((prev) =>
+                prev ? { ...prev, index: Math.min(prev.index + 1, suggestions.length - 1) } : prev,
+              )
               return
             }
             if (e.key === 'ArrowUp') {
               e.preventDefault()
-              setMentionIndex((i) => Math.max(i - 1, 0))
+              setMention((prev) => (prev ? { ...prev, index: Math.max(prev.index - 1, 0) } : prev))
               return
             }
             if (e.key === 'Enter' || e.key === 'Tab') {
@@ -88,7 +87,7 @@ export function MentionTextarea({
               return
             }
             if (e.key === 'Escape') {
-              setMentionQuery(null)
+              setMention(null)
               return
             }
           }
@@ -102,7 +101,7 @@ export function MentionTextarea({
         className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-amber-500 text-sm min-h-[72px] resize-y"
       />
 
-      {mentionQuery !== null && suggestions.length > 0 && (
+      {mention !== null && suggestions.length > 0 && (
         <ul className="absolute left-0 right-0 bottom-full mb-1 z-20 rounded-xl border border-white/10 bg-slate-900 shadow-xl overflow-hidden">
           {suggestions.map((emp, i) => (
             <li key={emp.id}>

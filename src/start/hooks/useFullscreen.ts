@@ -6,7 +6,10 @@ interface UseFullscreenOptions {
 }
 
 export function useFullscreen({ enabled, lock }: UseFullscreenOptions) {
-  const [active, setActive] = useState(false)
+  const [active, setActive] = useState(
+    () =>
+      typeof document !== 'undefined' && document.fullscreenElement === document.documentElement,
+  )
   const [supported] = useState(() => typeof document !== 'undefined' && document.fullscreenEnabled)
 
   const sync = useCallback(() => {
@@ -19,7 +22,6 @@ export function useFullscreen({ enabled, lock }: UseFullscreenOptions) {
       if (document.fullscreenElement !== document.documentElement) {
         await document.documentElement.requestFullscreen()
       }
-      setActive(true)
       return true
     } catch {
       return false
@@ -42,14 +44,13 @@ export function useFullscreen({ enabled, lock }: UseFullscreenOptions) {
 
   useEffect(() => {
     document.addEventListener('fullscreenchange', sync)
-    sync()
     return () => document.removeEventListener('fullscreenchange', sync)
   }, [sync])
 
   useEffect(() => {
     if (!enabled || !supported) return
-    void enter()
-  }, [enabled, supported, enter])
+    void document.documentElement.requestFullscreen().catch(() => {})
+  }, [enabled, supported])
 
   useEffect(() => {
     if (!enabled || !lock || !supported) return

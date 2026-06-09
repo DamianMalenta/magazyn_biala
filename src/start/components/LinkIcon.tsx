@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { QuickLink } from '../types'
 import { getFaviconCandidates, hasValidIconUrl, usesAutoIcon } from '../lib/faviconUtils'
 
@@ -38,6 +38,11 @@ interface LinkIconProps {
 }
 
 export function LinkIcon({ link, size = 'tile', className = '' }: LinkIconProps) {
+  const iconKey = `${link.url}:${link.iconMode}:${size}`
+  return <LinkIconContent key={iconKey} link={link} size={size} className={className} />
+}
+
+function LinkIconContent({ link, size = 'tile', className = '' }: LinkIconProps) {
   const auto = usesAutoIcon(link)
   const candidates = useMemo(
     () => getFaviconCandidates(link.url, FAVICON_SIZE[size]),
@@ -46,11 +51,6 @@ export function LinkIcon({ link, size = 'tile', className = '' }: LinkIconProps)
 
   const [candidateIndex, setCandidateIndex] = useState(0)
   const [exhausted, setExhausted] = useState(false)
-
-  useEffect(() => {
-    setCandidateIndex(0)
-    setExhausted(false)
-  }, [link.url, link.iconMode, candidates.length])
 
   const showFavicon = auto && !exhausted && candidates.length > 0 && hasValidIconUrl(link.url)
   const src = showFavicon ? candidates[candidateIndex] : null

@@ -1,15 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { loadConfig } from '../lib/storage'
 
 const SESSION_KEY = 'startpage-admin-session'
 
 export function useAdminAuth() {
-  const [isAdmin, setIsAdmin] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(
+    () => typeof sessionStorage !== 'undefined' && sessionStorage.getItem(SESSION_KEY) === 'authenticated',
+  )
   const [showLogin, setShowLogin] = useState(false)
-
-  useEffect(() => {
-    if (sessionStorage.getItem(SESSION_KEY) === 'authenticated') setIsAdmin(true)
-  }, [])
 
   const login = (pin: string): boolean => {
     const attempt = pin.trim()
