@@ -180,7 +180,7 @@
 }
 
 .start-modal-backdrop {
-  @apply absolute inset-0 bg-black/65 backdrop-blur-sm cursor-default;
+  @apply absolute inset-0 bg-black/80 backdrop-blur-sm cursor-default;
 }
 
 .start-modal-panel {

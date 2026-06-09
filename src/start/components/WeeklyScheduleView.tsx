@@ -172,7 +172,9 @@ function ScheduleGrid({
         <div
           className={`grid ${gridCols} gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5`}
         >
-          <div className="p-2 sticky left-0 z-10 bg-slate-900/90 rounded-lg">Osoba</div>
+          <div className="p-2 sticky left-0 z-20 bg-slate-900 border-r border-white/5 rounded-lg shadow-[4px_0_12px_rgba(0,0,0,0.35)]">
+            Osoba
+          </div>
           {DAY_KEYS.map((day) => (
             <div
               key={day}
@@ -191,7 +193,7 @@ function ScheduleGrid({
         {employees.map((emp) => (
           <div key={emp.id} className={`grid ${gridCols} gap-1.5 mb-1.5 items-stretch`}>
             <div
-              className={`sticky left-0 z-10 flex items-center gap-2 px-2.5 py-1.5 ${rowHeight} rounded-xl border border-white/10 bg-slate-900/90`}
+              className={`sticky left-0 z-20 flex items-center gap-2 px-2.5 py-1.5 ${rowHeight} rounded-xl border border-white/10 border-r-white/5 bg-slate-900 shadow-[4px_0_12px_rgba(0,0,0,0.35)]`}
             >
               <span className="w-3 h-3 rounded-full shrink-0" style={{ background: emp.color }} />
               <div className="min-w-0">

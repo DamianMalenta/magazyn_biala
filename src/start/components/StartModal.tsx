@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 interface StartModalProps {
   open: boolean
@@ -36,9 +37,18 @@ export function StartModal({
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [open])
+
   if (!open) return null
 
-  return (
+  return createPortal(
     <div className="start-modal-root" role="dialog" aria-modal="true" aria-labelledby="start-modal-title">
       <button type="button" className="start-modal-backdrop" onClick={onClose} aria-label="Zamknij" />
       <div className={`start-modal-panel ${MAX_W[maxWidth]}`}>
@@ -55,6 +65,7 @@ export function StartModal({
         </header>
         <div className={`start-modal-body ${bodyClassName ?? ''}`.trim()}>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
