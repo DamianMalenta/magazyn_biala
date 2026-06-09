@@ -211,6 +211,10 @@
   @apply px-4 py-3 max-h-[min(70vh,480px)] overflow-y-auto scrollbar-thin;
 }
 
+.start-modal-body-wide {
+  @apply max-h-[min(88vh,720px)];
+}
+
 .start-page-layout {
   @apply gap-3 md:gap-4;
 }

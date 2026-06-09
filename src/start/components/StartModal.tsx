@@ -6,16 +6,27 @@ interface StartModalProps {
   title: string
   icon?: string
   children: ReactNode
-  maxWidth?: 'sm' | 'md' | 'lg'
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+  bodyClassName?: string
 }
 
 const MAX_W = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-lg',
+  xl: 'max-w-4xl',
+  full: 'max-w-[min(96vw,1100px)]',
 } as const
 
-export function StartModal({ open, onClose, title, icon, children, maxWidth = 'md' }: StartModalProps) {
+export function StartModal({
+  open,
+  onClose,
+  title,
+  icon,
+  children,
+  maxWidth = 'md',
+  bodyClassName,
+}: StartModalProps) {
   useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => {
@@ -42,7 +53,7 @@ export function StartModal({ open, onClose, title, icon, children, maxWidth = 'm
             ×
           </button>
         </header>
-        <div className="start-modal-body">{children}</div>
+        <div className={`start-modal-body ${bodyClassName ?? ''}`.trim()}>{children}</div>
       </div>
     </div>
   )
