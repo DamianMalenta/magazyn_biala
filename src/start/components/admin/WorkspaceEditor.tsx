@@ -8,7 +8,7 @@ import {
   resolvePanelUrl,
 } from '../../lib/windowsDeploy'
 import type { StartPageConfig, WindowsShortcut, WindowsShortcutTargetType } from '../../types'
-import { OPEN_MODE_LABELS } from '../../lib/linkOpenUtils'
+import { OPEN_MODE_LABELS, resolveLinkOpenMode } from '../../lib/linkOpenUtils'
 import type { LinkOpenMode } from '../../types'
 import {
   TabHeader,
@@ -156,7 +156,9 @@ export function WorkspaceEditor({ config, patch, onToast }: WorkspaceEditorProps
               type="button"
               onClick={() => {
                 const mode = ws.defaultLinkOpenMode ?? 'shell'
-                const count = config.quickLinks.filter((l) => l.linkType !== 'music' && l.openMode !== mode).length
+                const count = config.quickLinks.filter(
+                  (l) => l.linkType !== 'music' && resolveLinkOpenMode(l, mode) !== mode,
+                ).length
                 if (count === 0) {
                   onToast('Wszystkie kafelki mają już ten sposób otwierania')
                   return

@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import type { QuickLink, WindowsShortcut } from '../types'
 import type { WorkspaceTab } from '../hooks/useWorkspace'
 import { resolveShellFrameUrl } from '../lib/internalLinks'
-import { openLinkInTab } from '../lib/linkOpenUtils'
 import { CommandBar } from './CommandBar'
 
 interface WorkspaceShellProps {
@@ -20,6 +19,7 @@ interface WorkspaceShellProps {
   onSwitchTab: (linkId: string) => void
   onCloseTab: (linkId: string) => void
   onOpenLink: (link: QuickLink) => void
+  onOpenInNewTab: () => void
   onOpenAdmin: () => void
   onToggleFullscreen: () => void
   fullscreenActive: boolean
@@ -40,6 +40,7 @@ export function WorkspaceShell({
   onSwitchTab,
   onCloseTab,
   onOpenLink,
+  onOpenInNewTab,
   onOpenAdmin,
   onToggleFullscreen,
   fullscreenActive,
@@ -86,7 +87,7 @@ export function WorkspaceShell({
       <div className="workspace-frame-actions">
         <button
           type="button"
-          onClick={() => openLinkInTab(activeTab.link.url)}
+          onClick={onOpenInNewTab}
           className="workspace-frame-action-btn"
           title="Otwórz w nowej karcie Chrome"
         >

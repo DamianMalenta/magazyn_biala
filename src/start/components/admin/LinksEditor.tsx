@@ -5,6 +5,7 @@ import {
   OPEN_MODE_DESCRIPTIONS,
   OPEN_MODE_LABELS,
   getEmbedInfo,
+  resolveLinkOpenMode,
 } from '../../lib/linkOpenUtils'
 import { isMusicLink } from '../../lib/musicUtils'
 import type { EmbedSize, LinkOpenMode, QuickLinkType } from '../../types'
@@ -185,6 +186,7 @@ function LinkCard({
   onRemove: () => void
 }) {
   const isMusic = isMusicLink(link.url, link.linkType)
+  const openMode = resolveLinkOpenMode(link, defaultOpenMode)
   const hostname = extractHostname(link.url)
   const isAuto = link.iconMode === 'auto' && !isMusic
 
@@ -299,7 +301,7 @@ function LinkCard({
                   type="button"
                   onClick={() => onUpdate(link.id, 'openMode', mode)}
                   className={`px-3 py-2 rounded-xl text-xs font-semibold transition ${
-                    (link.openMode ?? defaultOpenMode) === mode
+                    openMode === mode
                       ? 'bg-amber-600 text-white'
                       : 'bg-white/5 text-slate-400 hover:text-white'
                   }`}
@@ -309,15 +311,15 @@ function LinkCard({
               ))}
             </div>
             <p className="text-[11px] text-slate-500 mb-2">
-              {OPEN_MODE_DESCRIPTIONS[link.openMode ?? defaultOpenMode]}
+              {OPEN_MODE_DESCRIPTIONS[openMode]}
             </p>
-            {!isMusic && (link.openMode ?? defaultOpenMode) === 'shell' && link.url.length > 8 && (
+            {!isMusic && openMode === 'shell' && link.url.length > 8 && (
               <p className="text-[10px] text-slate-500 mb-2">
                 Treść otworzy się <strong className="text-slate-400">wewnątrz tego samego okna</strong> pod paskiem.
                 Jeśli strona jest pusta (blokada iframe), wybierz „Nowa karta” lub „Osobne okno”.
               </p>
             )}
-            {(link.openMode ?? defaultOpenMode) === 'embed' && (
+            {openMode === 'embed' && (
               <div className="flex flex-wrap gap-2 items-center">
                 <span className="text-[10px] text-slate-500">Wysokość panelu:</span>
                 {(['compact', 'medium', 'large', 'fullscreen'] as EmbedSize[]).map((sz) => (

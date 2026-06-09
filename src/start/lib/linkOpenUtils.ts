@@ -1,6 +1,20 @@
+import type { LinkOpenMode, QuickLink } from '../types'
 import { resolveQuickLinkUrl } from './internalLinks'
+import { isMusicLink } from './musicUtils'
 
-export type LinkOpenMode = 'tab' | 'embed' | 'window' | 'shell'
+export type { LinkOpenMode }
+
+/** Efektywny tryb otwierania kafelka (uwzględnia domyślne ustawienie workspace). */
+export function resolveLinkOpenMode(
+  link: QuickLink,
+  defaultOpenMode: LinkOpenMode = 'shell',
+): LinkOpenMode {
+  if (isMusicLink(link.url, link.linkType)) {
+    const mode = link.openMode ?? 'embed'
+    return mode === 'shell' ? 'embed' : mode
+  }
+  return link.openMode ?? defaultOpenMode
+}
 export type EmbedSize = 'compact' | 'medium' | 'large' | 'fullscreen'
 export type EmbedKind = 'iframe' | 'youtube-home' | 'blocked'
 
@@ -145,11 +159,17 @@ export const EMBED_SIZE_HEIGHT: Record<EmbedSize, string> = {
   fullscreen: 'min(78vh, 720px)',
 }
 
-/** Nowa karta Chrome — pełna strona. */
+/** Nowa karta Chrome — pełna strona (bez nawigacji bieżącej karty). */
 export function openLinkInTab(url: string): void {
   const resolved = resolveQuickLinkUrl(url)
-  const opened = window.open(resolved, '_blank', 'noopener,noreferrer')
-  if (!opened) window.location.assign(resolved)
+  const anchor = document.createElement('a')
+  anchor.href = resolved
+  anchor.target = '_blank'
+  anchor.rel = 'noopener noreferrer'
+  anchor.style.display = 'none'
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
 }
 
 /** Osobne okno przeglądarki z rozmiarem. */

@@ -1,4 +1,5 @@
-import type { IconMode, QuickLink } from '../types'
+import type { IconMode, LinkOpenMode, QuickLink } from '../types'
+import { resolveLinkOpenMode } from './linkOpenUtils'
 
 export function extractHostname(url: string): string | null {
   try {
@@ -52,14 +53,13 @@ function normalizeLinkType(link: QuickLink): QuickLink['linkType'] {
   return 'link'
 }
 
-export function normalizeQuickLink(link: QuickLink): QuickLink {
+export function normalizeQuickLink(link: QuickLink, defaultOpenMode: LinkOpenMode = 'shell'): QuickLink {
   const iconMode: IconMode = link.iconMode ?? 'auto'
   const linkType = normalizeLinkType(link)
+  const normalized = { ...link, iconMode, linkType }
   return {
-    ...link,
-    iconMode,
-    linkType,
-    openMode: linkType === 'music' ? 'embed' : (link.openMode ?? 'shell'),
+    ...normalized,
+    openMode: resolveLinkOpenMode(normalized, defaultOpenMode),
     embedSize: link.embedSize ?? 'medium',
     icon: link.icon?.trim() || '🔗',
     url: linkType === 'music' && !link.url.trim() ? 'music://player' : link.url,

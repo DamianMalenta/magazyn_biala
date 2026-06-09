@@ -14,6 +14,7 @@ import { CommandPalette } from './components/CommandPalette'
 import { AdminLogin } from './components/AdminLogin'
 import { AdminPanel } from './components/AdminPanel'
 import { useLinkOpener } from './hooks/useLinkOpener'
+import { resolveLinkOpenMode } from './lib/linkOpenUtils'
 import { EmbeddedPanel } from './components/EmbeddedPanel'
 import { MusicPanel, GlobalMusicOverlay } from './components/MusicPanel'
 import { isMusicLink } from './lib/musicUtils'
@@ -39,6 +40,7 @@ function StartAppInner() {
     minimizeEmbed,
     expandEmbed,
     openEmbeddedInTab,
+    openShellInNewTab,
     exitWorkspace,
     workspace: ws,
   } = useLinkOpener(workspace)
@@ -123,6 +125,7 @@ function StartAppInner() {
           onSwitchTab={ws.switchTab}
           onCloseTab={ws.closeTab}
           onOpenLink={openLink}
+          onOpenInNewTab={openShellInNewTab}
           onOpenAdmin={openAdmin}
           onToggleFullscreen={() => void toggleFullscreen()}
           fullscreenActive={fullscreenActive}
@@ -182,11 +185,14 @@ function StartAppInner() {
           <>
             <QuickLinksGrid
               links={config.quickLinks}
+              defaultOpenMode={workspace.defaultLinkOpenMode}
               activeEmbedId={embeddedLink?.id}
               embedMinimized={embedMinimized}
               onOpenLink={openLink}
             />
-            {embeddedLink && (embeddedLink.openMode ?? 'shell') === 'embed' && (
+            {embeddedLink &&
+              (isMusicLink(embeddedLink.url, embeddedLink.linkType) ||
+                resolveLinkOpenMode(embeddedLink, workspace.defaultLinkOpenMode) === 'embed') && (
               isMusicLink(embeddedLink.url, embeddedLink.linkType) ? (
                 <MusicPanel
                   link={embeddedLink}

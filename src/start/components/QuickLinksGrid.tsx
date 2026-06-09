@@ -1,8 +1,10 @@
-import type { QuickLink } from '../types'
+import type { LinkOpenMode, QuickLink } from '../types'
+import { resolveLinkOpenMode } from '../lib/linkOpenUtils'
 import { LinkIcon } from './LinkIcon'
 
 interface QuickLinksGridProps {
   links: QuickLink[]
+  defaultOpenMode: LinkOpenMode
   activeEmbedId?: string | null
   embedMinimized?: boolean
   onOpenLink: (link: QuickLink) => void
@@ -14,7 +16,13 @@ const OPEN_MODE_BADGE: Partial<Record<QuickLink['openMode'], string>> = {
   shell: '⛶',
 }
 
-export function QuickLinksGrid({ links, activeEmbedId, embedMinimized = false, onOpenLink }: QuickLinksGridProps) {
+export function QuickLinksGrid({
+  links,
+  defaultOpenMode,
+  activeEmbedId,
+  embedMinimized = false,
+  onOpenLink,
+}: QuickLinksGridProps) {
   const pinned = links.filter((l) => l.pinned)
   if (pinned.length === 0) return null
 
@@ -23,7 +31,8 @@ export function QuickLinksGrid({ links, activeEmbedId, embedMinimized = false, o
       <p className="links-dock-label">Szybki dostęp</p>
       <div className="links-dock links-dock-compact">
         {pinned.map((link) => {
-          const isActive = activeEmbedId === link.id && (link.openMode ?? 'shell') === 'embed'
+          const openMode = resolveLinkOpenMode(link, defaultOpenMode)
+          const isActive = activeEmbedId === link.id && openMode === 'embed'
           const isMinimized = isActive && embedMinimized
           return (
             <button
@@ -31,15 +40,15 @@ export function QuickLinksGrid({ links, activeEmbedId, embedMinimized = false, o
               type="button"
               onClick={() => onOpenLink(link)}
               className={`link-tile-dock group ${isActive ? 'link-tile-dock-active' : ''} ${isMinimized ? 'link-tile-dock-minimized' : ''}`}
-              title={`${link.label}${link.openMode === 'tab' ? ' · Nowa karta' : link.openMode === 'embed' ? ' · Panel' : link.openMode === 'window' ? ' · Osobne okno' : link.openMode === 'shell' ? ' · Pod paskiem' : ''}${isActive ? (embedMinimized ? ' · kliknij aby rozwinąć' : ' · kliknij aby zminimalizować') : ''}`}
+              title={`${link.label}${openMode === 'tab' ? ' · Nowa karta' : openMode === 'embed' ? ' · Panel' : openMode === 'window' ? ' · Osobne okno' : openMode === 'shell' ? ' · Pod paskiem' : ''}${isActive ? (embedMinimized ? ' · kliknij aby rozwinąć' : ' · kliknij aby zminimalizować') : ''}`}
               aria-expanded={isActive}
             >
               <div className="link-tile-dock-icon" style={{ '--tile-accent': link.color } as React.CSSProperties}>
                 <div className="link-tile-dock-glow" style={{ background: link.color }} />
                 <LinkIcon link={link} size="tileCompact" />
-                {OPEN_MODE_BADGE[link.openMode] && (
+                {OPEN_MODE_BADGE[openMode] && (
                   <span className="link-open-badge link-open-badge-compact" title="Otwiera panel">
-                    {OPEN_MODE_BADGE[link.openMode]}
+                    {OPEN_MODE_BADGE[openMode]}
                   </span>
                 )}
               </div>

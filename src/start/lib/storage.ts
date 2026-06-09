@@ -5,7 +5,7 @@ import { normalizeQuickLink } from './faviconUtils'
 import { normalizeHandoverNote } from './handoverUtils'
 import { emptyWeekSchedule } from './scheduleUtils'
 import { getWeekKey } from './weekCalendar'
-import type { ScheduleByWeek, StartPageConfig, WeekSchedule } from '../types'
+import type { LinkOpenMode, ScheduleByWeek, StartPageConfig, WeekSchedule } from '../types'
 
 const STORAGE_KEY = 'startpage-config-v1'
 export const DEFAULT_ADMIN_PIN = '2024'
@@ -17,8 +17,11 @@ export function normalizePin(pin: string | undefined): string {
   return trimmed && trimmed.length >= 4 ? trimmed : DEFAULT_ADMIN_PIN
 }
 
-function normalizeQuickLinks(links: StartPageConfig['quickLinks']): StartPageConfig['quickLinks'] {
-  return links.map(normalizeQuickLink)
+function normalizeQuickLinks(
+  links: StartPageConfig['quickLinks'],
+  defaultOpenMode: LinkOpenMode,
+): StartPageConfig['quickLinks'] {
+  return links.map((link) => normalizeQuickLink(link, defaultOpenMode))
 }
 
 function mergeWorkspace(parsed: Partial<StartPageConfig>['workspace']): StartPageConfig['workspace'] {
@@ -66,14 +69,15 @@ export function mergeSchedules(
 }
 
 function mergeConfig(parsed: LegacyStartPageConfig): StartPageConfig {
+  const workspace = mergeWorkspace(parsed.workspace)
   return {
     ...DEFAULT_CONFIG,
     ...parsed,
     adminPin: normalizePin(parsed.adminPin),
     sections: { ...DEFAULT_SECTIONS, ...parsed.sections },
     weather: { ...DEFAULT_WEATHER, ...parsed.weather },
-    workspace: mergeWorkspace(parsed.workspace),
-    quickLinks: normalizeQuickLinks(parsed.quickLinks ?? DEFAULT_CONFIG.quickLinks),
+    workspace,
+    quickLinks: normalizeQuickLinks(parsed.quickLinks ?? DEFAULT_CONFIG.quickLinks, workspace.defaultLinkOpenMode),
     infoCards: parsed.infoCards ?? DEFAULT_CONFIG.infoCards,
     shiftPresets: mergeShiftPresets(parsed.shiftPresets),
     employees: parsed.employees ?? DEFAULT_CONFIG.employees,
@@ -105,7 +109,7 @@ export function saveConfig(config: StartPageConfig): void {
   const safe: StartPageConfig = {
     ...config,
     adminPin: normalizePin(config.adminPin),
-    quickLinks: normalizeQuickLinks(config.quickLinks),
+    quickLinks: normalizeQuickLinks(config.quickLinks, config.workspace.defaultLinkOpenMode),
     handoverNotes: config.handoverNotes.map(normalizeHandoverNote),
     schedules: normalizedSchedules,
   }

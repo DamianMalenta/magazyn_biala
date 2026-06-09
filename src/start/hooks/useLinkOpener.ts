@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import type { QuickLink, WorkspaceSettings } from '../types'
-import { openLinkInTab, openLinkInWindow } from '../lib/linkOpenUtils'
+import { openLinkInTab, openLinkInWindow, resolveLinkOpenMode } from '../lib/linkOpenUtils'
 import { isMusicLink } from '../lib/musicUtils'
 import { useWorkspace } from './useWorkspace'
 
@@ -21,7 +21,7 @@ export function useLinkOpener(workspace: WorkspaceSettings) {
 
   const openLink = useCallback(
     (link: QuickLink) => {
-      const mode = link.openMode ?? 'shell'
+      const mode = resolveLinkOpenMode(link, workspace.defaultLinkOpenMode)
 
       if (isMusicLink(link.url, link.linkType)) {
         if (mode === 'tab') {
@@ -77,7 +77,7 @@ export function useLinkOpener(workspace: WorkspaceSettings) {
         })
       }
     },
-    [leaveWorkspace, ws],
+    [leaveWorkspace, ws, workspace.defaultLinkOpenMode],
   )
 
   const closeEmbed = useCallback(() => setEmbedState(CLOSED), [])
@@ -97,6 +97,13 @@ export function useLinkOpener(workspace: WorkspaceSettings) {
     })
   }, [])
 
+  const openShellInNewTab = useCallback(() => {
+    const tab = ws.activeTab
+    if (!tab) return
+    ws.closeWorkspace()
+    openLinkInTab(tab.link.url)
+  }, [ws])
+
   const exitWorkspace = useCallback(() => {
     ws.closeWorkspace()
   }, [ws])
@@ -109,6 +116,7 @@ export function useLinkOpener(workspace: WorkspaceSettings) {
     minimizeEmbed,
     expandEmbed,
     openEmbeddedInTab,
+    openShellInNewTab,
     exitWorkspace,
     workspace: ws,
   }
