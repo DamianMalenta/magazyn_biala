@@ -55,7 +55,8 @@ export const MUSIC_PRESETS: Record<MusicCategoryId, MusicStation[]> = {
     {
       id: 'rp-main',
       name: 'Radio Paradise — Main',
-      streamUrl: 'https://stream.radioparadise.com/aac-320',
+      streamUrl: 'https://stream.radioparadise.com/aac-128',
+      fallbackUrls: ['https://stream.radioparadise.com/aac-320'],
       tags: 'eclectic, lounge',
       source: 'preset',
     },
@@ -152,7 +153,11 @@ export const MUSIC_PRESETS: Record<MusicCategoryId, MusicStation[]> = {
     {
       id: 'radio-zet',
       name: 'Radio ZET',
-      streamUrl: 'https://r.dcs.redcdn.pl/sc/o2/Eurozet/live/audio.livx?audio=5',
+      streamUrl: 'https://zt01.cdn.eurozet.pl/zet-net.mp3',
+      fallbackUrls: [
+        'https://zt02.cdn.eurozet.pl/zet-old.mp3',
+        'https://r.dcs.redcdn.pl/sc/o2/Eurozet/live/audio.livx?audio=5',
+      ],
       tags: 'pop, news',
       country: 'Polska',
       source: 'preset',
@@ -182,6 +187,18 @@ interface RadioBrowserRow {
   country?: string
   codec?: string
   lastcheckok?: number
+  hls?: number
+}
+
+const ALLOWED_STREAM_CODECS = new Set(['MP3', 'AAC', 'AAC+'])
+
+export function isAllowedStreamCodec(codec?: string): boolean {
+  if (!codec) return false
+  return ALLOWED_STREAM_CODECS.has(codec.trim().toUpperCase())
+}
+
+export function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export function isMusicLink(url: string, linkType?: string): boolean {
@@ -235,7 +252,13 @@ export async function fetchRadioStations(
 
   const rows = (await res.json()) as RadioBrowserRow[]
   return rows
-    .filter((r) => r.lastcheckok !== 0 && r.url_resolved?.startsWith('https://'))
+    .filter(
+      (r) =>
+        r.lastcheckok !== 0 &&
+        r.url_resolved?.startsWith('https://') &&
+        r.hls !== 1 &&
+        isAllowedStreamCodec(r.codec),
+    )
     .slice(0, limit)
     .map((r) => ({
       id: r.stationuuid,

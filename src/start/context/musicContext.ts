@@ -4,6 +4,8 @@ import type { MusicStation } from '../lib/musicUtils'
 export interface MusicContextValue {
   current: MusicStation | null
   playing: boolean
+  buffering: boolean
+  reconnecting: boolean
   volume: number
   error: string | null
   playerExpanded: boolean

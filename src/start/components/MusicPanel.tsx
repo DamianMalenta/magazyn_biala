@@ -9,6 +9,19 @@ import {
   type MusicStation,
 } from '../lib/musicUtils'
 import { useMusic } from '../hooks/useMusic'
+import type { MusicContextValue } from '../context/musicContext'
+
+function streamStatusLabel(music: MusicContextValue): string {
+  if (music.reconnecting) return 'Łączenie ponownie…'
+  if (music.buffering) return 'Buforowanie…'
+  if (music.playing) return 'Gra w tle — kliknij aby rozwinąć'
+  return 'Wstrzymane'
+}
+
+function streamLiveIndicator(music: MusicContextValue): string {
+  if (music.reconnecting || music.buffering) return '◌ '
+  return music.playing ? '● ' : '○ '
+}
 
 interface MusicPanelProps {
   link: QuickLink
@@ -110,12 +123,16 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
     return (
       <div className="music-mini-bar music-mini-bar-inline" role="region" aria-label={`Muzyka: ${link.label}`}>
         <button type="button" onClick={onExpand} className="music-mini-bar-main" title="Rozwiń odtwarzacz">
-          <span className={`music-mini-bar-icon ${music.playing ? 'music-mini-bar-icon-live' : ''}`}>
-            {music.playing ? '♫' : '♪'}
+          <span
+            className={`music-mini-bar-icon ${
+              music.playing || music.reconnecting || music.buffering ? 'music-mini-bar-icon-live' : ''
+            }`}
+          >
+            {music.playing ? '♫' : music.reconnecting ? '↻' : '♪'}
           </span>
           <span className="music-mini-bar-text">
             <span className="music-mini-bar-title">{music.current?.name ?? link.label}</span>
-            <span className="music-mini-bar-sub">{music.playing ? 'Gra w tle — kliknij aby rozwinąć' : 'Wstrzymane'}</span>
+            <span className="music-mini-bar-sub">{streamStatusLabel(music)}</span>
           </span>
         </button>
         <button type="button" onClick={() => void music.togglePlay()} className="embed-btn embed-btn-primary music-mini-btn" title={music.playing ? 'Pauza' : 'Odtwórz'}>
@@ -142,8 +159,16 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
               <p className="text-[10px] text-slate-500 truncate">
                 {music.current ? (
                   <>
-                    <span className={music.playing ? 'text-emerald-400' : 'text-slate-500'}>
-                      {music.playing ? '● ' : '○ '}
+                    <span
+                      className={
+                        music.playing
+                          ? 'text-emerald-400'
+                          : music.reconnecting || music.buffering
+                            ? 'text-amber-400'
+                            : 'text-slate-500'
+                      }
+                    >
+                      {streamLiveIndicator(music)}
                     </span>
                     {music.current.name}
                   </>
@@ -216,7 +241,13 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
                   </p>
                 </div>
                 <span className="text-amber-400 text-xs shrink-0">
-                  {music.current?.id === station.id && music.playing ? '●' : '▶'}
+                  {music.current?.id === station.id && (music.playing || music.reconnecting || music.buffering)
+                    ? music.reconnecting
+                      ? '↻'
+                      : music.buffering
+                        ? '◌'
+                        : '●'
+                    : '▶'}
                 </span>
               </button>
             ))}

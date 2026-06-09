@@ -141,11 +141,25 @@ export function CommandBar({
           <button
             type="button"
             onClick={() => music.setPlayerExpanded(true)}
-            className={`shell-music-btn ${music.playing ? 'shell-music-btn-live' : ''}`}
-            title={music.current?.name ?? 'Muzyka w tle'}
+            className={`shell-music-btn ${
+              music.playing || music.reconnecting || music.buffering ? 'shell-music-btn-live' : ''
+            }`}
+            title={
+              music.reconnecting
+                ? 'Łączenie ponownie…'
+                : music.buffering
+                  ? 'Buforowanie…'
+                  : (music.current?.name ?? 'Muzyka w tle')
+            }
           >
-            <span>{music.playing ? '♫' : '♪'}</span>
-            <span className="shell-music-label">{music.current?.name ?? 'Muzyka'}</span>
+            <span>{music.playing ? '♫' : music.reconnecting ? '↻' : '♪'}</span>
+            <span className="shell-music-label">
+              {music.reconnecting
+                ? 'Łączenie…'
+                : music.buffering
+                  ? 'Buforowanie…'
+                  : (music.current?.name ?? 'Muzyka')}
+            </span>
           </button>
           <button type="button" onClick={() => void music.togglePlay()} className="shell-btn shell-btn-icon-only" title={music.playing ? 'Pauza' : 'Odtwórz'}>
             {music.playing ? '⏸' : '▶'}
