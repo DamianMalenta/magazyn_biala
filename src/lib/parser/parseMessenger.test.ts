@@ -94,21 +94,40 @@ describe('categoryStateMachine', () => {
 })
 
 describe('aliasMatcher', () => {
-  const names = DEFAULT_INVENTORY.map((i) => i.name)
+  const inventory = DEFAULT_INVENTORY
   const entries = buildAliasEntries(DEFAULT_INVENTORY)
 
   it('matches aliases longest-first', () => {
-    expect(matchSkuName('ser mozzarella', names, entries)?.canonical).toBe('Ser Mozzarella')
-    expect(matchSkuName('salami zwykle', names, entries)?.canonical).toBe('Salami')
-    expect(matchSkuName('pojemnik krewetek', names, entries)?.canonical).toBe('Krewetki')
+    expect(matchSkuName('ser mozzarella', inventory, entries)?.canonical).toBe('Ser Mozzarella')
+    expect(matchSkuName('salami zwykle', inventory, entries)?.canonical).toBe('Salami')
+    expect(matchSkuName('pojemnik krewetek', inventory, entries)?.canonical).toBe('Krewetki')
+  })
+
+  it('does not map salami picante to plain salami', () => {
+    expect(matchSkuName('salami picante', inventory, entries)?.canonical).toBe('Salami pikantne')
+    expect(matchSkuName('salami', inventory, entries)?.canonical).toBe('Salami')
+  })
+
+  it('prefers frozen zapiekanki in zamrażarka zone', () => {
+    expect(
+      matchSkuName('zapiekanki', inventory, entries, 'ZAMRAŻARKA')?.canonical,
+    ).toBe('Zapiekanki')
+    expect(
+      matchSkuName('opakowania zapiekanki', inventory, entries, 'OPAKOWANIA')?.canonical,
+    ).toBe('Kartony zapiekanki')
+  })
+
+  it('matches kartony by size in cm', () => {
+    expect(matchSkuName('kartony 37 cm', inventory, entries)?.canonical).toBe('Kartony duże')
+    expect(matchSkuName('kartony 30 cm', inventory, entries)?.canonical).toBe('Kartony małe')
   })
 
   it('matches user-learned aliases', () => {
     const nugetsy = DEFAULT_INVENTORY.find((i) => i.name === 'Nugetsy')!
     const custom = { [nugetsy.id]: ['nugetsy extra hot'] }
     const withCustom = buildAliasEntries(DEFAULT_INVENTORY, custom)
-    expect(matchSkuName('nugetsy extra hot', names, withCustom)?.confidence).toBe('learned')
-    expect(matchSkuName('nugetsy extra hot', names, withCustom)?.canonical).toBe('Nugetsy')
+    expect(matchSkuName('nugetsy extra hot', inventory, withCustom)?.confidence).toBe('learned')
+    expect(matchSkuName('nugetsy extra hot', inventory, withCustom)?.canonical).toBe('Nugetsy')
   })
 })
 
@@ -221,5 +240,47 @@ Opakowania 04.06
     const result = parseMessengerText(text, DEFAULT_INVENTORY, custom)
     expect(result.quarantine).toHaveLength(0)
     expect(result.updates.get(nugetsy.id)).toBe(4)
+  })
+
+  it('parses renament 15.06 with szynka, zapiekanki and cm kartons', () => {
+    const USER_TEXT = `Lodówka 15.06
+5x salami picante
+3x salami
+2x jogurt
+Zamrazalka 15.06
+2 kg polędwiczki surowe
+1x opakowanie polędwiczki
+3x nuggetsy
+2x szyszki
+2x skrzydełka
+11x szynka
+35x zapiekanki
+Opakowania 15.06
+6x opakowania frytki duże (po 50 szt.)
+1x opakowania frytki małe (po 100 szt.)
+5x opakowania pizzerinki (po 100 szt.)
+1x karton serwetek
+3x opakowania zapiekanki (po 100 szt.)
+6x opakowania makarony (po 50 szt.)
+6x wieczka do makaronów (po 50 szt.)
+4x kartony 37 cm (po 100 szt.)
+4x kartony 30 cm (po 100 szt.)`
+
+    const result = parseMessengerText(USER_TEXT, DEFAULT_INVENTORY)
+    const byName = (n: string) => DEFAULT_INVENTORY.find((i) => i.name === n)!
+
+    expect(result.quarantine).toHaveLength(0)
+    expect(result.updates.get(byName('Salami pikantne').id)).toBe(5)
+    expect(result.updates.get(byName('Salami').id)).toBe(3)
+    expect(result.updates.get(byName('Jogurt grecki').id)).toBe(2)
+    expect(result.updates.get(byName('Polędwiczki surowe').id)).toBe(3)
+    expect(result.updates.get(byName('Nugetsy').id)).toBe(3)
+    expect(result.updates.get(byName('Szynka').id)).toBe(11)
+    expect(result.updates.get(byName('Zapiekanki').id)).toBe(35)
+    expect(result.updates.get(byName('Kartony zapiekanki').id)).toBe(3)
+    expect(result.updates.get(byName('Kartony duże').id)).toBe(4)
+    expect(result.updates.get(byName('Kartony małe').id)).toBe(4)
+    expect(result.updates.get(byName('Frytki duże').id)).toBe(6)
+    expect(result.updates.get(byName('Wieczka na makarony').id)).toBe(6)
   })
 })

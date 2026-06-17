@@ -1,5 +1,6 @@
 import type { InventoryItem, StandardUOM, Category } from '../../types/inventory'
 import { DEFAULT_INVENTORY, STORAGE_KEY } from '../data/defaultInventory'
+import { normalizeText } from '../utils/text'
 
 export interface PersistedState {
   inventory: InventoryItem[]
@@ -32,6 +33,19 @@ function migrateItem(raw: Record<string, unknown>): InventoryItem | null {
   }
 }
 
+function mergeMissingDefaultItems(inventory: InventoryItem[]): InventoryItem[] {
+  const byId = new Set(inventory.map((item) => item.id))
+  const byName = new Set(inventory.map((item) => normalizeText(item.name)))
+  const merged = [...inventory]
+
+  for (const defaultItem of DEFAULT_INVENTORY) {
+    if (byId.has(defaultItem.id) || byName.has(normalizeText(defaultItem.name))) continue
+    merged.push({ ...defaultItem })
+  }
+
+  return merged
+}
+
 function migrateInventory(raw: unknown): InventoryItem[] {
   if (!Array.isArray(raw)) return [...DEFAULT_INVENTORY]
 
@@ -39,7 +53,8 @@ function migrateInventory(raw: unknown): InventoryItem[] {
     .map((item) => migrateItem(item as Record<string, unknown>))
     .filter((item): item is InventoryItem => item !== null)
 
-  return migrated.length > 0 ? migrated : [...DEFAULT_INVENTORY]
+  if (migrated.length === 0) return [...DEFAULT_INVENTORY]
+  return mergeMissingDefaultItems(migrated)
 }
 
 function migrateAliases(raw: unknown): Record<string, string[]> {
