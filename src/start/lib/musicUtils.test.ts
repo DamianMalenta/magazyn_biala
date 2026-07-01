@@ -4,7 +4,6 @@ import {
   defaultCategoryForTab,
   inferTabAndCategory,
   isAllowedStreamCodec,
-  isLocalCategory,
   stationsForCategory,
   stationsWithOnlineForCategory,
   streamUrlsForStation,
@@ -41,14 +40,14 @@ describe('streamUrlsForStation', () => {
 describe('music tabs and categories', () => {
   it('assigns Polish radio to commercial tab', () => {
     expect(tabForCategory('polskie-radio')).toBe('commercial')
-    expect(tabForCategory('radio')).toBe('non-commercial')
-    expect(tabForCategory('lokalne')).toBe('non-commercial')
+    expect(tabForCategory('stacje-radiowe')).toBe('non-commercial')
+    expect(tabForCategory('lokalnie')).toBe('non-commercial')
     expect(tabForCategory('lokalne-kom')).toBe('commercial')
   })
 
-  it('lists radio and lokalne in non-commercial tab', () => {
+  it('lists stacje radiowe and lokalnie in non-commercial tab', () => {
     const ids = categoriesForTab('non-commercial').map((c) => c.id)
-    expect(ids).toEqual(['radio', 'lokalne'])
+    expect(ids).toEqual(['stacje-radiowe', 'lokalnie'])
   })
 
   it('lists polskie-radio and lokalne in commercial tab', () => {
@@ -58,28 +57,27 @@ describe('music tabs and categories', () => {
 
   it('defaults each tab to first category', () => {
     expect(defaultCategoryForTab('commercial')).toBe('polskie-radio')
-    expect(defaultCategoryForTab('non-commercial')).toBe('radio')
+    expect(defaultCategoryForTab('non-commercial')).toBe('stacje-radiowe')
   })
 
-  it('marks local categories', () => {
-    expect(isLocalCategory('lokalne')).toBe(true)
-    expect(isLocalCategory('lokalne-kom')).toBe(true)
-    expect(isLocalCategory('radio')).toBe(false)
-  })
-
-  it('includes international presets in radio category', () => {
-    const stations = stationsForCategory('radio')
+  it('includes international presets in stacje-radiowe', () => {
+    const stations = stationsForCategory('stacje-radiowe')
     expect(stations.some((s) => s.id === 'soma-groove')).toBe(true)
-    expect(stations.some((s) => s.id === 'soma-indie')).toBe(true)
     expect(stations).toHaveLength(12)
   })
 
-  it('keeps local categories empty until configured', () => {
-    expect(stationsForCategory('lokalne')).toEqual([])
+  it('includes local playlist streams in lokalnie', () => {
+    const stations = stationsForCategory('lokalnie')
+    expect(stations.length).toBeGreaterThanOrEqual(7)
+    expect(stations[0].streamUrl).toContain('.mp3')
+    expect(stations.some((s) => s.id === 'local-pop-radio')).toBe(true)
+  })
+
+  it('keeps commercial local category empty until configured', () => {
     expect(stationsForCategory('lokalne-kom')).toEqual([])
   })
 
-  it('includes Polish presets in polskie-radio category', () => {
+  it('includes Polish presets in polskie-radio', () => {
     const stations = stationsForCategory('polskie-radio')
     expect(stations.map((s) => s.id)).toEqual(['rmf-maxxx', 'rmf-fm', 'radio-zet'])
   })
@@ -94,20 +92,34 @@ describe('music tabs and categories', () => {
     expect(result).toEqual({ tab: 'commercial', category: 'polskie-radio' })
   })
 
-  it('infers non-commercial radio tab from SomaFM preset', () => {
+  it('infers non-commercial stacje-radiowe from SomaFM preset', () => {
     const result = inferTabAndCategory({
       id: 'soma-groove',
       name: 'SomaFM',
       streamUrl: 'https://example.com/groove',
       source: 'preset',
     })
-    expect(result).toEqual({ tab: 'non-commercial', category: 'radio' })
+    expect(result).toEqual({ tab: 'non-commercial', category: 'stacje-radiowe' })
+  })
+
+  it('infers lokalnie from local playlist preset', () => {
+    const result = inferTabAndCategory({
+      id: 'local-pop-radio',
+      name: 'Pop & Radio',
+      streamUrl: 'http://192.168.1.50:8000/pop-radio.mp3',
+      source: 'preset',
+    })
+    expect(result).toEqual({ tab: 'non-commercial', category: 'lokalnie' })
   })
 })
 
 describe('stationsWithOnlineForCategory', () => {
-  it('returns presets only for local categories', async () => {
-    await expect(stationsWithOnlineForCategory('lokalne')).resolves.toEqual([])
+  it('returns presets only for lokalnie without online search', async () => {
+    const stations = await stationsWithOnlineForCategory('lokalnie')
+    expect(stations.length).toBeGreaterThanOrEqual(7)
+  })
+
+  it('returns empty for commercial local category', async () => {
     await expect(stationsWithOnlineForCategory('lokalne-kom')).resolves.toEqual([])
   })
 })

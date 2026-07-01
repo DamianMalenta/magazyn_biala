@@ -12,7 +12,10 @@ export interface MusicStation {
   source: 'preset' | 'radio-browser'
 }
 
-export type MusicCategoryId = 'radio' | 'lokalne' | 'polskie-radio' | 'lokalne-kom'
+export type MusicCategoryId = 'stacje-radiowe' | 'lokalnie' | 'polskie-radio' | 'lokalne-kom'
+
+/** Adres ShuffleCast w sieci lokalu — zmień na IP komputera z muzyką. */
+export const LOCAL_STREAM_HOST = 'http://192.168.1.50:8000'
 
 /** Główny podział: komercyjne (PL radio) vs niekomercyjne (reszta). */
 export type MusicTabId = 'commercial' | 'non-commercial'
@@ -47,8 +50,8 @@ export const MUSIC_TABS: MusicTab[] = [
     id: 'non-commercial',
     label: 'Niekomercyjne',
     emoji: '✓',
-    hint: 'Radio międzynarodowe i własne playlisty z lokalu (bez polskiego radia komercyjnego)',
-    categoryIds: ['radio', 'lokalne'],
+    hint: 'Stacje radiowe międzynarodowe oraz playlisty CC0 z serwera w lokalu',
+    categoryIds: ['stacje-radiowe', 'lokalnie'],
   },
   {
     id: 'commercial',
@@ -189,18 +192,44 @@ const POLISH_RADIO_STATIONS: MusicStation[] = [
   },
 ]
 
+function localPlaylistStation(
+  id: string,
+  folder: string,
+  name: string,
+  tags: string,
+): MusicStation {
+  return {
+    id,
+    name,
+    streamUrl: `${LOCAL_STREAM_HOST}/${folder}.mp3`,
+    tags: `${tags} · CC0 · lokalnie`,
+    source: 'preset',
+  }
+}
+
+/** Playlisty z PC (ShuffleCast) — foldery w local-music/lokalnie/ */
+const LOKALNIE_PLAYLISTS: MusicStation[] = [
+  localPlaylistStation('local-pop-radio', 'pop-radio', 'Pop & Radio — młodzież', 'pop'),
+  localPlaylistStation('local-dance-edm', 'dance-edm', 'Dance & EDM', 'dance, edm'),
+  localPlaylistStation('local-hiphop-trap', 'hiphop-trap', 'Hip-Hop & Trap', 'hip-hop, trap'),
+  localPlaylistStation('local-chill-pop', 'chill-pop', 'Chill Pop', 'chill, lofi'),
+  localPlaylistStation('local-lunch-jazz', 'lunch-jazz', 'Lunch & Jazz', 'jazz, lunch'),
+  localPlaylistStation('local-kolacja', 'kolacja', 'Kolacja', 'bossa, kolacja'),
+  localPlaylistStation('local-akustyczna', 'akustyczna', 'Akustyczna', 'folk, akustyczna'),
+]
+
 /** Bezpośrednie strumienie HTTPS — działają na GitHub Pages (bez mixed content). */
 export const MUSIC_PRESETS: Record<MusicCategoryId, MusicStation[]> = {
-  radio: INTERNATIONAL_RADIO_STATIONS,
-  lokalne: [],
+  'stacje-radiowe': INTERNATIONAL_RADIO_STATIONS,
+  lokalnie: LOKALNIE_PLAYLISTS,
   'polskie-radio': POLISH_RADIO_STATIONS,
   'lokalne-kom': [],
 }
 
 export const MUSIC_CATEGORIES: MusicCategory[] = [
   {
-    id: 'radio',
-    label: 'Radio',
+    id: 'stacje-radiowe',
+    label: 'Stacje radiowe',
     emoji: '📻',
     tab: 'non-commercial',
     onlineSearches: [
@@ -211,8 +240,8 @@ export const MUSIC_CATEGORIES: MusicCategory[] = [
     ],
   },
   {
-    id: 'lokalne',
-    label: 'Lokalne',
+    id: 'lokalnie',
+    label: 'Lokalnie',
     emoji: '🏠',
     tab: 'non-commercial',
   },
@@ -242,11 +271,11 @@ export function tabForCategory(categoryId: MusicCategoryId): MusicTabId {
 }
 
 export function defaultCategoryForTab(tabId: MusicTabId): MusicCategoryId {
-  return categoriesForTab(tabId)[0]?.id ?? 'radio'
+  return categoriesForTab(tabId)[0]?.id ?? 'stacje-radiowe'
 }
 
 export function isLocalCategory(categoryId: MusicCategoryId): boolean {
-  return categoryId === 'lokalne' || categoryId === 'lokalne-kom'
+  return categoryId === 'lokalnie' || categoryId === 'lokalne-kom'
 }
 
 /** Przywraca zakładkę i kategorię na podstawie ostatnio granej stacji. */
@@ -255,7 +284,7 @@ export function inferTabAndCategory(station: MusicStation | null): {
   category: MusicCategoryId
 } {
   if (!station) {
-    return { tab: 'non-commercial', category: 'radio' }
+    return { tab: 'non-commercial', category: 'stacje-radiowe' }
   }
 
   for (const catId of Object.keys(MUSIC_PRESETS) as MusicCategoryId[]) {
@@ -269,7 +298,7 @@ export function inferTabAndCategory(station: MusicStation | null): {
     return { tab: 'commercial', category: 'polskie-radio' }
   }
 
-  return { tab: 'non-commercial', category: 'radio' }
+  return { tab: 'non-commercial', category: 'stacje-radiowe' }
 }
 
 const RADIO_BROWSER = 'https://de1.api.radio-browser.info/json/stations/search'
@@ -400,7 +429,7 @@ export async function stationsWithOnlineForCategory(
     let merged = presets
     for (const batch of batches) {
       const filtered =
-        categoryId === 'radio'
+        categoryId === 'stacje-radiowe'
           ? batch.filter((s) => s.country !== 'Polska')
           : batch
       merged = mergeStations(merged, filtered)

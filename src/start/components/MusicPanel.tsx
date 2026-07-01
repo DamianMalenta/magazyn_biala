@@ -7,7 +7,6 @@ import {
   categoriesForTab,
   defaultCategoryForTab,
   inferTabAndCategory,
-  isLocalCategory,
   stationsForCategory,
   stationsWithOnlineForCategory,
   type MusicCategoryId,
@@ -255,13 +254,13 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
 
           <div className="music-station-list" role="list">
             {loading && <p className="text-xs text-slate-500 px-3 py-2">Ładowanie stacji…</p>}
-            {!loading && stations.length === 0 && isLocalCategory(category) && (
+            {!loading && stations.length === 0 && category === 'lokalne-kom' && (
               <p className="music-empty-category">
-                Brak skonfigurowanych playlist lokalnych.
+                Brak skonfigurowanych playlist komercyjnych z lokalu.
                 {activeCategoryMeta && (
                   <>
                     {' '}
-                    Kategoria <strong>{activeCategoryMeta.label}</strong> — dodamy strumienie z PC w lokalu (ShuffleCast).
+                    Kategoria <strong>{activeCategoryMeta.label}</strong> — dodamy strumienie z PC w lokalu.
                   </>
                 )}
               </p>
@@ -307,8 +306,9 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
               </p>
             ) : (
               <p>
-                <strong>Niekomercyjne</strong> — zakładka <strong>Radio</strong>: stacje międzynarodowe. Zakładka{' '}
-                <strong>Lokalne</strong>: własne playlisty royalty-free (CC0) z serwera w lokalu — bez opłat OZZ.
+                <strong>Niekomercyjne</strong> — <strong>Stacje radiowe</strong>: międzynarodowe strumienie bez
+                polskiego radia komercyjnego. <strong>Lokalnie</strong>: playlisty CC0 z serwera w lokalu (ShuffleCast)
+                — bez opłat OZZ.
               </p>
             )}
           </details>
