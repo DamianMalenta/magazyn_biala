@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "screenshots": "node scripts/capture-screenshots.mjs"
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "download:local-music": "node scripts/download-local-music.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",

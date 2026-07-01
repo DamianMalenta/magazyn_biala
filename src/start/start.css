@@ -472,6 +472,22 @@
   @apply flex flex-col gap-2 px-3 py-2 border-b border-white/10 shrink-0;
 }
 
+.music-tabs {
+  @apply flex gap-1 p-1 rounded-xl bg-black/25 border border-white/10;
+}
+
+.music-tab-btn {
+  @apply flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-slate-400 hover:text-white transition;
+}
+
+.music-tab-btn-active {
+  @apply bg-violet-600 text-white shadow-sm;
+}
+
+.music-tab-hint {
+  @apply text-[10px] text-slate-500 leading-snug px-0.5;
+}
+
 .music-categories {
   @apply flex flex-wrap gap-1.5;
 }
@@ -526,6 +542,10 @@
 
 .music-legal-note p {
   @apply mt-2 leading-relaxed;
+}
+
+.music-empty-category {
+  @apply mx-3 my-4 px-3 py-3 rounded-xl text-xs text-slate-400 leading-relaxed bg-white/[0.03] border border-dashed border-white/10;
 }
 
 .music-custom-stream {

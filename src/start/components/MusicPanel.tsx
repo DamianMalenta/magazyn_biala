@@ -3,10 +3,15 @@ import type { QuickLink } from '../types'
 import { EMBED_SIZE_HEIGHT } from '../lib/linkOpenUtils'
 import {
   MUSIC_CATEGORIES,
-  fetchRadioStations,
+  MUSIC_TABS,
+  categoriesForTab,
+  defaultCategoryForTab,
+  inferTabAndCategory,
   stationsForCategory,
+  stationsWithOnlineForCategory,
   type MusicCategoryId,
   type MusicStation,
+  type MusicTabId,
 } from '../lib/musicUtils'
 import { useMusic } from '../hooks/useMusic'
 import type { MusicContextValue } from '../context/musicContext'
@@ -35,53 +40,59 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
   const music = useMusic()
   const height = EMBED_SIZE_HEIGHT[link.embedSize ?? 'medium']
 
-  const [category, setCategory] = useState<MusicCategoryId>('lounge')
-  const [stations, setStations] = useState<MusicStation[]>(() => stationsForCategory('lounge'))
+  const initial = inferTabAndCategory(music.current)
+  const [tab, setTab] = useState<MusicTabId>(initial.tab)
+  const [category, setCategory] = useState<MusicCategoryId>(initial.category)
+  const [stations, setStations] = useState<MusicStation[]>(() => stationsForCategory(initial.category))
   const [loading, setLoading] = useState(false)
   const [customUrl, setCustomUrl] = useState('')
+
+  const tabCategories = categoriesForTab(tab)
+  const activeTabMeta = MUSIC_TABS.find((t) => t.id === tab)
+  const activeCategoryMeta = MUSIC_CATEGORIES.find((c) => c.id === category)
 
   const loadCategory = useCallback(async (catId: MusicCategoryId) => {
     setCategory(catId)
     music.clearError()
-    const presets = stationsForCategory(catId)
-    setStations(presets)
+    setStations(stationsForCategory(catId))
     setLoading(true)
 
-    const cat = MUSIC_CATEGORIES.find((c) => c.id === catId)
     try {
-      const online = cat?.search ? await fetchRadioStations(cat.search, 8) : []
-      const merged = [...presets]
-      for (const s of online) {
-        if (!merged.some((m) => m.streamUrl === s.streamUrl)) merged.push(s)
-      }
+      const merged = await stationsWithOnlineForCategory(catId, 8)
       setStations(merged)
     } catch {
-      setStations(presets)
+      setStations(stationsForCategory(catId))
     } finally {
       setLoading(false)
     }
   }, [music])
 
+  const loadTab = useCallback(
+    async (tabId: MusicTabId) => {
+      setTab(tabId)
+      const catId = defaultCategoryForTab(tabId)
+      await loadCategory(catId)
+    },
+    [loadCategory],
+  )
+
   useEffect(() => {
     let cancelled = false
-    const catId: MusicCategoryId = 'lounge'
-    const presets = stationsForCategory(catId)
-    const cat = MUSIC_CATEGORIES.find((c) => c.id === catId)
+    const { tab: initTab, category: initCat } = inferTabAndCategory(music.current)
 
     void (async () => {
       await Promise.resolve()
       if (cancelled) return
+      setTab(initTab)
+      setCategory(initCat)
       music.clearError()
       setLoading(true)
+      setStations(stationsForCategory(initCat))
       try {
-        const online = cat?.search ? await fetchRadioStations(cat.search, 8) : []
-        const merged = [...presets]
-        for (const s of online) {
-          if (!merged.some((m) => m.streamUrl === s.streamUrl)) merged.push(s)
-        }
+        const merged = await stationsWithOnlineForCategory(initCat, 8)
         if (!cancelled) setStations(merged)
       } catch {
-        if (!cancelled) setStations(presets)
+        if (!cancelled) setStations(stationsForCategory(initCat))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -189,19 +200,41 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
 
         <div className="embed-panel-body music-panel-body">
           <div className="music-panel-toolbar">
-            <div className="music-categories">
-              {MUSIC_CATEGORIES.map((cat) => (
+            <div className="music-tabs" role="tablist" aria-label="Typ muzyki">
+              {MUSIC_TABS.map((t) => (
                 <button
-                  key={cat.id}
+                  key={t.id}
                   type="button"
-                  onClick={() => void loadCategory(cat.id)}
-                  className={`music-cat-btn ${category === cat.id ? 'music-cat-btn-active' : ''}`}
+                  role="tab"
+                  aria-selected={tab === t.id}
+                  onClick={() => void loadTab(t.id)}
+                  className={`music-tab-btn ${tab === t.id ? 'music-tab-btn-active' : ''}`}
                 >
-                  <span>{cat.emoji}</span>
-                  <span>{cat.label}</span>
+                  <span>{t.emoji}</span>
+                  <span>{t.label}</span>
                 </button>
               ))}
             </div>
+            {activeTabMeta && (
+              <p className="music-tab-hint">{activeTabMeta.hint}</p>
+            )}
+            {tabCategories.length > 0 && (
+              <div className="music-categories" role="tablist" aria-label="Kategoria">
+                {tabCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={category === cat.id}
+                    onClick={() => void loadCategory(cat.id)}
+                    className={`music-cat-btn ${category === cat.id ? 'music-cat-btn-active' : ''}`}
+                  >
+                    <span>{cat.emoji}</span>
+                    <span>{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="music-volume-row">
               <span className="text-[10px] text-slate-500 shrink-0">Głośność</span>
               <input
@@ -221,6 +254,17 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
 
           <div className="music-station-list" role="list">
             {loading && <p className="text-xs text-slate-500 px-3 py-2">Ładowanie stacji…</p>}
+            {!loading && stations.length === 0 && category === 'lokalne-kom' && (
+              <p className="music-empty-category">
+                Brak skonfigurowanych playlist komercyjnych z lokalu.
+                {activeCategoryMeta && (
+                  <>
+                    {' '}
+                    Kategoria <strong>{activeCategoryMeta.label}</strong> — dodamy strumienie z PC w lokalu.
+                  </>
+                )}
+              </p>
+            )}
             {stations.map((station) => (
               <button
                 key={station.id}
@@ -255,10 +299,18 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
 
           <details className="music-legal-note">
             <summary>Prawa autorskie w lokalu (ważne)</summary>
-            <p>
-              Odtwarzanie muzyki w restauracji to <strong>użycie publiczne</strong> — w Polsce zwykle wymaga opłat
-              dla ZAiKS/STOART (lub licencji zbiorczej).
-            </p>
+            {tab === 'commercial' ? (
+              <p>
+                <strong>Komercyjne</strong> — <strong>Polskie radio</strong>: RMF, ZET itd. (wymaga ZAiKS/STOART).
+                <strong> Lokalne</strong>: własne playlisty z serwera w lokalu.
+              </p>
+            ) : (
+              <p>
+                <strong>Niekomercyjne</strong> — <strong>Stacje radiowe</strong>: międzynarodowe strumienie bez
+                polskiego radia komercyjnego. <strong>Lokalnie</strong>: playlisty CC0 z serwera w lokalu (ShuffleCast)
+                — bez opłat OZZ.
+              </p>
+            )}
           </details>
 
           <div className="music-custom-stream">
