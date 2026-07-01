@@ -14,10 +14,23 @@ export interface MusicStation {
 
 export type MusicCategoryId = 'lounge' | 'jazz' | 'chill' | 'pop' | 'pl'
 
+/** Główny podział: komercyjne (PL radio) vs niekomercyjne (reszta). */
+export type MusicTabId = 'commercial' | 'non-commercial'
+
+export interface MusicTab {
+  id: MusicTabId
+  label: string
+  emoji: string
+  /** Krótki opis pod zakładką. */
+  hint: string
+  categoryIds: MusicCategoryId[]
+}
+
 export interface MusicCategory {
   id: MusicCategoryId
   label: string
   emoji: string
+  tab: MusicTabId
   /** Parametry wyszukiwania Radio Browser (oprócz presetów). */
   search?: {
     tag?: string
@@ -26,6 +39,23 @@ export interface MusicCategory {
     language?: string
   }
 }
+
+export const MUSIC_TABS: MusicTab[] = [
+  {
+    id: 'non-commercial',
+    label: 'Niekomercyjne',
+    emoji: '✓',
+    hint: 'Radio międzynarodowe i własne playlisty (bez polskich stacji komercyjnych)',
+    categoryIds: ['lounge', 'jazz', 'chill', 'pop'],
+  },
+  {
+    id: 'commercial',
+    label: 'Komercyjne',
+    emoji: '🇵🇱',
+    hint: 'Polskie stacje radiowe — wymagają licencji ZAiKS/STOART',
+    categoryIds: ['pl'],
+  },
+]
 
 function soma(slug: string): Pick<MusicStation, 'streamUrl' | 'fallbackUrls'> {
   const base = slug.endsWith('-128-mp3') ? slug : `${slug}-128-mp3`
@@ -166,12 +196,49 @@ export const MUSIC_PRESETS: Record<MusicCategoryId, MusicStation[]> = {
 }
 
 export const MUSIC_CATEGORIES: MusicCategory[] = [
-  { id: 'lounge', label: 'Lounge', emoji: '🛋️', search: { tag: 'lounge' } },
-  { id: 'jazz', label: 'Jazz', emoji: '🎷', search: { tag: 'jazz' } },
-  { id: 'chill', label: 'Chill', emoji: '🌿', search: { tagList: 'chill,ambient' } },
-  { id: 'pop', label: 'Pop', emoji: '🎵', search: { tag: 'pop' } },
-  { id: 'pl', label: 'Polskie', emoji: '🇵🇱', search: { countrycode: 'PL', tag: 'pop' } },
+  { id: 'lounge', label: 'Lounge', emoji: '🛋️', tab: 'non-commercial', search: { tag: 'lounge' } },
+  { id: 'jazz', label: 'Jazz', emoji: '🎷', tab: 'non-commercial', search: { tag: 'jazz' } },
+  { id: 'chill', label: 'Chill', emoji: '🌿', tab: 'non-commercial', search: { tagList: 'chill,ambient' } },
+  { id: 'pop', label: 'Pop', emoji: '🎵', tab: 'non-commercial', search: { tag: 'pop' } },
+  { id: 'pl', label: 'Polskie', emoji: '🇵🇱', tab: 'commercial', search: { countrycode: 'PL', tag: 'pop' } },
 ]
+
+export function categoriesForTab(tabId: MusicTabId): MusicCategory[] {
+  const tab = MUSIC_TABS.find((t) => t.id === tabId)
+  if (!tab) return []
+  return MUSIC_CATEGORIES.filter((c) => tab.categoryIds.includes(c.id))
+}
+
+export function tabForCategory(categoryId: MusicCategoryId): MusicTabId {
+  return MUSIC_CATEGORIES.find((c) => c.id === categoryId)?.tab ?? 'non-commercial'
+}
+
+export function defaultCategoryForTab(tabId: MusicTabId): MusicCategoryId {
+  return categoriesForTab(tabId)[0]?.id ?? 'lounge'
+}
+
+/** Przywraca zakładkę i kategorię na podstawie ostatnio granej stacji. */
+export function inferTabAndCategory(station: MusicStation | null): {
+  tab: MusicTabId
+  category: MusicCategoryId
+} {
+  if (!station) {
+    return { tab: 'non-commercial', category: 'lounge' }
+  }
+
+  for (const catId of Object.keys(MUSIC_PRESETS) as MusicCategoryId[]) {
+    const presets = MUSIC_PRESETS[catId]
+    if (presets.some((s) => s.id === station.id || s.streamUrl === station.streamUrl)) {
+      return { tab: tabForCategory(catId), category: catId }
+    }
+  }
+
+  if (station.country === 'Polska') {
+    return { tab: 'commercial', category: 'pl' }
+  }
+
+  return { tab: 'non-commercial', category: 'lounge' }
+}
 
 const RADIO_BROWSER = 'https://de1.api.radio-browser.info/json/stations/search'
 const RADIO_USER_AGENT = 'MagazynBialaStartPanel/1.0 (https://damianmalenta.github.io/magazyn_biala/)'
