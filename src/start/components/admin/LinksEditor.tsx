@@ -273,7 +273,7 @@ function LinkCard({
             />
             {isMusic && (
               <p className="text-[10px] text-emerald-400/80 mt-1.5">
-                Ustaw „Panel pod kafelkami” — stacje lounge, jazz, chill i własny strumień MP3.
+                Ustaw „Panel pod kafelkami” — zakładki niekomercyjne/komercyjne, radio i playlisty lokalne.
               </p>
             )}
             {isAuto && hostname && (

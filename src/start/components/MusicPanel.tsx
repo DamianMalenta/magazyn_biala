@@ -6,9 +6,10 @@ import {
   MUSIC_TABS,
   categoriesForTab,
   defaultCategoryForTab,
-  fetchRadioStations,
   inferTabAndCategory,
+  isLocalCategory,
   stationsForCategory,
+  stationsWithOnlineForCategory,
   type MusicCategoryId,
   type MusicStation,
   type MusicTabId,
@@ -49,25 +50,19 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
 
   const tabCategories = categoriesForTab(tab)
   const activeTabMeta = MUSIC_TABS.find((t) => t.id === tab)
-  const showCategoryPills = tabCategories.length > 1
+  const activeCategoryMeta = MUSIC_CATEGORIES.find((c) => c.id === category)
 
   const loadCategory = useCallback(async (catId: MusicCategoryId) => {
     setCategory(catId)
     music.clearError()
-    const presets = stationsForCategory(catId)
-    setStations(presets)
+    setStations(stationsForCategory(catId))
     setLoading(true)
 
-    const cat = MUSIC_CATEGORIES.find((c) => c.id === catId)
     try {
-      const online = cat?.search ? await fetchRadioStations(cat.search, 8) : []
-      const merged = [...presets]
-      for (const s of online) {
-        if (!merged.some((m) => m.streamUrl === s.streamUrl)) merged.push(s)
-      }
+      const merged = await stationsWithOnlineForCategory(catId, 8)
       setStations(merged)
     } catch {
-      setStations(presets)
+      setStations(stationsForCategory(catId))
     } finally {
       setLoading(false)
     }
@@ -93,17 +88,12 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
       setCategory(initCat)
       music.clearError()
       setLoading(true)
-      const presets = stationsForCategory(initCat)
-      const cat = categoriesForTab(initTab).find((c) => c.id === initCat)
+      setStations(stationsForCategory(initCat))
       try {
-        const online = cat?.search ? await fetchRadioStations(cat.search, 8) : []
-        const merged = [...presets]
-        for (const s of online) {
-          if (!merged.some((m) => m.streamUrl === s.streamUrl)) merged.push(s)
-        }
+        const merged = await stationsWithOnlineForCategory(initCat, 8)
         if (!cancelled) setStations(merged)
       } catch {
-        if (!cancelled) setStations(presets)
+        if (!cancelled) setStations(stationsForCategory(initCat))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -229,8 +219,8 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
             {activeTabMeta && (
               <p className="music-tab-hint">{activeTabMeta.hint}</p>
             )}
-            {showCategoryPills && (
-              <div className="music-categories" role="tablist" aria-label="Gatunek">
+            {tabCategories.length > 0 && (
+              <div className="music-categories" role="tablist" aria-label="Kategoria">
                 {tabCategories.map((cat) => (
                   <button
                     key={cat.id}
@@ -265,6 +255,17 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
 
           <div className="music-station-list" role="list">
             {loading && <p className="text-xs text-slate-500 px-3 py-2">Ładowanie stacji…</p>}
+            {!loading && stations.length === 0 && isLocalCategory(category) && (
+              <p className="music-empty-category">
+                Brak skonfigurowanych playlist lokalnych.
+                {activeCategoryMeta && (
+                  <>
+                    {' '}
+                    Kategoria <strong>{activeCategoryMeta.label}</strong> — dodamy strumienie z PC w lokalu (ShuffleCast).
+                  </>
+                )}
+              </p>
+            )}
             {stations.map((station) => (
               <button
                 key={station.id}
@@ -301,15 +302,13 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
             <summary>Prawa autorskie w lokalu (ważne)</summary>
             {tab === 'commercial' ? (
               <p>
-                <strong>Komercyjne</strong> — polskie stacje radiowe (RMF, ZET itd.) to muzyka objęta prawami
-                autorskimi. Odtwarzanie w restauracji wymaga umów z <strong>ZAiKS</strong>, <strong>STOART</strong>{' '}
-                i ewentualnie <strong>ZPAV</strong> (użycie publiczne).
+                <strong>Komercyjne</strong> — <strong>Polskie radio</strong>: RMF, ZET itd. (wymaga ZAiKS/STOART).
+                <strong> Lokalne</strong>: własne playlisty z serwera w lokalu.
               </p>
             ) : (
               <p>
-                <strong>Niekomercyjne</strong> — stacje międzynarodowe i własne playlisty royalty-free (CC0). Nie
-                zawierają polskich stacji komercyjnych. Własne playlisty z muzyką CC0 nie wymagają opłat OZZ — przy
-                zewnętrznych stacjach sprawdź warunki licencji.
+                <strong>Niekomercyjne</strong> — zakładka <strong>Radio</strong>: stacje międzynarodowe. Zakładka{' '}
+                <strong>Lokalne</strong>: własne playlisty royalty-free (CC0) z serwera w lokalu — bez opłat OZZ.
               </p>
             )}
           </details>

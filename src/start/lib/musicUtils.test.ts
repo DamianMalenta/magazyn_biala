@@ -4,6 +4,9 @@ import {
   defaultCategoryForTab,
   inferTabAndCategory,
   isAllowedStreamCodec,
+  isLocalCategory,
+  stationsForCategory,
+  stationsWithOnlineForCategory,
   streamUrlsForStation,
   tabForCategory,
   type MusicStation,
@@ -35,26 +38,50 @@ describe('streamUrlsForStation', () => {
   })
 })
 
-describe('music tabs', () => {
-  it('assigns Polish category to commercial tab', () => {
-    expect(tabForCategory('pl')).toBe('commercial')
-    expect(tabForCategory('lounge')).toBe('non-commercial')
+describe('music tabs and categories', () => {
+  it('assigns Polish radio to commercial tab', () => {
+    expect(tabForCategory('polskie-radio')).toBe('commercial')
+    expect(tabForCategory('radio')).toBe('non-commercial')
+    expect(tabForCategory('lokalne')).toBe('non-commercial')
+    expect(tabForCategory('lokalne-kom')).toBe('commercial')
   })
 
-  it('lists only non-commercial categories in non-commercial tab', () => {
+  it('lists radio and lokalne in non-commercial tab', () => {
     const ids = categoriesForTab('non-commercial').map((c) => c.id)
-    expect(ids).toEqual(['lounge', 'jazz', 'chill', 'pop'])
-    expect(ids).not.toContain('pl')
+    expect(ids).toEqual(['radio', 'lokalne'])
   })
 
-  it('lists only Polish category in commercial tab', () => {
+  it('lists polskie-radio and lokalne in commercial tab', () => {
     const ids = categoriesForTab('commercial').map((c) => c.id)
-    expect(ids).toEqual(['pl'])
+    expect(ids).toEqual(['polskie-radio', 'lokalne-kom'])
   })
 
-  it('defaults commercial tab to Polish category', () => {
-    expect(defaultCategoryForTab('commercial')).toBe('pl')
-    expect(defaultCategoryForTab('non-commercial')).toBe('lounge')
+  it('defaults each tab to first category', () => {
+    expect(defaultCategoryForTab('commercial')).toBe('polskie-radio')
+    expect(defaultCategoryForTab('non-commercial')).toBe('radio')
+  })
+
+  it('marks local categories', () => {
+    expect(isLocalCategory('lokalne')).toBe(true)
+    expect(isLocalCategory('lokalne-kom')).toBe(true)
+    expect(isLocalCategory('radio')).toBe(false)
+  })
+
+  it('includes international presets in radio category', () => {
+    const stations = stationsForCategory('radio')
+    expect(stations.some((s) => s.id === 'soma-groove')).toBe(true)
+    expect(stations.some((s) => s.id === 'soma-indie')).toBe(true)
+    expect(stations).toHaveLength(12)
+  })
+
+  it('keeps local categories empty until configured', () => {
+    expect(stationsForCategory('lokalne')).toEqual([])
+    expect(stationsForCategory('lokalne-kom')).toEqual([])
+  })
+
+  it('includes Polish presets in polskie-radio category', () => {
+    const stations = stationsForCategory('polskie-radio')
+    expect(stations.map((s) => s.id)).toEqual(['rmf-maxxx', 'rmf-fm', 'radio-zet'])
   })
 
   it('infers commercial tab from RMF preset', () => {
@@ -64,16 +91,23 @@ describe('music tabs', () => {
       streamUrl: 'https://example.com/rmf',
       source: 'preset',
     })
-    expect(result).toEqual({ tab: 'commercial', category: 'pl' })
+    expect(result).toEqual({ tab: 'commercial', category: 'polskie-radio' })
   })
 
-  it('infers non-commercial tab from lounge preset', () => {
+  it('infers non-commercial radio tab from SomaFM preset', () => {
     const result = inferTabAndCategory({
       id: 'soma-groove',
       name: 'SomaFM',
       streamUrl: 'https://example.com/groove',
       source: 'preset',
     })
-    expect(result).toEqual({ tab: 'non-commercial', category: 'lounge' })
+    expect(result).toEqual({ tab: 'non-commercial', category: 'radio' })
+  })
+})
+
+describe('stationsWithOnlineForCategory', () => {
+  it('returns presets only for local categories', async () => {
+    await expect(stationsWithOnlineForCategory('lokalne')).resolves.toEqual([])
+    await expect(stationsWithOnlineForCategory('lokalne-kom')).resolves.toEqual([])
   })
 })
