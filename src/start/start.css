@@ -548,6 +548,42 @@
   @apply mx-3 my-4 px-3 py-3 rounded-xl text-xs text-slate-400 leading-relaxed bg-white/[0.03] border border-dashed border-white/10;
 }
 
+.music-local-setup {
+  @apply mx-3 mt-2 mb-1 px-3 py-3 rounded-xl text-xs leading-relaxed bg-violet-500/10 border border-violet-500/25;
+}
+
+.music-local-setup-title {
+  @apply text-sm font-semibold text-violet-200 mb-2;
+}
+
+.music-local-setup-text {
+  @apply text-slate-400;
+}
+
+.music-local-setup-steps {
+  @apply list-decimal list-inside space-y-1 text-slate-300 mb-3;
+}
+
+.music-local-setup-steps code {
+  @apply text-[10px] bg-black/30 px-1 py-0.5 rounded text-violet-200;
+}
+
+.music-local-pick-btn {
+  @apply w-full mb-2;
+}
+
+.music-local-setup-status {
+  @apply text-[10px] text-slate-500;
+}
+
+.music-local-setup-status-ok {
+  @apply text-emerald-400/90;
+}
+
+.music-station-row-disabled {
+  @apply opacity-45 cursor-not-allowed;
+}
+
 .music-custom-stream {
   @apply flex gap-2 px-3 py-2 border-t border-white/10 shrink-0;
 }

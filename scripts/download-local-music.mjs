@@ -6,8 +6,8 @@
  *   npm run download:local-music
  *   node scripts/download-local-music.mjs --out ./local-music/lokalnie
  *
- * Po pobraniu skopiuj foldery na PC z ShuffleCast:
- *   local-music/lokalnie/pop-radio/*.mp3  →  music/pop-radio/
+ * Po pobraniu w panelu: Niekomercyjne → Lokalnie → „Wybierz folder z muzyką”
+ * i wskaż ten folder (local-music/lokalnie).
  */
 
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -218,13 +218,21 @@ ${Object.entries(PLAYLISTS)
   .map(([id, c]) => `| \`${id}/\` | ${c.label} |`)
   .join('\n')}
 
-## ShuffleCast
+## Odtwarzanie w panelu
 
-Skopiuj zawartość każdego folderu do \`music/<nazwa-folderu>/\` na PC z ShuffleCast.
+1. Otwórz panel muzyki na **tym samym komputerze**, na którym są pliki.
+2. Zakładka **Niekomercyjne** → **Lokalnie**.
+3. Kliknij **Wybierz folder z muzyką** i wskaż folder \`lokalnie\` (ten katalog).
+4. Wybierz playlistę z listy — przeglądarka odtwarza MP3 bezpośrednio z dysku.
+
+Wymaga Chrome lub Edge (odczyt folderu przez przeglądarkę).
+
+## ShuffleCast (opcjonalnie)
+
+Jeśli wolisz strumień radiowy zamiast odtwarzania z folderu, możesz skopiować
+zawartość każdego folderu do \`music/<nazwa-folderu>/\` na PC z ShuffleCast.
 
 Strumień: \`http://<IP-PC>:8000/<folder>.mp3\`
-
-Domyślny adres w panelu: \`http://192.168.1.50:8000\` — zmień w \`src/start/lib/musicUtils.ts\` (\`LOCAL_STREAM_HOST\`).
 
 ## FMA (Free Music Archive)
 

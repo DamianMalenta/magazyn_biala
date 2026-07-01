@@ -7,6 +7,7 @@ import {
   categoriesForTab,
   defaultCategoryForTab,
   inferTabAndCategory,
+  isLocalFilesStation,
   stationsForCategory,
   stationsWithOnlineForCategory,
   type MusicCategoryId,
@@ -50,6 +51,11 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
   const tabCategories = categoriesForTab(tab)
   const activeTabMeta = MUSIC_TABS.find((t) => t.id === tab)
   const activeCategoryMeta = MUSIC_CATEGORIES.find((c) => c.id === category)
+  const isLokalnie = category === 'lokalnie'
+  const localReady = music.localMusic.connected
+  const localPlaylistCounts = Object.fromEntries(
+    music.localMusic.playlists.map((p) => [p.id, p.trackCount]),
+  )
 
   const loadCategory = useCallback(async (catId: MusicCategoryId) => {
     setCategory(catId)
@@ -252,6 +258,43 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
 
           {music.error && <p className="music-error-banner">{music.error}</p>}
 
+          {isLokalnie && (
+            <div className="music-local-setup">
+              <p className="music-local-setup-title">Muzyka na tym komputerze</p>
+              {!music.localMusic.supported ? (
+                <p className="music-local-setup-text">
+                  Ta przeglądarka nie obsługuje odtwarzania z folderu. Użyj Chrome lub Edge na komputerze,
+                  na którym masz pliki MP3.
+                </p>
+              ) : (
+                <>
+                  <ol className="music-local-setup-steps">
+                    <li>
+                      W terminalu w folderze projektu: <code>npm run download:local-music</code>
+                    </li>
+                    <li>Kliknij przycisk poniżej i wskaż folder <code>local-music/lokalnie</code></li>
+                    <li>Wybierz playlistę z listy — utwory lecą losowo z dysku</li>
+                  </ol>
+                  <button
+                    type="button"
+                    className="embed-btn embed-btn-primary music-local-pick-btn"
+                    onClick={() => void music.pickLocalMusicFolder()}
+                  >
+                    📁 Wybierz folder z muzyką
+                  </button>
+                  {localReady ? (
+                    <p className="music-local-setup-status music-local-setup-status-ok">
+                      ✓ Połączono: <strong>{music.localMusic.folderName}</strong> —{' '}
+                      {music.localMusic.totalTracks} utworów w {music.localMusic.playlists.length} playlistach
+                    </p>
+                  ) : (
+                    <p className="music-local-setup-status">Nie wybrano folderu — playlisty nie zagrają.</p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           <div className="music-station-list" role="list">
             {loading && <p className="text-xs text-slate-500 px-3 py-2">Ładowanie stacji…</p>}
             {!loading && stations.length === 0 && category === 'lokalne-kom' && (
@@ -265,23 +308,33 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
                 )}
               </p>
             )}
-            {stations.map((station) => (
+            {stations.map((station) => {
+              const isLocal = isLocalFilesStation(station)
+              const trackCount = isLocal && station.localFolder ? localPlaylistCounts[station.localFolder] : null
+              const disabled = isLocal && !localReady
+
+              return (
               <button
                 key={station.id}
                 type="button"
                 role="listitem"
+                disabled={disabled}
                 onClick={() => void music.playStation(station)}
-                className={`music-station-row ${music.current?.id === station.id ? 'music-station-row-active' : ''}`}
+                className={`music-station-row ${music.current?.id === station.id ? 'music-station-row-active' : ''} ${disabled ? 'music-station-row-disabled' : ''}`}
               >
                 {station.favicon ? (
                   <img src={station.favicon} alt="" className="music-station-favicon" />
                 ) : (
-                  <span className="music-station-favicon music-station-favicon-placeholder">🎧</span>
+                  <span className="music-station-favicon music-station-favicon-placeholder">
+                    {isLocal ? '💿' : '🎧'}
+                  </span>
                 )}
                 <div className="min-w-0 flex-1 text-left">
                   <p className="text-sm font-semibold truncate">{station.name}</p>
                   <p className="text-[10px] text-slate-500 truncate">
-                    {[station.country, station.tags].filter(Boolean).join(' · ') || 'strumień audio'}
+                    {trackCount != null
+                      ? `${trackCount} utworów · ${station.tags ?? 'playlista lokalna'}`
+                      : [station.country, station.tags].filter(Boolean).join(' · ') || 'strumień audio'}
                   </p>
                 </div>
                 <span className="text-amber-400 text-xs shrink-0">
@@ -294,7 +347,7 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
                     : '▶'}
                 </span>
               </button>
-            ))}
+            )})}
           </div>
 
           <details className="music-legal-note">
@@ -307,7 +360,7 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
             ) : (
               <p>
                 <strong>Niekomercyjne</strong> — <strong>Stacje radiowe</strong>: międzynarodowe strumienie bez
-                polskiego radia komercyjnego. <strong>Lokalnie</strong>: playlisty CC0 z serwera w lokalu (ShuffleCast)
+                polskiego radia komercyjnego. <strong>Lokalnie</strong>: playlisty CC0 z folderu na tym komputerze
                 — bez opłat OZZ.
               </p>
             )}

@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
+  getLocalMusicStatus,
+  isLocalFileSystemSupported,
+  listPlaylistTracks,
+  loadStoredRootHandle,
+  pickMusicRootFolder,
+  shuffleInPlace,
+  type LocalMusicStatus,
+} from '../lib/localMusic'
+import {
   delay,
+  isLocalFilesStation,
   loadLastStation,
   saveLastStation,
   streamUrlsForStation,
@@ -11,6 +21,32 @@ import { MusicContext } from './musicContext'
 const RETRIES_PER_URL = 3
 const RECOVERY_DELAY_MS = 8_000
 
+const EMPTY_LOCAL_STATUS: LocalMusicStatus = {
+  connected: false,
+  folderName: null,
+  playlists: [],
+  totalTracks: 0,
+  supported: isLocalFileSystemSupported(),
+}
+
+interface LocalPlaybackState {
+  station: MusicStation
+  files: File[]
+  index: number
+  objectUrl: string | null
+}
+
+function trackTitle(file: File): string {
+  return file.name.replace(/\.mp3$/i, '').replace(/^\d+-/, '')
+}
+
+function stationWithTrack(station: MusicStation, file: File): MusicStation {
+  return {
+    ...station,
+    name: `${station.name.replace(/ — .*$/, '')} — ${trackTitle(file)}`,
+  }
+}
+
 export function MusicProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [current, setCurrent] = useState<MusicStation | null>(() => loadLastStation())
@@ -20,6 +56,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const [volume, setVolume] = useState(0.75)
   const [error, setError] = useState<string | null>(null)
   const [playerExpanded, setPlayerExpanded] = useState(false)
+  const [localMusic, setLocalMusic] = useState<LocalMusicStatus>(EMPTY_LOCAL_STATUS)
 
   const currentRef = useRef(current)
   const userPausedRef = useRef(false)
@@ -28,6 +65,8 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const recoveringRef = useRef(false)
   const reconnectGenRef = useRef(0)
   const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const rootHandleRef = useRef<FileSystemDirectoryHandle | null>(null)
+  const localPlaybackRef = useRef<LocalPlaybackState | null>(null)
 
   useEffect(() => {
     currentRef.current = current
@@ -37,6 +76,29 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     const el = audioRef.current
     if (el) el.volume = volume
   }, [volume])
+
+  const revokeLocalObjectUrl = useCallback(() => {
+    const state = localPlaybackRef.current
+    if (state?.objectUrl) {
+      URL.revokeObjectURL(state.objectUrl)
+      state.objectUrl = null
+    }
+  }, [])
+
+  const clearLocalPlayback = useCallback(() => {
+    revokeLocalObjectUrl()
+    localPlaybackRef.current = null
+  }, [revokeLocalObjectUrl])
+
+  const refreshLocalMusic = useCallback(async () => {
+    const handle = await loadStoredRootHandle()
+    rootHandleRef.current = handle
+    setLocalMusic(await getLocalMusicStatus(handle))
+  }, [])
+
+  useEffect(() => {
+    void refreshLocalMusic()
+  }, [refreshLocalMusic])
 
   const clearRecoveryTimer = useCallback(() => {
     if (recoveryTimerRef.current) {
@@ -63,9 +125,91 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const playLocalTrackAt = useCallback(
+    async (index: number): Promise<boolean> => {
+      const state = localPlaybackRef.current
+      const el = audioRef.current
+      if (!state || !el || index < 0 || index >= state.files.length) return false
+
+      revokeLocalObjectUrl()
+      const file = state.files[index]
+      const url = URL.createObjectURL(file)
+      state.index = index
+      state.objectUrl = url
+
+      setCurrent(stationWithTrack(state.station, file))
+
+      const ok = await tryPlayUrl(el, url)
+      if (!ok) {
+        revokeLocalObjectUrl()
+        return false
+      }
+
+      setPlaying(true)
+      setBuffering(false)
+      setReconnecting(false)
+      setError(null)
+      return true
+    },
+    [revokeLocalObjectUrl, tryPlayUrl],
+  )
+
+  const playNextLocalTrack = useCallback(async () => {
+    const state = localPlaybackRef.current
+    if (!state || stoppedRef.current || userPausedRef.current) return
+
+    let next = state.index + 1
+    if (next >= state.files.length) {
+      shuffleInPlace(state.files)
+      next = 0
+    }
+
+    const ok = await playLocalTrackAt(next)
+    if (!ok) {
+      setPlaying(false)
+      setError('Nie udało się odtworzyć utworu z folderu.')
+    }
+  }, [playLocalTrackAt])
+
+  const startLocalPlaylist = useCallback(
+    async (station: MusicStation): Promise<boolean> => {
+      const folder = station.localFolder
+      if (!folder) return false
+
+      let root = rootHandleRef.current
+      if (!root) {
+        root = await loadStoredRootHandle()
+        rootHandleRef.current = root
+      }
+
+      if (!root) {
+        setError('Wybierz folder z muzyką (przycisk powyżej listy playlist).')
+        return false
+      }
+
+      const files = await listPlaylistTracks(root, folder)
+      if (files.length === 0) {
+        setError(`Folder „${folder}” jest pusty — uruchom npm run download:local-music.`)
+        return false
+      }
+
+      clearLocalPlayback()
+      localPlaybackRef.current = {
+        station,
+        files: shuffleInPlace([...files]),
+        index: -1,
+        objectUrl: null,
+      }
+
+      return playLocalTrackAt(0)
+    },
+    [clearLocalPlayback, playLocalTrackAt],
+  )
+
   const reconnectStream = useCallback(async () => {
     const station = currentRef.current
     if (!station || stoppedRef.current || userPausedRef.current) return
+    if (isLocalFilesStation(station) || localPlaybackRef.current) return
 
     const el = audioRef.current
     if (!el) return
@@ -106,10 +250,13 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   }, [tryPlayUrl])
 
   const scheduleRecovery = useCallback(() => {
+    if (localPlaybackRef.current) return
+
     clearRecoveryTimer()
     recoveryTimerRef.current = setTimeout(() => {
       recoveryTimerRef.current = null
       if (stoppedRef.current || userPausedRef.current || !currentRef.current) return
+      if (localPlaybackRef.current) return
 
       const el = audioRef.current
       if (!el) return
@@ -137,16 +284,23 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       if (!el) return
 
       cancelReconnect()
+      clearLocalPlayback()
       stoppedRef.current = false
       userPausedRef.current = false
       startingRef.current = true
       setError(null)
       setCurrent(station)
       saveLastStation(station)
-
-      const urls = streamUrlsForStation(station)
       el.pause()
 
+      if (isLocalFilesStation(station)) {
+        const ok = await startLocalPlaylist(station)
+        startingRef.current = false
+        if (!ok) setPlaying(false)
+        return
+      }
+
+      const urls = streamUrlsForStation(station)
       for (let i = 0; i < urls.length; i++) {
         const ok = await tryPlayUrl(el, urls[i])
         if (ok) {
@@ -160,8 +314,19 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       setPlaying(false)
       setError('Nie udało się odtworzyć stacji — spróbuj innej.')
     },
-    [cancelReconnect, tryPlayUrl],
+    [cancelReconnect, clearLocalPlayback, startLocalPlaylist, tryPlayUrl],
   )
+
+  const pickLocalMusicFolder = useCallback(async () => {
+    setError(null)
+    const handle = await pickMusicRootFolder()
+    if (!handle) {
+      setError('Nie wybrano folderu lub brak uprawnień do odczytu.')
+      return
+    }
+    rootHandleRef.current = handle
+    setLocalMusic(await getLocalMusicStatus(handle))
+  }, [])
 
   const togglePlay = useCallback(async () => {
     const el = audioRef.current
@@ -193,6 +358,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
 
   const stop = useCallback(() => {
     cancelReconnect()
+    clearLocalPlayback()
     stoppedRef.current = true
     userPausedRef.current = false
 
@@ -205,18 +371,25 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     setPlaying(false)
     setCurrent(null)
     setPlayerExpanded(false)
-  }, [cancelReconnect])
+  }, [cancelReconnect, clearLocalPlayback])
 
   const clearError = useCallback(() => setError(null), [])
 
   const handleStreamIssue = useCallback(() => {
     if (startingRef.current || recoveringRef.current || stoppedRef.current || userPausedRef.current) return
+
+    if (localPlaybackRef.current) {
+      void playNextLocalTrack()
+      return
+    }
+
     clearRecoveryTimer()
     setBuffering(false)
     void reconnectStream()
-  }, [clearRecoveryTimer, reconnectStream])
+  }, [clearRecoveryTimer, playNextLocalTrack, reconnectStream])
 
   const handleBuffering = useCallback(() => {
+    if (localPlaybackRef.current) return
     if (startingRef.current || stoppedRef.current || userPausedRef.current || reconnecting) return
     setBuffering(true)
     scheduleRecovery()
@@ -230,6 +403,14 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     setError(null)
   }, [clearRecoveryTimer])
 
+  const handleEnded = useCallback(() => {
+    if (localPlaybackRef.current && !stoppedRef.current && !userPausedRef.current) {
+      void playNextLocalTrack()
+      return
+    }
+    setPlaying(false)
+  }, [playNextLocalTrack])
+
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState !== 'visible') return
@@ -238,6 +419,11 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       const station = currentRef.current
       if (!el || !station || stoppedRef.current || userPausedRef.current) return
       if (!el.paused) return
+
+      if (localPlaybackRef.current) {
+        void el.play().catch(() => {})
+        return
+      }
 
       if (el.src) {
         void el
@@ -270,12 +456,15 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         volume,
         error,
         playerExpanded,
+        localMusic,
         setVolume,
         setPlayerExpanded,
         playStation,
         togglePlay,
         stop,
         clearError,
+        pickLocalMusicFolder,
+        refreshLocalMusic,
       }}
     >
       <audio
@@ -286,6 +475,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         onPlay={handlePlaybackResumed}
         onPlaying={handlePlaybackResumed}
         onPause={() => setPlaying(false)}
+        onEnded={handleEnded}
         onWaiting={handleBuffering}
         onStalled={handleBuffering}
         onError={handleStreamIssue}

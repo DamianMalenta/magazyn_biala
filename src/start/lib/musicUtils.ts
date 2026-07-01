@@ -9,13 +9,17 @@ export interface MusicStation {
   tags?: string
   country?: string
   favicon?: string
-  source: 'preset' | 'radio-browser'
+  source: 'preset' | 'radio-browser' | 'local-files'
+  /** Folder playlisty w local-music/lokalnie/ (tylko source: local-files). */
+  localFolder?: string
 }
 
 export type MusicCategoryId = 'stacje-radiowe' | 'lokalnie' | 'polskie-radio' | 'lokalne-kom'
 
-/** Adres ShuffleCast w sieci lokalu — zmień na IP komputera z muzyką. */
-export const LOCAL_STREAM_HOST = 'http://192.168.1.50:8000'
+/** Identyfikator strumienia lokalnego — nie jest adresem URL. */
+export function localStreamId(folder: string): string {
+  return `local://${folder}`
+}
 
 /** Główny podział: komercyjne (PL radio) vs niekomercyjne (reszta). */
 export type MusicTabId = 'commercial' | 'non-commercial'
@@ -50,7 +54,7 @@ export const MUSIC_TABS: MusicTab[] = [
     id: 'non-commercial',
     label: 'Niekomercyjne',
     emoji: '✓',
-    hint: 'Stacje radiowe międzynarodowe oraz playlisty CC0 z serwera w lokalu',
+    hint: 'Stacje radiowe międzynarodowe oraz playlisty CC0 z folderu na tym komputerze',
     categoryIds: ['stacje-radiowe', 'lokalnie'],
   },
   {
@@ -192,22 +196,18 @@ const POLISH_RADIO_STATIONS: MusicStation[] = [
   },
 ]
 
-function localPlaylistStation(
-  id: string,
-  folder: string,
-  name: string,
-  tags: string,
-): MusicStation {
+function localPlaylistStation(id: string, folder: string, name: string, tags: string): MusicStation {
   return {
     id,
     name,
-    streamUrl: `${LOCAL_STREAM_HOST}/${folder}.mp3`,
-    tags: `${tags} · CC0 · lokalnie`,
-    source: 'preset',
+    streamUrl: localStreamId(folder),
+    localFolder: folder,
+    tags: `${tags} · CC0 · ten komputer`,
+    source: 'local-files',
   }
 }
 
-/** Playlisty z PC (ShuffleCast) — foldery w local-music/lokalnie/ */
+/** Playlisty z folderu local-music/lokalnie/ na tym komputerze. */
 const LOKALNIE_PLAYLISTS: MusicStation[] = [
   localPlaylistStation('local-pop-radio', 'pop-radio', 'Pop & Radio — młodzież', 'pop'),
   localPlaylistStation('local-dance-edm', 'dance-edm', 'Dance & EDM', 'dance, edm'),
@@ -274,8 +274,8 @@ export function defaultCategoryForTab(tabId: MusicTabId): MusicCategoryId {
   return categoriesForTab(tabId)[0]?.id ?? 'stacje-radiowe'
 }
 
-export function isLocalCategory(categoryId: MusicCategoryId): boolean {
-  return categoryId === 'lokalnie' || categoryId === 'lokalne-kom'
+export function isLocalFilesStation(station: MusicStation): boolean {
+  return station.source === 'local-files' || station.streamUrl.startsWith('local://')
 }
 
 /** Przywraca zakładkę i kategorię na podstawie ostatnio granej stacji. */

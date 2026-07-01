@@ -66,10 +66,11 @@ describe('music tabs and categories', () => {
     expect(stations).toHaveLength(12)
   })
 
-  it('includes local playlist streams in lokalnie', () => {
+  it('includes local playlist presets in lokalnie', () => {
     const stations = stationsForCategory('lokalnie')
     expect(stations.length).toBeGreaterThanOrEqual(7)
-    expect(stations[0].streamUrl).toContain('.mp3')
+    expect(stations[0].source).toBe('local-files')
+    expect(stations[0].streamUrl).toMatch(/^local:\/\//)
     expect(stations.some((s) => s.id === 'local-pop-radio')).toBe(true)
   })
 
@@ -106,8 +107,9 @@ describe('music tabs and categories', () => {
     const result = inferTabAndCategory({
       id: 'local-pop-radio',
       name: 'Pop & Radio',
-      streamUrl: 'http://192.168.1.50:8000/pop-radio.mp3',
-      source: 'preset',
+      streamUrl: 'local://pop-radio',
+      source: 'local-files',
+      localFolder: 'pop-radio',
     })
     expect(result).toEqual({ tab: 'non-commercial', category: 'lokalnie' })
   })
