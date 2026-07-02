@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "screenshots": "node scripts/capture-screenshots.mjs",
-    "download:local-music": "node scripts/download-local-music.mjs"
+    "download:local-music": "node --use-system-ca scripts/download-local-music.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",
@@ -28,7 +28,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
-    "playwright": "^1.52.0",
+    "playwright": "^1.61.1",
     "tailwindcss": "^4.3.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
