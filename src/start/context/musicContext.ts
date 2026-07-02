@@ -18,7 +18,8 @@ export interface MusicContextValue {
   stop: () => void
   clearError: () => void
   pickLocalMusicFolder: () => Promise<void>
-  refreshLocalMusic: () => Promise<void>
+  restoreLocalMusicFolder: () => Promise<void>
+  refreshLocalMusic: (requestIfNeeded?: boolean) => Promise<unknown>
 }
 
 export const MusicContext = createContext<MusicContextValue | null>(null)

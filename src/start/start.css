@@ -580,6 +580,10 @@
   @apply text-emerald-400/90;
 }
 
+.music-local-setup-status-warn {
+  @apply text-amber-300/90 mt-2;
+}
+
 .music-station-row-disabled {
   @apply opacity-45 cursor-not-allowed;
 }

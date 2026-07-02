@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
-  getLocalMusicStatus,
+  getLocalMusicStatusFromRoot,
   isLocalFileSystemSupported,
   listPlaylistTracks,
-  loadStoredRootHandle,
   pickMusicRootFolder,
+  resolveLocalMusicRoot,
+  restoreStoredRootAccess,
   shuffleInPlace,
   type LocalMusicStatus,
 } from '../lib/localMusic'
@@ -24,6 +25,8 @@ const RECOVERY_DELAY_MS = 8_000
 const EMPTY_LOCAL_STATUS: LocalMusicStatus = {
   connected: false,
   folderName: null,
+  rememberedFolderName: null,
+  permission: 'none',
   playlists: [],
   totalTracks: 0,
   supported: isLocalFileSystemSupported(),
@@ -90,14 +93,15 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     localPlaybackRef.current = null
   }, [revokeLocalObjectUrl])
 
-  const refreshLocalMusic = useCallback(async () => {
-    const handle = await loadStoredRootHandle()
-    rootHandleRef.current = handle
-    setLocalMusic(await getLocalMusicStatus(handle))
+  const refreshLocalMusic = useCallback(async (requestIfNeeded = false) => {
+    const root = await resolveLocalMusicRoot({ requestIfNeeded })
+    rootHandleRef.current = root.handle
+    setLocalMusic(await getLocalMusicStatusFromRoot(root))
+    return root
   }, [])
 
   useEffect(() => {
-    void refreshLocalMusic()
+    void refreshLocalMusic(false)
   }, [refreshLocalMusic])
 
   const clearRecoveryTimer = useCallback(() => {
@@ -178,8 +182,16 @@ export function MusicProvider({ children }: { children: ReactNode }) {
 
       let root = rootHandleRef.current
       if (!root) {
-        root = await loadStoredRootHandle()
+        const resolved = await resolveLocalMusicRoot({ requestIfNeeded: false })
+        root = resolved.handle
         rootHandleRef.current = root
+
+        if (!root && resolved.permission === 'prompt') {
+          setError(
+            `Po restarcie komputera kliknij «Przywróć dostęp» przy folderze ${resolved.rememberedFolderName ?? 'z muzyką'}.`,
+          )
+          return false
+        }
       }
 
       if (!root) {
@@ -325,7 +337,30 @@ export function MusicProvider({ children }: { children: ReactNode }) {
       return
     }
     rootHandleRef.current = handle
-    setLocalMusic(await getLocalMusicStatus(handle))
+    setLocalMusic(
+      await getLocalMusicStatusFromRoot({
+        handle,
+        permission: 'granted',
+        rememberedFolderName: handle.name,
+      }),
+    )
+  }, [])
+
+  const restoreLocalMusicFolder = useCallback(async () => {
+    setError(null)
+    const handle = await restoreStoredRootAccess()
+    if (!handle) {
+      setError('Nie udało się przywrócić dostępu — wybierz folder ponownie.')
+      return
+    }
+    rootHandleRef.current = handle
+    setLocalMusic(
+      await getLocalMusicStatusFromRoot({
+        handle,
+        permission: 'granted',
+        rememberedFolderName: handle.name,
+      }),
+    )
   }, [])
 
   const togglePlay = useCallback(async () => {
@@ -464,6 +499,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
         stop,
         clearError,
         pickLocalMusicFolder,
+        restoreLocalMusicFolder,
         refreshLocalMusic,
       }}
     >

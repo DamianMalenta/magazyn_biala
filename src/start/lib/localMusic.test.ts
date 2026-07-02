@@ -1,5 +1,10 @@
-import { describe, expect, it } from 'vitest'
-import { playlistLabel, shuffleInPlace } from './localMusic'
+import { describe, expect, it, vi } from 'vitest'
+import {
+  loadRememberedFolderName,
+  playlistLabel,
+  saveRememberedFolderName,
+  shuffleInPlace,
+} from './localMusic'
 
 describe('localMusic helpers', () => {
   it('maps known playlist folder ids to labels', () => {
@@ -12,5 +17,17 @@ describe('localMusic helpers', () => {
     const shuffled = shuffleInPlace([...original])
     expect(shuffled).toHaveLength(5)
     expect(shuffled.sort()).toEqual(original.sort())
+  })
+
+  it('remembers folder name in localStorage', () => {
+    const storage = new Map<string, string>()
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => storage.get(k) ?? null,
+      setItem: (k: string, v: string) => storage.set(k, v),
+      removeItem: (k: string) => storage.delete(k),
+    })
+    saveRememberedFolderName('lokalnie')
+    expect(loadRememberedFolderName()).toBe('lokalnie')
+    vi.unstubAllGlobals()
   })
 })

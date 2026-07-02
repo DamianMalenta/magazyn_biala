@@ -53,6 +53,7 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
   const activeCategoryMeta = MUSIC_CATEGORIES.find((c) => c.id === category)
   const isLokalnie = category === 'lokalnie'
   const localReady = music.localMusic.connected
+  const needsRestore = music.localMusic.permission === 'prompt'
   const localPlaylistCounts = Object.fromEntries(
     music.localMusic.playlists.map((p) => [p.id, p.trackCount]),
   )
@@ -273,23 +274,46 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
                       W terminalu w folderze projektu: <code>npm run download:local-music</code>
                     </li>
                     <li>Kliknij przycisk poniżej i wskaż folder <code>local-music/lokalnie</code></li>
-                    <li>Wybierz playlistę z listy — utwory lecą losowo z dysku</li>
+                    <li>
+                      Po restarcie komputera kliknij <strong>Przywróć dostęp</strong> (przeglądarka resetuje
+                      uprawnienia — nie trzeba szukać folderu od nowa)
+                    </li>
                   </ol>
-                  <button
-                    type="button"
-                    className="embed-btn embed-btn-primary music-local-pick-btn"
-                    onClick={() => void music.pickLocalMusicFolder()}
-                  >
-                    📁 Wybierz folder z muzyką
-                  </button>
+                  {needsRestore ? (
+                    <button
+                      type="button"
+                      className="embed-btn embed-btn-primary music-local-pick-btn"
+                      onClick={() => void music.restoreLocalMusicFolder()}
+                    >
+                      🔓 Przywróć dostęp do folderu
+                      {music.localMusic.rememberedFolderName
+                        ? ` (${music.localMusic.rememberedFolderName})`
+                        : ''}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="embed-btn embed-btn-primary music-local-pick-btn"
+                      onClick={() => void music.pickLocalMusicFolder()}
+                    >
+                      📁 Wybierz folder z muzyką
+                    </button>
+                  )}
+                  {needsRestore && (
+                    <p className="music-local-setup-status music-local-setup-status-warn">
+                      Folder <strong>{music.localMusic.rememberedFolderName ?? 'z muzyką'}</strong> jest
+                      zapamiętany, ale po restarcie komputera przeglądarka wymaga jednego kliknięcia, żeby
+                      znów czytać pliki.
+                    </p>
+                  )}
                   {localReady ? (
                     <p className="music-local-setup-status music-local-setup-status-ok">
                       ✓ Połączono: <strong>{music.localMusic.folderName}</strong> —{' '}
                       {music.localMusic.totalTracks} utworów w {music.localMusic.playlists.length} playlistach
                     </p>
-                  ) : (
+                  ) : !needsRestore ? (
                     <p className="music-local-setup-status">Nie wybrano folderu — playlisty nie zagrają.</p>
-                  )}
+                  ) : null}
                 </>
               )}
             </div>

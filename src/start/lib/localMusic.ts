@@ -4,6 +4,7 @@ const DB_NAME = 'biala-local-music'
 const DB_VERSION = 1
 const STORE = 'handles'
 const ROOT_KEY = 'music-root'
+const FOLDER_NAME_KEY = 'startpage-music-local-folder-name'
 
 const PLAYLIST_LABELS: Record<string, string> = {
   'pop-radio': 'Pop & Radio — młodzież',
@@ -15,6 +16,8 @@ const PLAYLIST_LABELS: Record<string, string> = {
   akustyczna: 'Akustyczna',
 }
 
+export type LocalMusicPermission = 'granted' | 'prompt' | 'denied' | 'none'
+
 export interface LocalPlaylistInfo {
   id: string
   label: string
@@ -23,10 +26,20 @@ export interface LocalPlaylistInfo {
 
 export interface LocalMusicStatus {
   connected: boolean
+  /** Aktualnie odczytana nazwa folderu (gdy mamy uprawnienia). */
   folderName: string | null
+  /** Zapamiętana nazwa — widoczna też po restarcie, zanim przywrócisz dostęp. */
+  rememberedFolderName: string | null
+  permission: LocalMusicPermission
   playlists: LocalPlaylistInfo[]
   totalTracks: number
   supported: boolean
+}
+
+export interface LocalMusicRoot {
+  handle: FileSystemDirectoryHandle | null
+  permission: LocalMusicPermission
+  rememberedFolderName: string | null
 }
 
 function openDb(): Promise<IDBDatabase> {
@@ -77,32 +90,113 @@ export function shuffleInPlace<T>(items: T[]): T[] {
   return items
 }
 
-export async function ensureReadPermission(handle: FileSystemDirectoryHandle): Promise<boolean> {
-  const perm = await handle.queryPermission({ mode: 'read' })
-  if (perm === 'granted') return true
-  if (perm === 'denied') return false
+export function loadRememberedFolderName(): string | null {
+  try {
+    return localStorage.getItem(FOLDER_NAME_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function saveRememberedFolderName(name: string): void {
+  try {
+    localStorage.setItem(FOLDER_NAME_KEY, name)
+  } catch {
+    /* ignore */
+  }
+}
+
+export function clearRememberedFolderName(): void {
+  try {
+    localStorage.removeItem(FOLDER_NAME_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
+export async function readStoredRootHandle(): Promise<FileSystemDirectoryHandle | null> {
+  if (!isLocalFileSystemSupported()) return null
+  return idbGet<FileSystemDirectoryHandle>(ROOT_KEY)
+}
+
+export async function queryRootPermission(
+  handle: FileSystemDirectoryHandle,
+): Promise<PermissionState> {
+  return handle.queryPermission({ mode: 'read' })
+}
+
+export async function requestRootPermission(handle: FileSystemDirectoryHandle): Promise<boolean> {
   return (await handle.requestPermission({ mode: 'read' })) === 'granted'
 }
 
-export async function loadStoredRootHandle(): Promise<FileSystemDirectoryHandle | null> {
-  if (!isLocalFileSystemSupported()) return null
-  const handle = await idbGet<FileSystemDirectoryHandle>(ROOT_KEY)
-  if (!handle) return null
-  const ok = await ensureReadPermission(handle)
-  return ok ? handle : null
+function emptyStatus(overrides: Partial<LocalMusicStatus> = {}): LocalMusicStatus {
+  return {
+    connected: false,
+    folderName: null,
+    rememberedFolderName: loadRememberedFolderName(),
+    permission: 'none',
+    playlists: [],
+    totalTracks: 0,
+    supported: isLocalFileSystemSupported(),
+    ...overrides,
+  }
+}
+
+/** Bez żądania uprawnień — bezpieczne przy starcie strony (bez kliknięcia użytkownika). */
+export async function resolveLocalMusicRoot(options?: {
+  requestIfNeeded?: boolean
+}): Promise<LocalMusicRoot> {
+  if (!isLocalFileSystemSupported()) {
+    return { handle: null, permission: 'none', rememberedFolderName: loadRememberedFolderName() }
+  }
+
+  const stored = await readStoredRootHandle()
+  const remembered = stored?.name ?? loadRememberedFolderName()
+
+  if (!stored) {
+    return { handle: null, permission: 'none', rememberedFolderName: remembered }
+  }
+
+  let perm = await queryRootPermission(stored)
+
+  if (perm === 'prompt' && options?.requestIfNeeded) {
+    perm = (await requestRootPermission(stored)) ? 'granted' : 'denied'
+  }
+
+  if (perm === 'granted') {
+    return { handle: stored, permission: 'granted', rememberedFolderName: stored.name }
+  }
+
+  if (perm === 'denied') {
+    return { handle: null, permission: 'denied', rememberedFolderName: remembered }
+  }
+
+  // Folder zapisany w IndexedDB, ale przeglądarka czeka na kliknięcie (typowe po restarcie PC).
+  return { handle: null, permission: 'prompt', rememberedFolderName: remembered }
 }
 
 export async function saveRootHandle(handle: FileSystemDirectoryHandle): Promise<void> {
   await idbSet(ROOT_KEY, handle)
+  saveRememberedFolderName(handle.name)
 }
 
 export async function pickMusicRootFolder(): Promise<FileSystemDirectoryHandle | null> {
   if (!isLocalFileSystemSupported()) return null
   const handle = await window.showDirectoryPicker({ mode: 'read' })
-  const ok = await ensureReadPermission(handle)
+  const ok = await requestRootPermission(handle)
   if (!ok) return null
   await saveRootHandle(handle)
   return handle
+}
+
+/** Przywraca dostęp do zapamiętanego folderu — wymaga kliknięcia użytkownika. */
+export async function restoreStoredRootAccess(): Promise<FileSystemDirectoryHandle | null> {
+  const stored = await readStoredRootHandle()
+  if (!stored) return null
+  const ok = await requestRootPermission(stored)
+  if (!ok) return null
+  saveRememberedFolderName(stored.name)
+  return stored
 }
 
 async function mp3FilesInFolder(folder: FileSystemDirectoryHandle): Promise<File[]> {
@@ -143,18 +237,35 @@ export async function listPlaylistTracks(
   return mp3FilesInFolder(folder)
 }
 
-export async function getLocalMusicStatus(root: FileSystemDirectoryHandle | null): Promise<LocalMusicStatus> {
-  const supported = isLocalFileSystemSupported()
-  if (!supported || !root) {
-    return { connected: false, folderName: null, playlists: [], totalTracks: 0, supported }
+export async function getLocalMusicStatusFromRoot(root: LocalMusicRoot): Promise<LocalMusicStatus> {
+  const base = emptyStatus({
+    permission: root.permission,
+    rememberedFolderName: root.rememberedFolderName,
+  })
+
+  if (!root.handle || root.permission !== 'granted') {
+    return base
   }
 
-  const playlists = await scanLocalPlaylists(root)
+  const playlists = await scanLocalPlaylists(root.handle)
   return {
+    ...base,
     connected: playlists.length > 0,
-    folderName: root.name,
+    folderName: root.handle.name,
+    rememberedFolderName: root.handle.name,
     playlists,
     totalTracks: playlists.reduce((sum, p) => sum + p.trackCount, 0),
-    supported,
   }
+}
+
+/** @deprecated użyj resolveLocalMusicRoot + getLocalMusicStatusFromRoot */
+export async function loadStoredRootHandle(): Promise<FileSystemDirectoryHandle | null> {
+  const root = await resolveLocalMusicRoot({ requestIfNeeded: true })
+  return root.handle
+}
+
+/** @deprecated użyj getLocalMusicStatusFromRoot */
+export async function getLocalMusicStatus(root: FileSystemDirectoryHandle | null): Promise<LocalMusicStatus> {
+  if (!root) return emptyStatus()
+  return getLocalMusicStatusFromRoot({ handle: root, permission: 'granted', rememberedFolderName: root.name })
 }
