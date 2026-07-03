@@ -278,6 +278,10 @@ export function MusicPanel({ link, minimized, onMinimize, onExpand, onClose }: M
                       Po restarcie komputera kliknij <strong>Przywróć dostęp</strong> (przeglądarka resetuje
                       uprawnienia — nie trzeba szukać folderu od nowa)
                     </li>
+                    <li>
+                      Playlista <strong>Polskie</strong>: hip-hop, reggae i dub (CC0 / CC BY — komercyjnie w lokalu).
+                      Szczegóły licencji: <code>polskie/README.md</code>
+                    </li>
                   </ol>
                   {needsRestore ? (
                     <button

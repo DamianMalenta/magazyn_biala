@@ -68,10 +68,11 @@ describe('music tabs and categories', () => {
 
   it('includes local playlist presets in lokalnie', () => {
     const stations = stationsForCategory('lokalnie')
-    expect(stations.length).toBeGreaterThanOrEqual(7)
+    expect(stations.length).toBeGreaterThanOrEqual(8)
     expect(stations[0].source).toBe('local-files')
     expect(stations[0].streamUrl).toMatch(/^local:\/\//)
     expect(stations.some((s) => s.id === 'local-pop-radio')).toBe(true)
+    expect(stations.some((s) => s.id === 'local-polskie')).toBe(true)
   })
 
   it('keeps commercial local category empty until configured', () => {

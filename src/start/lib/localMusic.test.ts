@@ -9,6 +9,7 @@ import {
 describe('localMusic helpers', () => {
   it('maps known playlist folder ids to labels', () => {
     expect(playlistLabel('pop-radio')).toBe('Pop & Radio — młodzież')
+    expect(playlistLabel('polskie')).toBe('Polskie')
     expect(playlistLabel('unknown-folder')).toBe('unknown-folder')
   })
 

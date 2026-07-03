@@ -216,6 +216,7 @@ const LOKALNIE_PLAYLISTS: MusicStation[] = [
   localPlaylistStation('local-lunch-jazz', 'lunch-jazz', 'Lunch & Jazz', 'jazz, lunch'),
   localPlaylistStation('local-kolacja', 'kolacja', 'Kolacja', 'bossa, kolacja'),
   localPlaylistStation('local-akustyczna', 'akustyczna', 'Akustyczna', 'folk, akustyczna'),
+  localPlaylistStation('local-polskie', 'polskie', 'Polskie', 'reggae, dub, hip-hop, cc0'),
 ]
 
 /** Bezpośrednie strumienie HTTPS — działają na GitHub Pages (bez mixed content). */

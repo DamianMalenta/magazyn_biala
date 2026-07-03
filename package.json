@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "screenshots": "node scripts/capture-screenshots.mjs",
-    "download:local-music": "node --use-system-ca scripts/download-local-music.mjs"
+    "download:local-music": "node --use-system-ca scripts/download-local-music.mjs",
+    "clean:local-music": "node scripts/clean-local-music.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",

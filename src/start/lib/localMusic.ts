@@ -14,6 +14,7 @@ const PLAYLIST_LABELS: Record<string, string> = {
   'lunch-jazz': 'Lunch & Jazz',
   kolacja: 'Kolacja',
   akustyczna: 'Akustyczna',
+  polskie: 'Polskie',
 }
 
 export type LocalMusicPermission = 'granted' | 'prompt' | 'denied' | 'none'
